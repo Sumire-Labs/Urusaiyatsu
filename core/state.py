@@ -194,9 +194,9 @@ class Bot(commands.Bot):
             except Exception as e:
                 print(f'Failed to load extension {ext}: {e}')
 
-        # バックグラウンドループ開始
+        # バックグラウンドループ開始（デーモンスレッドで実行）
         from .background import start_background_loop
-        Thread(target=start_background_loop).start()
+        Thread(target=start_background_loop, daemon=True).start()
 
         # コマンドツリー同期
         await self.tree.sync()
