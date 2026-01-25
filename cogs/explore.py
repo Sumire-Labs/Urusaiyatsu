@@ -8,8 +8,8 @@ import math
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS, PLACES, ADVANCEMENTS, EMOJIS, place_choices
-from utils import new_user, xp, complete_advancement
+from core.state import USERS, ITEMS, PLACES, ADVANCEMENTS, EMOJIS, place_choices
+from core.utils import new_user, xp, complete_advancement
 
 
 class ExploreCog(commands.Cog):

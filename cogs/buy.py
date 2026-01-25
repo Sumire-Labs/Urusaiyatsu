@@ -5,8 +5,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS
-from utils import new_user
+from core.state import USERS, ITEMS
+from core.utils import new_user
 from views.shop_view import shop_choice
 
 

@@ -9,8 +9,8 @@ import typing
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices, bait_choices
-from utils import new_user, xp, complete_advancement
+from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices, bait_choices
+from core.utils import new_user, xp, complete_advancement
 
 
 class FishingCog(commands.Cog):

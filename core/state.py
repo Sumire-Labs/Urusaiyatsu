@@ -10,7 +10,7 @@ import json
 import os
 from threading import Thread
 
-from config import DATA_DIR
+from .config import DATA_DIR
 
 # データディレクトリに移動（JSONファイル読み込みのため）
 os.chdir(DATA_DIR)
@@ -195,7 +195,7 @@ class Bot(commands.Bot):
                 print(f'Failed to load extension {ext}: {e}')
 
         # バックグラウンドループ開始
-        from background import start_background_loop
+        from .background import start_background_loop
         Thread(target=start_background_loop).start()
 
         # コマンドツリー同期

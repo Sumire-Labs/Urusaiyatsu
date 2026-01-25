@@ -3,7 +3,7 @@
 """
 import discord
 
-from state import USERS
+from core.state import USERS
 
 
 class set_name(discord.ui.Modal):

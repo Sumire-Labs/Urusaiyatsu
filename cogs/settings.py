@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
 
-from state import USERS
+from core.state import USERS
 from modals.settings_modal import set_name
 
 

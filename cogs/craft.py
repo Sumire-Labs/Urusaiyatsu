@@ -7,8 +7,8 @@ import json
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
-from utils import xp, complete_advancement
+from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
+from core.utils import xp, complete_advancement
 from views.craft_view import crafting, set_craft_func
 
 

@@ -4,8 +4,8 @@
 import discord
 import math
 
-from state import ITEMS, item_choices
-from utils import new_user
+from core.state import ITEMS, item_choices
+from core.utils import new_user
 
 
 class item_select(discord.ui.View):

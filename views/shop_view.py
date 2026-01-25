@@ -5,7 +5,7 @@ import discord
 import ast
 import json
 
-from state import USERS, ITEMS, EMOJIS
+from core.state import USERS, ITEMS, EMOJIS
 
 
 class shop_choice(discord.ui.View):

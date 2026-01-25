@@ -5,8 +5,8 @@ import typing
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS
-from utils import new_user
+from core.state import USERS
+from core.utils import new_user
 from views.status_view import view_status
 
 

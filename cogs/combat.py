@@ -4,7 +4,7 @@ Combat Cog
 from discord import app_commands
 from discord.ext import commands
 
-from state import combat_choices
+from core.state import combat_choices
 
 
 class CombatCog(commands.Cog):

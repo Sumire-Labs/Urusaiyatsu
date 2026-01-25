@@ -3,7 +3,7 @@
 """
 import discord
 
-from state import equippable_choices
+from core.state import equippable_choices
 
 
 # equip関数への参照（循環import回避のため遅延設定）

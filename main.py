@@ -1,8 +1,7 @@
 """
 Urusaiyatsu Discord Bot - Entry Point
 """
-from state import bot
-from config import TOKEN
+from core import bot, TOKEN
 
 if __name__ == "__main__":
     bot.run(TOKEN)

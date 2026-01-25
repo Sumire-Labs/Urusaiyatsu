@@ -6,8 +6,8 @@ import json
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS, equippable_choices
-from utils import new_user
+from core.state import USERS, ITEMS, equippable_choices
+from core.utils import new_user
 from views.equip_view import equip_select, set_equip_func
 from views.shop_view import remove_equip_choice
 

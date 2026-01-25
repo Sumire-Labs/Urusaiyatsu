@@ -6,7 +6,7 @@ import math
 import random
 import discord
 
-from state import (
+from .state import (
     USERS, ITEMS, ADVANCEMENTS,
     shop_list, bot
 )
@@ -140,13 +140,13 @@ def save_users():
 
 def save_market():
     """マーケットデータを保存"""
-    from state import MARKET
+    from .state import MARKET
     with open('market.json', 'w', encoding='UTF-8') as f:
         json.dump(MARKET, f, indent=2, ensure_ascii=False)
 
 
 def save_data():
     """グローバルデータを保存"""
-    from state import DATA
+    from .state import DATA
     with open('data.json', 'w', encoding='UTF-8') as f:
         json.dump(DATA, f, indent=2, ensure_ascii=False)

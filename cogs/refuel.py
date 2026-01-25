@@ -5,8 +5,8 @@ import json
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, EMOJIS
-from utils import new_user
+from core.state import USERS, EMOJIS
+from core.utils import new_user
 
 
 class RefuelCog(commands.Cog):

@@ -4,8 +4,8 @@
 import discord
 import math
 
-from state import USERS, ITEMS, RECIPES
-from utils import new_user
+from core.state import USERS, ITEMS, RECIPES
+from core.utils import new_user
 
 
 # craft関数への参照（循環import回避のため遅延設定）

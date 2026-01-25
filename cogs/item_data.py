@@ -6,7 +6,7 @@ import math
 from discord import app_commands
 from discord.ext import commands
 
-from state import ITEMS, RECIPES, PLACES, FISHING_PLACES, LOOTS, LOCALIZATIONS, EMOJIS
+from core.state import ITEMS, RECIPES, PLACES, FISHING_PLACES, LOOTS, LOCALIZATIONS, EMOJIS
 from views.item_select_view import item_select_view, register_callback
 
 

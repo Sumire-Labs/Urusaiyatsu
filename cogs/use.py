@@ -7,8 +7,8 @@ import json
 from discord import app_commands
 from discord.ext import commands
 
-from state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
-from utils import new_user, complete_advancement
+from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
+from core.utils import new_user, complete_advancement
 
 
 class UseCog(commands.Cog):

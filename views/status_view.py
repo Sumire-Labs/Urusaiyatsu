@@ -5,8 +5,8 @@ import discord
 import math
 import json
 
-from state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
-from utils import new_user
+from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
+from core.utils import new_user
 
 
 class status_paging(discord.ui.View):

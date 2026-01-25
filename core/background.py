@@ -7,7 +7,7 @@ import datetime
 import random
 import json
 
-from state import USERS, ITEMS, DATA, shop_list
+from .state import USERS, ITEMS, DATA, shop_list
 
 
 def start_background_loop():
