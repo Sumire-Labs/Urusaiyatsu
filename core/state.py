@@ -205,7 +205,10 @@ class Bot(commands.Bot):
     async def on_ready(self):
         """Bot起動完了時"""
         print('Botが起動しました')
-        await self.change_presence(activity=discord.Game(name="うおおおお～～～～～～～～～～～～～～～"))
+        try:
+            await self.change_presence(activity=discord.Game(name="うおおおお～～～～～～～～～～～～～～～"))
+        except Exception:
+            pass  # 終了中の場合は無視
 
 
 # Botインスタンス作成
