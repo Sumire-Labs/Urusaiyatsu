@@ -3,10 +3,9 @@
 """
 import discord
 import math
-import json
 
 from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
-from core.utils import new_user
+from core.utils import new_user, save_users
 
 
 class status_paging(discord.ui.View):
@@ -221,5 +220,4 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
         await interaction.response.edit_message(embeds=embeds, view=view)
 
     # ファイル更新
-    with open('user.json', 'w', encoding='UTF-8') as f:
-        json.dump(USERS, f, indent=2, ensure_ascii=False)
+    save_users()

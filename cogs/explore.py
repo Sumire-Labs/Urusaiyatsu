@@ -3,13 +3,12 @@ Explore Cog
 """
 import discord
 import random
-import json
 import math
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, PLACES, ADVANCEMENTS, EMOJIS, place_choices
-from core.utils import new_user, xp, complete_advancement
+from core.utils import new_user, xp, complete_advancement, save_users
 
 
 class ExploreCog(commands.Cog):
@@ -229,8 +228,7 @@ class ExploreCog(commands.Cog):
                 f'{place_name}での採集によって**{item_f}**を手に入れました！{add_msg}{tool_msg}{ret}')
 
             # ファイル更新
-            with open('user.json', 'w') as open_file:
-                json.dump(USERS, open_file, indent=2)
+            save_users()
         else:
             await interaction.response.send_message(
                 f'この採集にはスタミナ{EMOJIS["stamina"]}が{stamina}必要です。')
@@ -384,8 +382,7 @@ class ExploreCog(commands.Cog):
             await interaction.response.send_message(ret, embed=embed)
 
             # ファイル更新
-            with open('user.json', 'w') as open_file:
-                json.dump(USERS, open_file, indent=2)
+            save_users()
 
 
 async def setup(bot: commands.Bot):

@@ -3,12 +3,11 @@ Use Cog
 """
 import discord
 import random
-import json
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
-from core.utils import new_user, complete_advancement
+from core.utils import new_user, complete_advancement, save_users
 
 
 class UseCog(commands.Cog):
@@ -120,8 +119,7 @@ class UseCog(commands.Cog):
 
             # ファイル更新
             user_f['inventory'][item] -= count
-            with open('user.json', 'w', encoding='UTF-8') as f:
-                json.dump(USERS, f, indent=2, ensure_ascii=False)
+            save_users()
         else:
             await interaction.response.send_message(f'**{item_f}**は持っていません。')
 

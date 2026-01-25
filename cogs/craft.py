@@ -3,12 +3,11 @@ Craft Cog
 """
 import discord
 import random
-import json
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
-from core.utils import xp, complete_advancement
+from core.utils import xp, complete_advancement, save_users
 from views.craft_view import crafting, set_craft_func
 
 
@@ -95,8 +94,7 @@ async def craft(interaction: discord.Interaction, recipe: int, bulk: int = 1):
                 await interaction.response.send_message(f'**{item_f}**をクラフトしました！{tool_msg}{ret}')
 
                 # ファイル更新
-                with open('user.json', 'w', encoding='UTF-8') as f:
-                    json.dump(USERS, f, indent=2, ensure_ascii=False)
+                save_users()
 
             elif fail == 1:
                 ingredient = ''
@@ -185,8 +183,7 @@ async def craft(interaction: discord.Interaction, recipe: int, bulk: int = 1):
                         f'**{item_f}**を**{count}**個クラフトしました！{tool_msg}{ret}')
 
                     # ファイル更新
-                    with open('user.json', 'w', encoding='UTF-8') as f:
-                        json.dump(USERS, f, indent=2, ensure_ascii=False)
+                    save_users()
 
                 elif fail == 1:
                     ingredient = ''

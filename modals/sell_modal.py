@@ -2,9 +2,9 @@
 売却関連Modal
 """
 import discord
-import json
 
 from core.state import USERS, ITEMS, EMOJIS
+from core.utils import save_users
 
 
 class sell_amount(discord.ui.Modal):
@@ -55,8 +55,7 @@ async def sell_item(interaction: discord.Interaction, item: str, count: int):
         await interaction.response.send_message(f'**{item_name}{count}**個を**{result}**{EMOJIS["money"]}で売却しました！')
 
         # ファイル更新
-        with open('user.json', 'w', encoding='UTF-8') as f:
-            json.dump(USERS, f, indent=2, ensure_ascii=False)
+        save_users()
     else:
         item_name = ITEMS[item]['name_e']
         await interaction.response.send_message(f'**{item_name}**は持っていません。')
