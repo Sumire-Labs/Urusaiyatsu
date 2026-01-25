@@ -218,6 +218,7 @@ __marimo__/
 # Claude
 tmpclaude-*
 .claude
+CLAUDE.md
 
 # data files
 # 個人データが含まれているため
