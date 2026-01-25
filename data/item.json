@@ -1,0 +1,1371 @@
+{
+    "wood": {
+        "name": "丸太",
+        "value": 5,
+        "shop_amount": 5,
+        "tag": ["spawnable_in_shop"]
+    },
+    "stone": {
+        "name": "石",
+        "value": 5,
+        "shop_amount": 5,
+        "tag": ["spawnable_in_shop"]
+    },
+    "planks": {
+        "name": "木材",
+        "shop_amount": 3,
+        "tag": ["spawnable_in_shop"]
+    },
+    "coal": {
+        "name": "石炭",
+        "value": 14,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "copper": {
+        "name": "銅",
+        "value": 16,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "copper_ingot": {
+        "name": "銅の延べ棒",
+        "shop_amount": 2,
+        "tag": ["spawnable_in_shop"]
+    },
+    "iron": {
+        "name": "鉄",
+        "value": 25,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "iron_ingot": {
+        "name": "鉄の延べ棒",
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "steel_ingot": {
+        "name": "鋼鉄の延べ棒"
+    },
+    "crystal": {
+        "name": "クリスタル",
+        "value": 150
+    },
+    "gold": {
+        "name": "金",
+        "value": 35,
+        "shop_amount": 2,
+        "tag": ["spawnable_in_shop"]
+    },
+    "gold_ingot": {
+        "name": "金の延べ棒",
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "rose_gold_ingot": {
+        "name": "ローズゴールドの延べ棒"
+    },
+    "leather": {
+        "name": "革",
+        "value": 15,
+        "shop_amount": 3,
+        "tag": ["spawnable_in_shop"]
+    },
+    "string": {
+        "name": "絹糸",
+        "value": 20,
+        "shop_amount": 2,
+        "tag": ["spawnable_in_shop"]
+    },
+    "hard_wood": {
+        "name": "堅い丸太",
+        "value": 10,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "hard_planks": {
+        "name": "堅い木材",
+        "shop_amount": 2,
+        "tag": ["spawnable_in_shop"]
+    },
+    "silk": {
+        "name": "シルク",
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "silver": {
+        "name": "銀",
+        "value": 30,
+        "shop_amount": 2,
+        "tag": ["spawnable_in_shop"]
+    },
+    "silver_ingot": {
+        "name": "銀の延べ棒",
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "black_bronze_ingot": {
+        "name": "ブラックブロンズの延べ棒"
+    },
+    "ruby": {
+        "name": "ルビー",
+        "value": 250,
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "scrap": {
+        "name": "スクラップ",
+        "value": 5,
+        "price": 200,
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "trash": {
+        "name": "ゴミ",
+        "value": 1
+    },
+    "titanium": {
+        "name": "チタニウム",
+        "value": 50,
+        "price": 500,
+        "shop_amount": 1,
+        "tag": ["spawnable_in_shop"]
+    },
+    "refined_titanium": {
+        "name": "精製されたチタニウム"
+    },
+    "broken_battery": {
+        "name": "壊れたバッテリー",
+        "value": 400
+    },
+    "battery": {
+        "name": "バッテリー"
+    },
+    "tungsten": {
+        "name": "タングステン",
+        "value": 36
+    },
+    "refined_tungsten": {
+        "name": "精製されたタングステン"
+    },
+    "compressed_tungsten": {
+        "name": "圧縮されたタングステン"
+    },
+    "amethyst": {
+        "name": "アメジスト",
+        "value": 160
+    },
+    "fine_crystal": {
+        "name": "上質なクリスタル"
+    },
+    "flawless_crystal": {
+        "name": "精巧なクリスタル"
+    },
+    "fine_amethyst": {
+        "name": "上質なアメジスト"
+    },
+    "flawless_amethyst": {
+        "name": "精巧なアメジスト"
+    },
+    "emerald": {
+        "name": "エメラルド",
+        "value": 175
+    },
+    "fine_emerald": {
+        "name": "上質なエメラルド"
+    },
+    "flawless_emerald": {
+        "name": "精巧なエメラルド"
+    },
+    "sapphire": {
+        "name": "サファイア",
+        "value": 190
+    },
+    "fine_sapphire": {
+        "name": "上質なサファイア"
+    },
+    "flawless_sapphire": {
+        "name": "精巧なサファイア"
+    },
+    "diamond": {
+        "name": "ダイヤモンド",
+        "value": 210
+    },
+    "fine_diamond": {
+        "name": "上質なダイヤモンド"
+    },
+    "flawless_diamond": {
+        "name": "精巧なダイヤモンド"
+    },
+    "copper_plate": {
+        "name": "銅の板"
+    },
+    "steel_plate": {
+        "name": "鋼鉄の板"
+    },
+    "silver_plate": {
+        "name": "銀の板"
+    },
+    "gold_plate": {
+        "name": "金の板"
+    },
+    "gold_shard": {
+        "name": "金の欠片"
+    },
+    "stone_chunk": {
+        "name": "石の塊"
+    },
+    "stone_matrix": {
+        "name": "石の基材"
+    },
+    "mixed_gemstone": {
+        "name": "混合宝石"
+    },
+    "cobalt": {
+        "name": "コバルト",
+        "value": 38
+    },
+    "refined_cobalt": {
+        "name": "精製されたコバルト"
+    },
+    "compressed_cobalt": {
+        "name": "圧縮されたコバルト"
+    },
+    "iridium": {
+        "name": "イリジウム",
+        "value": 40
+    },
+    "refined_iridium": {
+        "name": "精製されたイリジウム"
+    },
+    "compressed_iridium": {
+        "name": "圧縮されたイリジウム"
+    },
+    "drill_engine": {
+        "name": "ドリルエンジン"
+    },
+    "precision_mechanism": {
+        "name": "精密機構",
+        "value": 400
+    },
+    "advanced_engine_part": {
+        "name": "発展型エンジンの部品",
+        "value": 1000
+    },
+    "advanced_drill_engine": {
+        "name": "発展型ドリルエンジン"
+    },
+    "mythical_fragment": {
+        "name": "神話の断片",
+        "value": 1200
+    },
+    "mythical_drill_engine": {
+        "name": "神話のドリルエンジン"
+    },
+    "bass": {
+        "name": "バス",
+        "value": 15,
+        "shop_amount": 5,
+        "tag": ["spawnable_in_shop"]
+    },
+    "trout": {
+        "name": "マス",
+        "value": 15,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "carp": {
+        "name": "フナ",
+        "value": 19,
+        "shop_amount": 1
+    },
+    "char": {
+        "name": "イワナ",
+        "value": 21,
+        "shop_amount": 4,
+        "tag": ["spawnable_in_shop"]
+    },
+    "pond_smelt": {
+        "name": "ワカサギ",
+        "value": 21,
+        "shop_amount": 3,
+        "tag": ["spawnable_in_shop"]
+    },
+    "salmon": {
+        "name": "サケ",
+        "value": 26
+    },
+    "sardine": {
+        "name": "イワシ",
+        "value": 29
+    },
+    "herring": {
+        "name": "ニシン",
+        "value": 29
+    },
+    "mackerel": {
+        "name": "サバ",
+        "value": 34
+    },
+    "flounder": {
+        "name": "カレイ",
+        "value": 42
+    },
+    "sea_bream": {
+        "name": "タイ",
+        "value": 36
+    },
+    "scorpionfish": {
+        "name": "カサゴ",
+        "value": 36
+    },
+    "squid": {
+        "name": "イカ",
+        "value": 45
+    },
+    "tuna": {
+        "name": "マグロ",
+        "value": 60
+    },
+    "pufferfish": {
+        "name": "フグ",
+        "value": 80
+    },
+    "tin": {
+        "name": "錫",
+        "value": 36
+    },
+    "tin_ingot": {
+        "name": "錫の延べ棒"
+    },
+    "chrome": {
+        "name": "クロム",
+        "value": 85
+    },
+    "chrome_ingot": {
+        "name": "クロムの延べ棒"
+    },
+    "aquamarine": {
+        "name": "アクアマリン",
+        "value": 150
+    },
+    "opal": {
+        "name": "オパール",
+        "value": 280
+    },
+    "fish_oil": {
+        "name": "フィッシュオイル",
+        "tag": ["spawnable_in_shop"]
+    },
+    "rich_fish_oil": {
+        "name": "濃縮されたフィッシュオイル"
+    },
+    "extra_rich_fish_oil": {
+        "name": "特濃フィッシュオイル"
+    },
+    "supreme_fish_oil": {
+        "name": "至高のフィッシュオイル"
+    },
+    "ultimate_fish_oil": {
+        "name": "極上のフィッシュオイル"
+    },
+    "pearl": {
+        "name": "真珠",
+        "value": 180
+    },
+    "lead": {
+        "name": "鉛",
+        "value": 105
+    },
+    "lead_ingot": {
+        "name": "鉛の延べ棒"
+    },
+    "citrine": {
+        "name": "シトリン",
+        "value": 300
+    },
+    "platinum": {
+        "name": "プラチナ",
+        "value": 125
+    },
+    "platinum_ingot": {
+        "name": "プラチナの延べ棒"
+    },
+    "onyx": {
+        "name": "オニキス",
+        "value": 330
+    },
+    "mercury": {
+        "name": "水銀",
+        "value": 210
+    },
+    "dwarven_alloy": {
+        "name": "ドワーフの合金"
+    },
+    "abyssal_seed": {
+        "name": "深淵の種",
+        "value": 1300
+    },
+    "mercury_compound": {
+        "name": "水銀混合物"
+    },
+    "abyssal_amalgam": {
+        "name": "深淵のアマルガム"
+    },
+    "abyssal_ingot": {
+        "name": "深淵の延べ棒"
+    },
+    "obsidian": {
+        "name": "黒曜石",
+        "value": 8
+    },
+    "obsidian_brick": {
+        "name": "黒曜石のレンガ"
+    },
+    "obsidian_glass": {
+        "name": "黒曜石のガラス"
+    },
+    "sulfur": {
+        "name": "硫黄",
+        "value": 39
+    },
+    "beryllium": {
+        "name": "ベリリウム",
+        "value": 42
+    },
+    "pure_beryllium": {
+        "name": "純粋なベリリウム"
+    },
+    "dense_beryllium": {
+        "name": "高密度なベリリウム"
+    },
+    "garnet": {
+        "name": "ガーネット",
+        "value": 200
+    },
+    "cut_garnet": {
+        "name": "研がれたガーネット"
+    },
+    "perfect_garnet": {
+        "name": "完璧なガーネット"
+    },
+    "thorium": {
+        "name": "トリウム",
+        "value": 44
+    },
+    "pure_thorium": {
+        "name": "純粋なトリウム"
+    },
+    "dense_thorium": {
+        "name": "高密度なトリウム"
+    },
+    "topaz": {
+        "name": "トパーズ",
+        "value": 220
+    },
+    "cut_topaz": {
+        "name": "研がれたトパーズ"
+    },
+    "perfect_topaz": {
+        "name": "完璧なトパーズ"
+    },
+    "uranium": {
+        "name": "ウラニウム",
+        "value": 46
+    },
+    "pure_uranium": {
+        "name": "純粋なウラニウム"
+    },
+    "dense_uranium": {
+        "name": "高密度なウラニウム"
+    },
+    "lava_stone": {
+        "name": "溶岩石",
+        "value": 450
+    },
+    "durable_plate": {
+        "name": "強固な板"
+    },
+    "conductive_plate": {
+        "name": "電導性の板"
+    },
+    "fluorescent_paint": {
+        "name": "蛍光塗料"
+    },
+    "robust_plate": {
+        "name": "頑丈な板"
+    },
+    "container": {
+        "name": "格納器"
+    },
+    "contained_uranium": {
+        "name": "格納されたウラニウム"
+    },
+    "plutonium": {
+        "name": "プルトニウム"
+    },
+    "radiation_core": {
+        "name": "放射線コア",
+        "value": 1400
+    },
+    "super_battery": {
+        "name": "スーパーバッテリー"
+    },
+    "atomic_booster": {
+        "name": "アトミックブースター"
+    },
+    "shattered_arm_part": {
+        "name": "破損したアームの部品",
+        "value": 5000
+    },
+
+
+    "black_bronze_pickaxe": {
+        "name": "ブラックブロンズのツルハシ",
+        "breakability": 0,
+        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3"]
+    },
+    "crystal_pickaxe": {
+        "name": "クリスタルのツルハシ",
+        "breakability": 0,
+        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4"]
+    },
+    "titanium_pickaxe": {
+        "name": "チタニウムのツルハシ",
+        "breakability": 0,
+        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5"]
+    },
+
+    "drill_t0": {
+        "name": "タングステンのドリル D-T0",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
+        "drill_status": {
+            "stamina_add": 3,
+            "fuel": 10,
+            "chance": 3
+        }
+    },
+    "drill_g1": {
+        "name": "アメジストのドリル D-G1",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
+        "drill_status": {
+            "stamina_add": 2,
+            "fuel": 9,
+            "chance": 3
+        }
+    },
+    "drill_m1": {
+        "name": "コバルトのドリル D-M1",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
+        "drill_status": {
+            "stamina_add": 2,
+            "fuel": 9,
+            "chance": 4
+        }
+    },
+    "drill_g2": {
+        "name": "エメラルドのドリル D-G2",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2"],
+        "drill_status": {
+            "stamina_add": 2,
+            "fuel": 9,
+            "chance": 4
+        }
+    },
+    "drill_g3": {
+        "name": "サファイアのドリル D-G3",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3"],
+        "drill_status": {
+            "stamina_add": 1,
+            "fuel": 8,
+            "chance": 4
+        }
+    },
+    "drill_m2": {
+        "name": "コバルトのドリル D-M2",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
+        "drill_status": {
+            "stamina_add": 1,
+            "fuel": 8,
+            "chance": 5
+        }
+    },
+    "drill_g4": {
+        "name": "宝石のドリル D-G4",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
+        "drill_status": {
+            "stamina_add": 0,
+            "fuel": 7,
+            "chance": 5
+        }
+    },
+    "drill_m3": {
+        "name": "イリジウムのドリル D-M3",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2"],
+        "drill_status": {
+            "stamina_add": 1,
+            "fuel": 7,
+            "chance": 6
+        }
+    },
+    "drill_m4": {
+        "name": "イリジウムのドリル D-M4",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3"],
+        "drill_status": {
+            "stamina_add": 0,
+            "fuel": 6,
+            "chance": 8
+        }
+    },
+    "drill_m5": {
+        "name": "イリジウムのドリル D-M5",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
+        "drill_status": {
+            "stamina_add": 0,
+            "fuel": 5,
+            "chance": 10
+        }
+    },
+    "drill_mx": {
+        "name": "神話のドリル D-MX",
+        "breakability": 0,
+        "equip_slot": "drill",
+        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
+        "drill_status": {
+            "stamina_add": -1,
+            "fuel": 4,
+            "chance": 15
+        }
+    },
+    "pickaxe": {
+        "name": "ツルハシ",
+        "shop_amount": 1,
+        "breakability": 10,
+        "tag": ["pickaxe_t1", "spawnable_in_shop"]
+    },
+    "copper_pickaxe": {
+        "name": "銅のツルハシ",
+        "breakability": 7,
+        "tag": ["pickaxe_t1","pickaxe_t2"]
+    },
+    "steel_pickaxe": {
+        "name": "鋼鉄のツルハシ",
+        "breakability": 5,
+        "tag": ["pickaxe_t1","pickaxe_t2","pickaxe_t3"]
+    },
+
+    "drill_laser": {
+        "name": "ドリルレーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 2,
+            "additional_chance": 2
+        },
+        "tag": ["equippable", "drill_laser"]
+    },
+    "improved_laser": {
+        "name": "改良型レーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 1.5,
+            "additional_chance": 5
+        },
+        "tag": ["equippable", "drill_laser"]
+    },
+    "heated_laser": {
+        "name": "ヒートレーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 4,
+            "additional_chance": 10
+        },
+        "tag": ["equippable", "drill_laser"]
+    },
+    "cooled_laser": {
+        "name": "冷却レーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 0.25,
+            "additional_chance": 5
+        },
+        "tag": ["equippable", "drill_laser"]
+    },
+    "adjusted_laser": {
+        "name": "調整済みレーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 1.5,
+            "additional_chance": 12
+        },
+        "tag": ["equippable", "drill_laser"]
+    },
+    "radioactive_laser": {
+        "name": "放射性レーザー",
+        "equip_slot": "drill_attachment",
+        "drill_attachment_status": {
+            "fuel_multiplier": 1.25,
+            "additional_chance": 0.5,
+            "radiation_limit": 50
+        },
+        "tag": ["equippable", "drill_laser", "radioactive_laser"]
+    },
+
+    "black_bronze_knife": {
+        "name": "ブラックブロンズのナイフ",
+        "breakability": 0,
+        "tag": ["knife"]
+    },
+    "knife": {
+        "name": "ナイフ",
+        "breakability": 10,
+        "shop_amount": 1,
+        "tag": ["knife", "spawnable_in_shop"]
+    },
+    "copper_knife": {
+        "name": "銅のナイフ",
+        "breakability": 7,
+        "tag": ["knife"]
+    },
+    "steel_knife": {
+        "name": "鋼鉄のナイフ",
+        "breakability": 5,
+        "tag": ["knife"]
+    },
+
+    "reinforced_boots": {
+        "name": "補強されたブーツ",
+        "breakability": 0,
+        "tag": ["boots"]
+    },
+    "leather_boots": {
+        "name": "革のブーツ",
+        "breakability": 7,
+        "tag": ["boots"]
+    },
+
+    "reinforced_gloves": {
+        "name": "補強された手袋",
+        "breakability": 0,
+        "tag": ["gloves"]
+    },
+    "sturdy_gloves": {
+        "name": "丈夫な手袋",
+        "breakability": 5,
+        "tag": ["gloves"]
+    },
+
+
+    "fishing_rod": {
+        "name": "釣り竿",
+        "shop_amount": 1,
+        "fishing_status": {
+            "power": 5,
+            "stamina": 10,
+            "chance": 0,
+            "miss_chance": 15
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod","spawnable_in_shop"]
+    },
+    "apprentice_rod": {
+        "name": "見習いの釣り竿",
+        "fishing_status": {
+            "power": 10,
+            "stamina": 10,
+            "chance": 3,
+            "miss_chance": 12
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "expert_rod": {
+        "name": "熟練の釣り竿",
+        "fishing_status": {
+            "power": 15,
+            "stamina": 10,
+            "chance": 5,
+            "miss_chance": 10
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "master_rod": {
+        "name": "達人の釣り竿",
+        "fishing_status": {
+            "power": 20,
+            "stamina": 10,
+            "chance": 10,
+            "miss_chance": 8
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "legend_rod": {
+        "name": "伝説の釣り竿",
+        "fishing_status": {
+            "power": 25,
+            "stamina": 9,
+            "chance": 15,
+            "miss_chance": 5
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "lucky_rod": {
+        "name": "幸運の釣り竿",
+        "value": 300,
+        "fishing_status": {
+            "power": 20,
+            "stamina": 11,
+            "chance": 30,
+            "miss_chance": 15
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "tough_rod": {
+        "name": "強靭な釣り竿",
+        "value": 270,
+        "fishing_status": {
+            "power": 20,
+            "stamina": 11,
+            "chance": 2,
+            "miss_chance": 1
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "light_rod": {
+        "name": "軽い釣り竿",
+        "value": 120,
+        "fishing_status": {
+            "power": 10,
+            "stamina": 8,
+            "chance": 2,
+            "miss_chance": 20
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "shiny_rod": {
+        "name": "輝く釣り竿",
+        "fishing_status": {
+            "power": 39,
+            "stamina": 9,
+            "chance": 4,
+            "miss_chance": 15
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "crystal_rod": {
+        "name": "結晶の釣り竿",
+        "fishing_status": {
+            "power": 42,
+            "stamina": 9,
+            "chance": 6,
+            "miss_chance": 15
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "dwarven_rod": {
+        "name": "ドワーフの釣り竿",
+        "fishing_status": {
+            "power": 46,
+            "stamina": 11,
+            "chance": 15,
+            "miss_chance": 10
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "advanced_dwarven_rod": {
+        "name": "進化したドワーフの釣り竿",
+        "fishing_status": {
+            "power": 52,
+            "stamina": 10,
+            "chance": 15,
+            "miss_chance": 8
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+    "abyssal_rod": {
+        "name": "深淵の釣り竿",
+        "fishing_status": {
+            "power": 60,
+            "stamina": 9,
+            "chance": 20,
+            "miss_chance": 3
+        },
+        "equip_slot": "fishing_rod",
+        "tag": ["equippable","fishing_rod"]
+    },
+
+
+    "basic_bait": {
+        "name": "基本の餌",
+        "shop_amount": 1,
+        "power": 7,
+        "additional_chance": 4,
+        "tag": ["bait", "spawnable_in_shop"]
+    },
+    "delicious_bait": {
+        "name": "おいしい餌",
+        "power": 10,
+        "additional_chance": 8,
+        "tag": ["bait"]
+    },
+    "rare_bait": {
+        "name": "レア魚の餌",
+        "power": 6,
+        "additional_chance": 5,
+        "additional_loot": {
+            "pond": ["carp"],
+            "river": ["salmon"],
+            "beach": ["flounder"],
+            "ocean": ["tuna", "pufferfish", "pufferfish"],
+            "deep_ocean": ["pufferfish", "pearl"],
+            "subterranean_lake": ["pufferfish", "pearl"],
+            "abyss_fishing_pond": ["pufferfish", "pearl", "pearl"]
+        },
+        "tag": ["bait"]
+    },
+    "treasure_bait": {
+        "name": "お宝の餌",
+        "power": 4,
+        "additional_chance": 2,
+        "additional_loot": {
+            "pond": ["crate", "crate", "crate"],
+            "river": ["crate", "crate", "crate"],
+            "beach": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest"],
+            "ocean": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest"],
+            "deep_ocean": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate"],
+            "subterranean_lake": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate", "golden_crate", "abyssal_treasure_chest"],
+            "abyss_fishing_pond": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate", "golden_crate", "abyssal_treasure_chest", "abyssal_treasure_chest"]
+        },
+        "tag": ["bait"]
+    },
+
+
+    "black_bronze_saw": {
+        "name": "ブラックブロンズのノコギリ",
+        "breakability": 0,
+        "tag": ["saw", "saw_t2", "saw_t3"]
+    },
+    "saw": {
+        "name": "ノコギリ",
+        "shop_amount": 1,
+        "breakability": 10,
+        "tag": ["saw", "spawnable_in_shop"]
+    },
+    "copper_saw": {
+        "name": "銅のノコギリ",
+        "breakability": 7,
+        "tag": ["saw", "saw_t2"]
+    },
+    "steel_saw": {
+        "name": "鋼鉄のノコギリ",
+        "breakability": 5,
+        "tag": ["saw", "saw_t2", "saw_t3"]
+    },
+    "forge": {
+        "name": "鍛造機",
+        "breakability": 0,
+        "tag": ["furnace", "hammer", "anvil", "charcoal_kiln", "refiner", "forge"]
+    },
+    "black_bronze_anvil": {
+        "name": "ブラックブロンズの金床",
+        "breakability": 0,
+        "tag": ["hammer", "anvil"]
+    },
+    "steel_hammer": {
+        "name": "鋼鉄のハンマー",
+        "breakability": 10,
+        "tag": ["hammer"]
+    },
+    "furnace": {
+        "name": "炉",
+        "breakability": 0,
+        "tag": ["furnace"]
+    },
+    "loom": {
+        "name": "織機",
+        "breakability": 0,
+        "tag": ["loom"]
+    },
+    "recycler": {
+        "name": "リサイクラー",
+        "breakability": 0,
+        "tag": ["recycler"]
+    },
+    "refiner": {
+        "name": "精製機",
+        "breakability": 0,
+        "tag": ["furnace", "charcoal_kiln", "refiner"]
+    },
+    "charcoal_kiln": {
+        "name": "炭窯",
+        "breakability": 5,
+        "tag": ["charcoal_kiln"]
+    },
+    "machine_loom": {
+        "name": "電動織機",
+        "breakability": 0,
+        "tag": ["loom", "loom_t2"]
+    },
+    "fisherman_station": {
+        "name": "釣り人の作業場",
+        "breakability": 0,
+        "tag": ["fisherman_station"]
+    },
+    "reaction_chamber": {
+        "name": "反応炉",
+        "breakability": 0,
+        "tag": ["reaction_chamber"]
+    },
+    "atomic_reactor": {
+        "name": "原子炉",
+        "breakability": 0,
+        "tag": ["atomic_reactor"]
+    },
+
+
+    "rest_charm": {
+        "name": "休息のお守り",
+        "rest_stamina": 3,
+        "equip_slot": "accessory",
+        "equip_type": "rest",
+        "tag": ["equippable", "acc_rest"]
+    },
+    "rest_ring": {
+        "name": "休息のリング",
+        "rest_stamina": 4,
+        "equip_slot": "accessory",
+        "equip_type": "rest",
+        "tag": ["equippable", "acc_rest"]
+    },
+    "rest_artifact": {
+        "name": "休息のアーティファクト",
+        "rest_stamina": 5,
+        "equip_slot": "accessory",
+        "equip_type": "rest",
+        "tag": ["equippable", "acc_rest"]
+    },
+
+    "mining_charm": {
+        "name": "採掘のお守り",
+        "additional_chance": 6,
+        "equip_slot": "accessory",
+        "equip_type": "mining",
+        "tag": ["equippable", "acc_mining"]
+    },
+    "mining_ring": {
+        "name": "採掘のリング",
+        "additional_chance": 9,
+        "equip_slot": "accessory",
+        "equip_type": "mining",
+        "tag": ["equippable", "acc_mining"]
+    },
+    "mining_artifact": {
+        "name": "採掘のアーティファクト",
+        "additional_chance": 12,
+        "equip_slot": "accessory",
+        "equip_type": "mining",
+        "tag": ["equippable", "acc_mining"]
+    },
+    "mining_relic": {
+        "name": "採掘のレリック",
+        "additional_chance": 15,
+        "equip_slot": "accessory",
+        "equip_type": "mining",
+        "tag": ["equippable", "acc_mining"]
+    },
+
+    "money_charm": {
+        "name": "金運のお守り",
+        "money_chance": 23,
+        "equip_slot": "accessory",
+        "equip_type": "money",
+        "tag": ["equippable", "acc_money"]
+    },
+    "money_ring": {
+        "name": "金運のリング",
+        "money_chance": 28,
+        "equip_slot": "accessory",
+        "equip_type": "money",
+        "tag": ["equippable", "acc_money"]
+    },
+    "money_artifact": {
+        "name": "金運のアーティファクト",
+        "money_chance": 33,
+        "equip_slot": "accessory",
+        "equip_type": "money",
+        "tag": ["equippable", "acc_money"]
+    },
+
+    "fishing_charm": {
+        "name": "釣りのお守り",
+        "power": 4,
+        "equip_slot": "accessory",
+        "equip_type": "fish_power",
+        "tag": ["equippable", "acc_fish_power"]
+    },
+    "fishing_ring": {
+        "name": "釣りのリング",
+        "power": 7,
+        "equip_slot": "accessory",
+        "equip_type": "fish_power",
+        "tag": ["equippable", "acc_fish_power"]
+    },
+    "fishing_artifact": {
+        "name": "釣りのアーティファクト",
+        "power": 10,
+        "equip_slot": "accessory",
+        "equip_type": "fish_power",
+        "tag": ["equippable", "acc_fish_power"]
+    },
+    "fishing_relic": {
+        "name": "釣りのレリック",
+        "power": 13,
+        "equip_slot": "accessory",
+        "equip_type": "fish_power",
+        "tag": ["equippable", "acc_fish_power"]
+    },
+
+    "biting_charm": {
+        "name": "入れ食いのお守り",
+        "additional_chance": 6,
+        "equip_slot": "accessory",
+        "equip_type": "fish_chance",
+        "tag": ["equippable", "acc_fishing_chance"]
+    },
+    "biting_ring": {
+        "name": "入れ食いのリング",
+        "additional_chance": 9,
+        "equip_slot": "accessory",
+        "equip_type": "fish_chance",
+        "tag": ["equippable", "acc_fishing_chance"]
+    },
+    "biting_artifact": {
+        "name": "入れ食いのアーティファクト",
+        "additional_chance": 12,
+        "equip_slot": "accessory",
+        "equip_type": "fish_chance",
+        "tag": ["equippable", "acc_fishing_chance"]
+    },
+
+    "crafting_charm": {
+        "name": "工作のお守り",
+        "stamina_reduce_chance": 15,
+        "equip_slot": "accessory",
+        "equip_type": "crafting",
+        "tag": ["equippable", "acc_crafting"]
+    },
+    "crafting_ring": {
+        "name": "工作のリング",
+        "stamina_reduce_chance": 25,
+        "equip_slot": "accessory",
+        "equip_type": "crafting",
+        "tag": ["equippable", "acc_crafting"]
+    },
+    "crafting_artifact": {
+        "name": "工作のアーティファクト",
+        "stamina_reduce_chance": 35,
+        "equip_slot": "accessory",
+        "equip_type": "crafting",
+        "tag": ["equippable", "acc_crafting"]
+    },
+
+    "radiation_shield": {
+        "name": "放射線シールド",
+        "radiation_resistance": 50,
+        "max_radiation": 80,
+        "equip_slot": "accessory",
+        "equip_type": "radiation_shield",
+        "tag": ["equippable", "acc_radiation"]
+    },
+    "reinforced_radiation_shield": {
+        "name": "強化放射線シールド",
+        "radiation_resistance": 75,
+        "max_radiation": 60,
+        "equip_slot": "accessory",
+        "equip_type": "radiation_shield",
+        "tag": ["equippable", "acc_radiation"]
+    },
+
+    "immune_boosting_unit": {
+        "name": "免疫促進ユニット",
+        "radiation_decrease_multiplier": 9,
+        "equip_slot": "accessory",
+        "equip_type": "radiation_unit",
+        "tag": ["equippable", "acc_radiation_decrease"]
+    },
+    "immunosuppression_unit": {
+        "name": "免疫抑制ユニット",
+        "radiation_immune": 25,
+        "equip_slot": "accessory",
+        "equip_type": "radiation_unit",
+        "tag": ["equippable", "acc_radiation_suppress"]
+    },
+
+    "radiation_stopper": {
+        "name": "放射線停滞装置",
+        "radiation_resistance": 90,
+        "radiation_immune": 10,
+        "max_radiation": 50,
+        "equip_slot": "accessory",
+        "equip_type": "radiation_unit",
+        "tag": ["equippable", "acc_radiation_suppress", "acc_radiation"]
+    },
+
+    "robot_arm": {
+        "name": "ロボットアーム",
+        "stamina_reduce": 2,
+        "equip_slot": "accessory",
+        "equip_type": "robot_arm",
+        "tag": ["equippable", "acc_explore"]
+    },
+
+    "atomic_arm": {
+        "name": "アトミックアーム",
+        "stamina_reduce": 2,
+        "radiation_effect": 0.35,
+        "radiation_debuff": 1.75,
+        "radiation_limit": 30,
+        "equip_slot": "accessory",
+        "equip_type": "robot_arm",
+        "tag": ["equippable", "acc_explore", "acc_radiation_effect"]
+    },
+
+    
+    "small_energy_drink": {
+        "name": "エナジードリンク(小)",
+        "value": 25,
+        "shop_amount": 1,
+        "stamina_restore": 10,
+        "tag": ["consumable", "con_stamina", "spawnable_in_shop"]
+    },
+    "medium_energy_drink": {
+        "name": "エナジードリンク(中)",
+        "value": 100,
+        "stamina_restore": 30,
+        "shop_amount": 1,
+        "tag": ["consumable", "con_stamina", "spawnable_in_shop"]
+    },
+    "large_energy_drink": {
+        "name": "エナジードリンク(大)",
+        "value": 250,
+        "shop_amount": 1,
+        "stamina_restore": 60,
+        "tag": ["consumable", "con_stamina", "spawnable_in_shop"]
+    },
+    "greater_energy_drink": {
+        "name": "エナジードリンク(特大)",
+        "value": 450,
+        "shop_amount": 1,
+        "stamina_restore": 90,
+        "tag": ["consumable", "con_stamina", "spawnable_in_shop"]
+    },
+    "massive_energy_drink": {
+        "name": "エナジードリンク(超特大)",
+        "value": 625,
+        "shop_amount": 1,
+        "stamina_restore": 120,
+        "tag": ["consumable", "con_stamina", "spawnable_in_shop"]
+    },
+
+    "solid_fuel": {
+        "name": "固形燃料",
+        "fuel_restore": 25,
+        "tag": ["consumable", "con_fuel"]
+    },
+    "sulfide_fuel": {
+        "name": "硫化燃料",
+        "fuel_restore": 125,
+        "tag": ["consumable", "con_fuel"]
+    },
+    "bio_fuel": {
+        "name": "バイオ燃料",
+        "value": 43,
+        "shop_amount": 1,
+        "fuel_restore": 100,
+        "tag": ["consumable", "con_fuel", "spawnable_in_shop"]
+    },
+
+    "radiation_remover": {
+        "name": "放射線除染剤",
+        "radiation_remove": 50,
+        "tag": ["consumable", "con_radiation"]
+    },
+    
+    "common_geode": {
+        "name": "ジオード",
+        "value": 150,
+        "table": "common_geode",
+        "tag": ["consumable", "con_loot"]
+    },
+    "rare_geode": {
+        "name": "希少なジオード",
+        "value": 500,
+        "table": "rare_geode",
+        "tag": ["consumable", "con_loot"]
+    },
+    "lava_geode": {
+        "name": "溶岩のジオード",
+        "value": 250,
+        "table": "lava_geode",
+        "tag": ["consumable", "con_loot"]
+    },
+    "radioactive_geode": {
+        "name": "放射性のジオード",
+        "value": 550,
+        "table": "radioactive_geode",
+        "tag": ["consumable", "con_loot"]
+    },
+    "crate": {
+        "name": "木箱",
+        "value": 35,
+        "table": "crate",
+        "tag": ["consumable", "con_loot"]
+    },
+    "treasure_chest": {
+        "name": "宝箱",
+        "value": 75,
+        "table": "treasure_chest",
+        "tag": ["consumable", "con_loot"]
+    },
+    "golden_crate": {
+        "name": "金の箱",
+        "value": 125,
+        "table": "golden_crate",
+        "tag": ["consumable", "con_loot"]
+    },
+    "abyssal_treasure_chest": {
+        "name": "深淵の宝箱",
+        "value": 200,
+        "table": "abyssal_treasure_chest",
+        "tag": ["consumable", "con_loot"]
+    }
+}

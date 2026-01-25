@@ -1,0 +1,2309 @@
+[
+    {
+        "result": "saw",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 5,
+        "xp": 2,
+        "ingredient": {
+            "wood": 1,
+            "stone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "planks",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 2,
+        "xp": 1,
+        "ingredient": {
+            "wood": 1
+        },
+        "default": true
+    },
+    {
+        "result": "pickaxe",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 3,
+        "ingredient": {
+            "planks": 1,
+            "stone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "furnace",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 10,
+        "xp": 5,
+        "ingredient": {
+            "stone":2,
+            "coal": 1,
+            "copper": 1
+        },
+        "default": true
+    },
+    {
+        "result": "copper_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "copper": 1,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "copper_pickaxe",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 5,
+        "ingredient": {
+            "planks": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "iron_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "iron": 1,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "steel_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "iron_ingot": 1,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "steel_hammer",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 6,
+        "ingredient": {
+            "planks": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "steel_pickaxe",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 10,
+        "xp": 8,
+        "ingredient": {
+            "steel_ingot": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "gold_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "gold": 2,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rose_gold_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "gold_ingot": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rest_charm",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 5,
+        "xp": 8,
+        "ingredient": {
+            "crystal": 1,
+            "iron_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rest_ring",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 10,
+        "xp": 10,
+        "ingredient": {
+            "rest_charm": 1,
+            "steel_ingot": 1,
+            "rose_gold_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rest_artifact",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 20,
+        "xp": 20,
+        "ingredient": {
+            "rest_ring": 1,
+            "crystal": 1,
+            "silk": 1,
+            "black_bronze_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "copper_plate",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "copper_ingot": 3
+        },
+        "default": true
+    },
+    {
+        "result": "steel_plate",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "steel_ingot": 3
+        },
+        "default": true
+    },
+    {
+        "result": "gold_plate",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "gold_ingot": 3
+        },
+        "default": true
+    },
+    {
+        "result": "silver_plate",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "silver_ingot": 3
+        },
+        "default": true
+    },
+    {
+        "result": "money_charm",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 2,
+        "xp": 6,
+        "ingredient": {
+            "gold_ingot": 2
+        },
+        "default": true
+    },
+    {
+        "result": "money_ring",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 4,
+        "xp": 9,
+        "ingredient": {
+            "money_charm": 1, 
+            "gold_plate": 1
+        },
+        "default": true
+    },
+    {
+        "result": "money_artifact",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 7,
+        "xp": 13,
+        "ingredient": {
+            "money_ring": 1,
+            "gold_plate": 2
+        },
+        "default": true
+    },
+    {
+        "result": "knife",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 3,
+        "ingredient": {
+            "planks": 1,
+            "stone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "leather_boots",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 5,
+        "xp": 5,
+        "ingredient": {
+            "leather": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "copper_saw",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 5,
+        "ingredient": {
+            "planks": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "hard_planks",
+        "tool": "copper_saw",
+        "tool_tag": "saw_t2",
+        "stamina": 3,
+        "xp": 2,
+        "ingredient": {
+            "hard_wood": 1
+        },
+        "default": true
+    },
+    {
+        "result": "loom",
+        "tool": "copper_saw",
+        "tool_tag": "saw_t2",
+        "stamina": 7,
+        "xp": 6,
+        "ingredient": {
+            "hard_planks": 1,
+            "leather": 1,
+            "iron_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "silk",
+        "tool": "loom",
+        "tool_tag": "loom",
+        "stamina": 3,
+        "xp": 3,
+        "ingredient": {
+            "string": 2
+        },
+        "default": true
+    },
+    {
+        "result": "sturdy_gloves",
+        "tool": "loom",
+        "tool_tag": "loom",
+        "stamina": 10,
+        "xp": 8,
+        "ingredient": {
+            "silk": 1,
+            "leather": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "silver_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "silver": 1,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "black_bronze_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 3,
+        "xp": 6,
+        "ingredient": {
+            "copper_ingot": 1,
+            "gold_ingot": 1,
+            "silver_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "black_bronze_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "rose_gold_ingot": 1,
+            "silver_ingot": 1
+        }
+    },
+    {
+        "result": "black_bronze_anvil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 10,
+        "xp": 12,
+        "ingredient": {
+            "black_bronze_ingot": 1,
+            "steel_hammer": 1
+        },
+        "default": true
+    },
+    {
+        "result": "black_bronze_pickaxe",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 12,
+        "xp": 15,
+        "ingredient": {
+            "black_bronze_ingot": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "crystal_pickaxe",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 20,
+        "xp": 20,
+        "ingredient": {
+            "black_bronze_pickaxe": 1,
+            "crystal": 1,
+            "ruby": 1
+        },
+        "default": true
+    },
+    {
+        "result": "charcoal_kiln",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 5,
+        "xp": 3,
+        "ingredient": {
+            "stone": 3,
+            "iron_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "coal",
+        "tool": "charcoal_kiln",
+        "tool_tag": "charcoal_kiln",
+        "stamina": 2,
+        "xp": 1,
+        "ingredient": {
+            "wood": 2
+        }
+    },
+    {
+        "result": "coal",
+        "tool": "charcoal_kiln",
+        "tool_tag": "charcoal_kiln",
+        "stamina": 4,
+        "xp": 1,
+        "ingredient": {
+            "hard_wood": 1
+        }
+    },
+    {
+        "result": "steel_saw",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 10,
+        "xp": 8,
+        "ingredient": {
+            "steel_ingot": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "black_bronze_saw",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 12,
+        "xp": 15,
+        "ingredient": {
+            "black_bronze_ingot": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "recycler",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 8,
+        "xp": 12,
+        "ingredient": {
+            "scrap": 2,
+            "steel_ingot": 2
+        },
+        "default": true
+    },
+    {
+        "result": "titanium",
+        "tool": "recycler",
+        "tool_tag": "recycler",
+        "stamina": 1,
+        "xp": 4,
+        "ingredient": {
+            "scrap": 2
+        }
+    },
+    {
+        "result": "steel_ingot",
+        "tool": "recycler",
+        "tool_tag": "recycler",
+        "stamina": 4,
+        "xp": 4,
+        "ingredient": {
+            "scrap": 4
+        }
+    },
+    {
+        "result": "gold_shard",
+        "tool": "recycler",
+        "tool_tag": "recycler",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "scrap": 2
+        },
+        "default": true
+    },
+    {
+        "result": "gold_ingot",
+        "tool": "recycler",
+        "tool_tag": "recycler",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "gold_shard": 2
+        }
+    },
+    {
+        "result": "gold_ingot",
+        "tool": "recycler",
+        "tool_tag": "recycler",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "gold_shard": 1,
+            "gold": 1
+        }
+    },
+    {
+        "result": "refiner",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 8,
+        "xp": 10,
+        "ingredient": {
+            "furnace": 1,
+            "charcoal_kiln": 1,
+            "titanium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "scrap",
+        "tool": "refiner",
+        "tool_tag": "refiner",
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "trash": 2
+        }
+    },
+    {
+        "result": "refined_titanium",
+        "tool": "refiner",
+        "tool_tag": "refiner",
+        "stamina": 1,
+        "xp": 3,
+        "ingredient": {
+            "titanium": 2
+        },
+        "default": true
+    },
+    {
+        "result": "refined_tungsten",
+        "tool": "refiner",
+        "tool_tag": "refiner",
+        "stamina": 1,
+        "xp": 3,
+        "ingredient": {
+            "tungsten": 2
+        },
+        "default": true
+    },
+    {
+        "result": "battery",
+        "tool": "refiner",
+        "tool_tag": "refiner",
+        "stamina": 4,
+        "xp": 8,
+        "ingredient": {
+            "broken_battery": 1,
+            "refined_titanium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "robot_arm",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 6,
+        "xp": 15,
+        "ingredient": {
+            "battery": 1,
+            "compressed_tungsten": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mining_charm",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 6,
+        "xp": 15,
+        "ingredient": {
+            "refined_titanium": 1,
+            "black_bronze_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mining_ring",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 8,
+        "xp": 16,
+        "ingredient": {
+            "mining_charm": 1,
+            "amethyst": 1,
+            "compressed_tungsten": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mining_artifact",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 15,
+        "xp": 19,
+        "ingredient": {
+            "mining_ring": 1,
+            "fine_sapphire": 1,
+            "refined_cobalt": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mining_relic",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 20,
+        "xp": 25,
+        "ingredient": {
+            "mining_artifact": 1,
+            "mixed_gemstone": 1,
+            "compressed_iridium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "titanium_pickaxe",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 10,
+        "xp": 13,
+        "ingredient": {
+            "crystal_pickaxe": 1,
+            "refined_titanium": 1,
+            "silver_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "compressed_tungsten",
+        "tool": "refiner",
+        "tool_tag": "refiner",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "refined_tungsten": 2
+        },
+        "default": true
+    },
+    {
+        "result": "copper_knife",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 5,
+        "ingredient": {
+            "copper_ingot": 1,
+            "planks": 1
+        },
+        "default": true
+    },
+    {
+        "result": "steel_knife",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 10,
+        "xp": 8,
+        "ingredient": {
+            "steel_ingot": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "black_bronze_knife",
+        "tool": "steel_hammer",
+        "tool_tag": "hammer",
+        "stamina": 12,
+        "xp": 15,
+        "ingredient": {
+            "black_bronze_ingot": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "machine_loom",
+        "tool": "black_bronze_anvil",
+        "tool_tag": "anvil",
+        "stamina": 11,
+        "xp": 14,
+        "ingredient": {
+            "loom": 1,
+            "titanium": 1,
+            "steel_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "reinforced_boots",
+        "tool": "machine_loom",
+        "tool_tag": "loom_t2",
+        "stamina": 10,
+        "xp": 13,
+        "ingredient": {
+            "leather_boots": 1,
+            "titanium": 1,
+            "string": 1
+        },
+        "default": true
+    },
+    {
+        "result": "reinforced_gloves",
+        "tool": "machine_loom",
+        "tool_tag": "loom_t2",
+        "stamina": 10,
+        "xp": 13,
+        "ingredient": {
+            "sturdy_gloves": 1,
+            "titanium": 1,
+            "string": 1
+        },
+        "default": true
+    },
+    {
+        "result": "stone_chunk",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "stone": 4
+        },
+        "default": true
+    },
+    {
+        "result": "stone_matrix",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "stone_chunk": 4
+        },
+        "default": true
+    },
+    {
+        "result": "forge",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 10,
+        "xp": 12,
+        "ingredient": {
+            "refiner": 1,
+            "black_bronze_anvil": 1,
+            "refined_tungsten": 1,
+            "refined_titanium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fine_crystal",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "crystal": 2
+        },
+        "default": true
+    },
+    {
+        "result": "flawless_crystal",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "fine_crystal": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fine_amethyst",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "amethyst": 2
+        },
+        "default": true
+    },
+    {
+        "result": "flawless_amethyst",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "fine_amethyst": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fine_emerald",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "emerald": 2
+        },
+        "default": true
+    },
+    {
+        "result": "flawless_emerald",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "fine_emerald": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fine_sapphire",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "sapphire": 2
+        },
+        "default": true
+    },
+    {
+        "result": "flawless_sapphire",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "fine_sapphire": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fine_diamond",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "diamond": 2
+        },
+        "default": true
+    },
+    {
+        "result": "flawless_diamond",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 4,
+        "ingredient": {
+            "fine_diamond": 2
+        },
+        "default": true
+    },
+    {
+        "result": "mixed_gemstone",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 3,
+        "xp": 6,
+        "ingredient": {
+            "stone_matrix": 1,
+            "fine_crystal": 1,
+            "fine_amethyst": 1,
+            "fine_emerald": 1,
+            "fine_sapphire": 1,
+            "fine_diamond": 1
+        },
+        "default": true
+    },
+    {
+        "result": "refined_cobalt",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "cobalt": 2
+        },
+        "default": true
+    },
+    {
+        "result": "compressed_cobalt",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "refined_cobalt": 2
+        },
+        "default": true
+    },
+    {
+        "result": "refined_iridium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "iridium": 2
+        },
+        "default": true
+    },
+    {
+        "result": "compressed_iridium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "refined_iridium": 2
+        },
+        "default": true
+    },
+    {
+        "result": "drill_engine",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 4,
+        "xp": 7,
+        "ingredient": {
+            "refined_cobalt": 1,
+            "refined_titanium": 1,
+            "copper_plate": 1
+        },
+        "default": true
+    },
+    {
+        "result": "advanced_drill_engine",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 6,
+        "xp": 10,
+        "ingredient": {
+            "drill_engine": 1,
+            "advanced_engine_part": 1,
+            "precision_mechanism": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mythical_drill_engine",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 8,
+        "xp": 20,
+        "ingredient": {
+            "advanced_drill_engine": 1,
+            "mythical_fragment": 2,
+            "precision_mechanism": 1
+        },
+        "default": true
+    },
+    {
+        "result": "solid_fuel",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 3,
+        "ingredient": {
+            "coal": 2
+        },
+        "default": true
+    },
+    {
+        "result": "drill_t0",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 5,
+        "xp": 7,
+        "ingredient": {
+            "compressed_tungsten": 2,
+            "amethyst": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_g1",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 7,
+        "xp": 10,
+        "ingredient": {
+            "drill_engine": 1,
+            "flawless_amethyst": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_g2",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 10,
+        "xp": 12,
+        "ingredient": {
+            "drill_g1": 1,
+            "flawless_emerald": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_g3",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 15,
+        "xp": 17,
+        "ingredient": {
+            "drill_g2": 1,
+            "flawless_sapphire": 1,
+            "precision_mechanism": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_g4",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 20,
+        "xp": 24,
+        "ingredient": {
+            "drill_g3": 1,
+            "mixed_gemstone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_m1",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 10,
+        "xp": 12,
+        "ingredient": {
+            "drill_engine": 1,
+            "flawless_emerald": 1,
+            "compressed_cobalt": 2
+        },
+        "default": true
+    },
+    {
+        "result": "drill_m2",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 12,
+        "xp": 15,
+        "ingredient": {
+            "drill_m1": 1,
+            "flawless_sapphire": 1,
+            "compressed_cobalt": 3
+        },
+        "default": true
+    },
+    {
+        "result": "drill_m3",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 15,
+        "xp": 17,
+        "ingredient": {
+            "drill_m2": 1,
+            "advanced_drill_engine": 1,
+            "compressed_iridium": 2
+        },
+        "default": true
+    },
+    {
+        "result": "drill_m4",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 20,
+        "xp": 24,
+        "ingredient": {
+            "drill_m3": 1,
+            "flawless_diamond": 1,
+            "compressed_iridium": 3
+        },
+        "default": true
+    },
+    {
+        "result": "drill_m5",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 25,
+        "xp": 30,
+        "ingredient": {
+            "drill_m4": 1,
+            "mixed_gemstone": 2,
+            "compressed_iridium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "drill_mx",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 30,
+        "xp": 50,
+        "ingredient": {
+            "drill_m5": 1,
+            "mythical_drill_engine": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fishing_rod",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 2,
+        "ingredient": {
+            "wood": 1,
+            "planks": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "bass": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "trout": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "carp": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "char": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "pond_smelt": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "salmon": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "sardine": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "herring": 2
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "mackerel": 1
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "flounder": 1
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "sea_bream": 1
+        }
+    },
+    {
+        "result": "fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "scorpionfish": 1
+        }
+    },
+    {
+        "result": "rich_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 1,
+        "ingredient": {
+            "tuna": 1
+        }
+    },
+    {
+        "result": "rich_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 1,
+        "ingredient": {
+            "pufferfish": 1
+        }
+    },
+    {
+        "result": "rich_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 1,
+        "ingredient": {
+            "fish_oil": 2
+        },
+        "default": true
+    },
+    {
+        "result": "extra_rich_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "rich_fish_oil": 2
+        },
+        "default": true
+    },
+    {
+        "result": "fisherman_station",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 10,
+        "xp": 7,
+        "ingredient": {
+            "planks": 1,
+            "fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "tin_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "tin": 2,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "chrome_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "chrome": 2,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "apprentice_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 8,
+        "xp": 6,
+        "ingredient": {
+            "fishing_rod": 1,
+            "tin": 1,
+            "fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "expert_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 12,
+        "xp": 10,
+        "ingredient": {
+            "apprentice_rod": 1,
+            "aquamarine": 1,
+            "tin_ingot": 1,
+            "rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "master_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 15,
+        "xp": 16,
+        "ingredient": {
+            "expert_rod": 1,
+            "ruby": 1,
+            "chrome_ingot": 1,
+            "extra_rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "legend_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 20,
+        "xp": 24,
+        "ingredient": {
+            "master_rod": 1,
+            "opal": 1,
+            "chrome_ingot": 1,
+            "extra_rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "basic_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "delicious_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rare_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "bass": 1
+        },
+        "default": true
+    },
+    {
+        "result": "rare_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "pond_smelt": 1
+        }
+    },
+    {
+        "result": "rare_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "mackerel": 1
+        }
+    },
+    {
+        "result": "rare_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "scorpionfish": 1
+        }
+    },
+    {
+        "result": "rare_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "squid": 1
+        }
+    },
+    {
+        "result": "treasure_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "tin": 1
+        },
+        "default": true
+    },
+    {
+        "result": "treasure_bait",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "rich_fish_oil": 1,
+            "chrome": 1
+        }
+    },
+    {
+        "result": "fishing_charm",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 5,
+        "xp": 3,
+        "ingredient": {
+            "carp": 1,
+            "fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fishing_ring",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 10,
+        "xp": 6,
+        "ingredient": {
+            "fishing_charm": 1,
+            "tin_ingot": 1,
+            "rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fishing_artifact",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 15,
+        "xp": 10,
+        "ingredient": {
+            "fishing_ring": 1,
+            "aquamarine": 1,
+            "chrome_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "fishing_relic",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 20,
+        "xp": 20,
+        "ingredient": {
+            "fishing_artifact": 1,
+            "dwarven_alloy": 1,
+            "mercury": 8,
+            "ultimate_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "biting_charm",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 6,
+        "xp": 4,
+        "ingredient": {
+            "aquamarine": 1,
+            "tin_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "biting_ring",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 12,
+        "xp": 8,
+        "ingredient": {
+            "biting_charm": 1,
+            "opal": 1,
+            "extra_rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "biting_artifact",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 15,
+        "xp": 12,
+        "ingredient": {
+            "biting_ring": 1,
+            "dwarven_alloy": 1,
+            "pearl": 8,
+            "ultimate_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "lead_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "lead": 2,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "platinum_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "platinum": 2,
+            "coal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "supreme_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "extra_rich_fish_oil": 2
+        },
+        "default": true
+    },
+    {
+        "result": "ultimate_fish_oil",
+        "tool": null,
+        "tool_tag": null,
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "supreme_fish_oil": 2
+        },
+        "default": true
+    },
+    {
+        "result": "dwarven_alloy",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 4,
+        "xp": 8,
+        "ingredient": {
+            "platinum_ingot": 1,
+            "lead_ingot": 1,
+            "citrine": 1,
+            "onyx": 1
+        },
+        "default": true
+    },
+    {
+        "result": "mercury_compound",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 5,
+        "xp": 7,
+        "ingredient": {
+            "mercury": 3,
+            "pearl": 2,
+            "tin_ingot": 1,
+            "chrome_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "abyssal_amalgam",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 8,
+        "xp": 10,
+        "ingredient": {
+            "mercury_compound": 1,
+            "abyssal_seed": 1,
+            "dwarven_alloy": 1,
+            "ultimate_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "abyssal_ingot",
+        "tool": "furnace",
+        "tool_tag": "furnace",
+        "stamina": 8,
+        "xp": 10,
+        "ingredient": {
+            "abyssal_amalgam": 2,
+            "aquamarine": 2,
+            "opal": 2
+        },
+        "default": true
+    },
+    {
+        "result": "shiny_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 8,
+        "xp": 13,
+        "ingredient": {
+            "chrome_ingot": 1,
+            "lead_ingot": 1,
+            "pearl": 1,
+            "extra_rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "crystal_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 10,
+        "xp": 15,
+        "ingredient": {
+            "shiny_rod": 1,
+            "lead_ingot": 1,
+            "citrine": 1,
+            "supreme_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "dwarven_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 12,
+        "xp": 18,
+        "ingredient": {
+            "crystal_rod": 1,
+            "platinum_ingot": 1,
+            "mercury": 1,
+            "supreme_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "advanced_dwarven_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 15,
+        "xp": 20,
+        "ingredient": {
+            "dwarven_rod": 1,
+            "dwarven_alloy": 1,
+            "onyx": 1,
+            "ultimate_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "abyssal_rod",
+        "tool": "fisherman_station",
+        "tool_tag": "fisherman_station",
+        "stamina": 20,
+        "xp": 28,
+        "ingredient": {
+            "advanced_dwarven_rod": 1,
+            "abyssal_ingot": 1,
+            "dwarven_alloy": 1,
+            "ultimate_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "crafting_charm",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "planks": 1,
+            "copper_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "crafting_ring",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 4,
+        "xp": 7,
+        "ingredient": {
+            "crafting_charm": 1,
+            "hard_planks": 1,
+            "iron_ingot": 1
+        },
+        "default": true
+    },
+    {
+        "result": "crafting_artifact",
+        "tool": "saw",
+        "tool_tag": "saw",
+        "stamina": 5,
+        "xp": 9,
+        "ingredient": {
+            "crafting_ring": 1,
+            "silver_ingot": 1,
+            "crystal": 1
+        },
+        "default": true
+    },
+    {
+        "result": "durable_plate",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 3,
+        "xp": 3,
+        "ingredient": {
+            "steel_plate": 3,
+            "compressed_tungsten": 4,
+            "refined_titanium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "conductive_plate",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 3,
+        "xp": 3,
+        "ingredient": {
+            "silver_plate": 2,
+            "gold_plate": 2,
+            "compressed_cobalt": 4,
+            "compressed_iridium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "reaction_chamber",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 7,
+        "xp": 9,
+        "ingredient": {
+            "conductive_plate": 1,
+            "durable_plate": 1,
+            "mixed_gemstone": 1,
+            "flawless_crystal": 4
+        },
+        "default": true
+    },
+    {
+        "result": "fluorescent_paint",
+        "tool": "reaction_chamber",
+        "tool_tag": "reaction_chamber",
+        "stamina": 2,
+        "xp": 3,
+        "ingredient": {
+            "coal": 2,
+            "flawless_emerald": 1,
+            "extra_rich_fish_oil": 1
+        },
+        "default": true
+    },
+    {
+        "result": "drill_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 6,
+        "xp": 8,
+        "ingredient": {
+            "conductive_plate": 1,
+            "fluorescent_paint": 1,
+            "flawless_sapphire": 2,
+            "mixed_gemstone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "obsidian_brick",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "obsidian": 8
+        },
+        "default": true
+    },
+    {
+        "result": "obsidian_glass",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "obsidian_brick": 8
+        },
+        "default": true
+    },
+    {
+        "result": "pure_beryllium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "beryllium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "dense_beryllium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "pure_beryllium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "pure_thorium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "thorium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "dense_thorium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "pure_thorium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "pure_uranium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "uranium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "dense_uranium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "pure_uranium": 4
+        },
+        "default": true
+    },
+    {
+        "result": "cut_garnet",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "garnet": 4
+        },
+        "default": true
+    },
+    {
+        "result": "perfect_garnet",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "cut_garnet": 4
+        },
+        "default": true
+    },
+    {
+        "result": "cut_topaz",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "topaz": 4
+        },
+        "default": true
+    },
+    {
+        "result": "perfect_topaz",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "cut_topaz": 4
+        },
+        "default": true
+    },
+    {
+        "result": "obsidian_glass",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "obsidian_brick": 8
+        },
+        "default": true
+    },
+    {
+        "result": "radiation_remover",
+        "tool": "reaction_chamber",
+        "tool_tag": "reaction_chamber",
+        "stamina": 3,
+        "xp": 4,
+        "ingredient": {
+            "coal": 4,
+            "sulfur": 2,
+            "garnet": 1
+        },
+        "default": true
+    },
+    {
+        "result": "sulfide_fuel",
+        "tool": "reaction_chamber",
+        "tool_tag": "reaction_chamber",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "solid_fuel": 1,
+            "sulfur": 2
+        },
+        "default": true
+    },
+    {
+        "result": "uranium",
+        "tool": "atomic_reactor",
+        "tool_tag": "atomic_reactor",
+        "stamina": 1,
+        "xp": 1,
+        "ingredient": {
+            "thorium": 2
+        }
+    },
+    {
+        "result": "robust_plate",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 3,
+        "xp": 5,
+        "ingredient": {
+            "durable_plate": 1,
+            "conductive_plate": 1,
+            "copper_plate": 3,
+            "dense_beryllium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "atomic_reactor",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 8,
+        "xp": 9,
+        "ingredient": {
+            "robust_plate": 1,
+            "dense_thorium": 1,
+            "uranium": 2,
+            "perfect_garnet": 1
+        },
+        "default": true
+    },
+    {
+        "result": "container",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 4,
+        "xp": 6,
+        "ingredient": {
+            "robust_plate": 1,
+            "obsidian_glass": 1,
+            "cut_topaz": 1
+        },
+        "default": true
+    },
+    {
+        "result": "contained_uranium",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 1,
+        "xp": 2,
+        "ingredient": {
+            "container": 1,
+            "dense_uranium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "plutonium",
+        "tool": "atomic_reactor",
+        "tool_tag": "atomic_reactor",
+        "stamina": 2,
+        "xp": 2,
+        "ingredient": {
+            "contained_uranium": 1,
+            "lava_stone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "super_battery",
+        "tool": "reaction_chamber",
+        "tool_tag": "reaction_chamber",
+        "stamina": 3,
+        "xp": 6,
+        "ingredient": {
+            "battery": 1,
+            "sulfur": 4,
+            "lava_stone": 1,
+            "fluorescent_paint": 1
+        },
+        "default": true
+    },
+    {
+        "result": "atomic_booster",
+        "tool": "reaction_chamber",
+        "tool_tag": "reaction_chamber",
+        "stamina": 4,
+        "xp": 7,
+        "ingredient": {
+            "super_battery": 1,
+            "plutonium": 1,
+            "precision_mechanism": 3,
+            "radiation_core": 2
+        },
+        "default": true
+    },
+    {
+        "result": "improved_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 7,
+        "xp": 10,
+        "ingredient": {
+            "drill_laser": 1,
+            "robust_plate": 1,
+            "cut_garnet": 1
+        },
+        "default": true
+    },
+    {
+        "result": "heated_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 8,
+        "xp": 11,
+        "ingredient": {
+            "improved_laser": 1,
+            "perfect_topaz": 1,
+            "dense_uranium": 1,
+            "super_battery": 1
+        },
+        "default": true
+    },
+    {
+        "result": "cooled_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 7,
+        "xp": 10,
+        "ingredient": {
+            "improved_laser": 1,
+            "perfect_topaz": 1,
+            "dense_thorium": 1,
+            "super_battery": 1
+        },
+        "default": true
+    },
+    {
+        "result": "adjusted_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 9,
+        "xp": 12,
+        "ingredient": {
+            "cooled_laser": 1,
+            "heated_laser": 1,
+            "plutonium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "radioactive_laser",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 12,
+        "xp": 15,
+        "ingredient": {
+            "adjusted_laser": 1,
+            "robust_plate": 2,
+            "atomic_booster": 1
+        },
+        "default": true
+    },
+    {
+        "result": "radiation_shield",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 7,
+        "xp": 10,
+        "ingredient": {
+            "dense_beryllium": 1,
+            "thorium": 2,
+            "conductive_plate": 1,
+            "obsidian_brick": 2
+        },
+        "default": true
+    },
+    {
+        "result": "reinforced_radiation_shield",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 9,
+        "xp": 14,
+        "ingredient": {
+            "radiation_shield": 1,
+            "durable_plate": 1,
+            "pure_uranium": 1,
+            "obsidian_glass": 1
+        },
+        "default": true
+    },
+    {
+        "result": "immune_boosting_unit",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 8,
+        "xp": 12,
+        "ingredient": {
+            "dense_thorium": 1,
+            "conductive_plate": 1,
+            "lava_stone": 1
+        },
+        "default": true
+    },
+    {
+        "result": "immunosuppression_unit",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 8,
+        "xp": 12,
+        "ingredient": {
+            "dense_uranium": 1,
+            "durable_plate": 1,
+            "super_battery": 1
+        },
+        "default": true
+    },
+    {
+        "result": "radiation_stopper",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 11,
+        "xp": 18,
+        "ingredient": {
+            "immunosuppression_unit": 1,
+            "reinforced_radiation_shield": 1,
+            "robust_plate": 1,
+            "plutonium": 1
+        },
+        "default": true
+    },
+    {
+        "result": "atomic_arm",
+        "tool": "forge",
+        "tool_tag": "forge",
+        "stamina": 15,
+        "xp": 22,
+        "ingredient": {
+            "robot_arm": 1,
+            "mythical_fragment": 2,
+            "shattered_arm_part": 1,
+            "atomic_booster": 1
+        },
+        "default": true
+    }
+]
