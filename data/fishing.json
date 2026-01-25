@@ -1,0 +1,477 @@
+{
+    "pond": {
+        "name": "池",
+        "level": 1,
+        "xp": 7,
+        "result": [
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 8
+            },
+            {
+                "id": "trout",
+                "weight": 4,
+                "power_min": 1,
+                "power_max": -1
+            },
+            {
+                "id": "bass",
+                "weight": 4,
+                "power_min": 5,
+                "power_max": -1
+            },
+            {
+                "id": "carp",
+                "weight": 3,
+                "power_min": 9,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 2,
+                "power_min": 9,
+                "power_max": -1
+            }
+        ]
+    },
+    "river": {
+        "name": "川",
+        "level": 7,
+        "xp": 10,
+        "result": [
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 8
+            },
+            {
+                "id": "stone",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 15
+            },
+            {
+                "id": "char",
+                "weight": 4,
+                "power_min": 5,
+                "power_max": -1
+            },
+            {
+                "id": "pond_smelt",
+                "weight": 4,
+                "power_min": 9,
+                "power_max": -1
+            },
+            {
+                "id": "salmon",
+                "weight": 3,
+                "power_min": 16,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 3,
+                "power_min": 16,
+                "power_max": -1
+            }
+        ]
+    },
+    "beach": {
+        "name": "海岸",
+        "level": 15,
+        "xp": 15,
+        "result": [
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 15
+            },
+            {
+                "id": "stone",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 19
+            },
+            {
+                "id": "sardine",
+                "weight": 5,
+                "power_min": 10,
+                "power_max": -1
+            },
+            {
+                "id": "herring",
+                "weight": 4,
+                "power_min": 10,
+                "power_max": -1
+            },
+            {
+                "id": "mackerel",
+                "weight": 5,
+                "power_min": 12,
+                "power_max": -1
+            },
+            {
+                "id": "flounder",
+                "weight": 4,
+                "power_min": 20,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 4,
+                "power_min": 20,
+                "power_max": -1
+            },
+            {
+                "id": "treasure_chest",
+                "weight": 2,
+                "power_min": 25,
+                "power_max": -1
+            }
+        ]
+    },
+    "ocean": {
+        "name": "海",
+        "level": 24,
+        "xp": 20,
+        "result": [
+            {
+                "id": "coal",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 13
+            },
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 17
+            },
+            {
+                "id": "stone",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 24
+            },
+            {
+                "id": "sea_bream",
+                "weight": 7,
+                "power_min": 14,
+                "power_max": -1
+            },
+            {
+                "id": "scorpionfish",
+                "weight": 6,
+                "power_min": 14,
+                "power_max": -1
+            },
+            {
+                "id": "squid",
+                "weight": 7,
+                "power_min": 16,
+                "power_max": -1
+            },
+            {
+                "id": "tuna",
+                "weight": 5,
+                "power_min": 18,
+                "power_max": -1
+            },
+            {
+                "id": "pufferfish",
+                "weight": 3,
+                "power_min": 25,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 5,
+                "power_min": 25,
+                "power_max": -1
+            },
+            {
+                "id": "treasure_chest",
+                "weight": 3,
+                "power_min": 30,
+                "power_max": -1
+            }
+        ]
+    },
+    "deep_ocean": {
+        "name": "深海",
+        "level": 32,
+        "xp": 22,
+        "result": [
+            {
+                "id": "coal",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 17
+            },
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 17
+            },
+            {
+                "id": "hard_wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 25
+            },
+            {
+                "id": "stone",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 30
+            },
+            {
+                "id": "mackerel",
+                "weight": 5,
+                "power_min": 17,
+                "power_max": -1
+            },
+            {
+                "id": "flounder",
+                "weight": 4,
+                "power_min": 23,
+                "power_max": -1
+            },
+            {
+                "id": "sea_bream",
+                "weight": 7,
+                "power_min": 19,
+                "power_max": -1
+            },
+            {
+                "id": "scorpionfish",
+                "weight": 6,
+                "power_min": 22,
+                "power_max": -1
+            },
+            {
+                "id": "squid",
+                "weight": 6,
+                "power_min": 25,
+                "power_max": -1
+            },
+            {
+                "id": "pufferfish",
+                "weight": 3,
+                "power_min": 30,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 5,
+                "power_min": 30,
+                "power_max": -1
+            },
+            {
+                "id": "pearl",
+                "weight": 3,
+                "power_min": 28,
+                "power_max": -1
+            },
+            {
+                "id": "treasure_chest",
+                "weight": 4,
+                "power_min": 33,
+                "power_max": -1
+            },
+            {
+                "id": "golden_crate",
+                "weight": 3,
+                "power_min": 35,
+                "power_max": -1
+            }
+        ]
+    },
+    "subterranean_lake": {
+        "name": "地底湖",
+        "level": 40,
+        "xp": 26,
+        "result": [
+            {
+                "id": "coal",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 35
+            },
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 35
+            },
+            {
+                "id": "hard_wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 37
+            },
+            {
+                "id": "stone",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 40
+            },
+            {
+                "id": "salmon",
+                "weight": 5,
+                "power_min": 36,
+                "power_max": -1
+            },
+            {
+                "id": "flounder",
+                "weight": 4,
+                "power_min": 36,
+                "power_max": -1
+            },
+            {
+                "id": "char",
+                "weight": 7,
+                "power_min": 36,
+                "power_max": -1
+            },
+            {
+                "id": "scorpionfish",
+                "weight": 6,
+                "power_min": 38,
+                "power_max": -1
+            },
+            {
+                "id": "squid",
+                "weight": 6,
+                "power_min": 38,
+                "power_max": -1
+            },
+            {
+                "id": "pufferfish",
+                "weight": 3,
+                "power_min": 38,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 5,
+                "power_min": 42,
+                "power_max": -1
+            },
+            {
+                "id": "pearl",
+                "weight": 3,
+                "power_min": 42,
+                "power_max": -1
+            },
+            {
+                "id": "treasure_chest",
+                "weight": 4,
+                "power_min": 42,
+                "power_max": -1
+            },
+            {
+                "id": "golden_crate",
+                "weight": 3,
+                "power_min": 45,
+                "power_max": -1
+            },
+            {
+                "id": "abyssal_treasure_chest",
+                "weight": 2,
+                "power_min": 48,
+                "power_max": -1
+            }
+        ]
+    },
+    "abyss_fishing_pond": {
+        "name": "深淵の釣り堀",
+        "level": 45,
+        "xp": 32,
+        "result": [
+            {
+                "id": "coal",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 20
+            },
+            {
+                "id": "wood",
+                "weight": 1,
+                "power_min": 1,
+                "power_max": 20
+            },
+            {
+                "id": "hard_wood",
+                "weight": 2,
+                "power_min": 1,
+                "power_max": 30
+            },
+            {
+                "id": "stone",
+                "weight": 2,
+                "power_min": 1,
+                "power_max": 35
+            },
+            {
+                "id": "flounder",
+                "weight": 5,
+                "power_min": 26,
+                "power_max": -1
+            },
+            {
+                "id": "squid",
+                "weight": 6,
+                "power_min": 30,
+                "power_max": -1
+            },
+            {
+                "id": "pufferfish",
+                "weight": 5,
+                "power_min": 36,
+                "power_max": -1
+            },
+            {
+                "id": "crate",
+                "weight": 5,
+                "power_min": 36,
+                "power_max": -1
+            },
+            {
+                "id": "pearl",
+                "weight": 3,
+                "power_min": 47,
+                "power_max": -1
+            },
+            {
+                "id": "treasure_chest",
+                "weight": 4,
+                "power_min": 47,
+                "power_max": -1
+            },
+            {
+                "id": "golden_crate",
+                "weight": 3,
+                "power_min": 49,
+                "power_max": -1
+            },
+            {
+                "id": "mercury",
+                "weight": 1,
+                "power_min": 47,
+                "power_max": -1
+            },
+            {
+                "id": "abyssal_treasure_chest",
+                "weight": 2,
+                "power_min": 52,
+                "power_max": -1
+            }
+        ]
+    }
+}

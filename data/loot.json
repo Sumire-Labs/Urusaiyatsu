@@ -1,0 +1,298 @@
+{
+    "common_geode": [
+        {
+            "id": "titanium",
+            "weight": 2
+        },
+        {
+            "id": "cobalt",
+            "weight": 2
+        },
+        {
+            "id": "iridium",
+            "weight": 2
+        },
+        {
+            "id": "crystal",
+            "weight": 2
+        },
+        {
+            "id": "amethyst",
+            "weight": 2
+        },
+        {
+            "id": "emerald",
+            "weight": 3
+        },
+        {
+            "id": "sapphire",
+            "weight": 3
+        },
+        {
+            "id": "diamond",
+            "weight": 3
+        },
+        {
+            "id": "precision_mechanism",
+            "weight": 3
+        },
+        {
+            "id": "advanced_engine_part",
+            "weight": 1
+        }
+    ],
+    "rare_geode": [
+        {
+            "id": "fine_crystal",
+            "weight": 2
+        },
+        {
+            "id": "fine_amethyst",
+            "weight": 2
+        },
+        {
+            "id": "fine_emerald",
+            "weight": 3
+        },
+        {
+            "id": "fine_sapphire",
+            "weight": 3
+        },
+        {
+            "id": "fine_diamond",
+            "weight": 3
+        },
+        {
+            "id": "precision_mechanism",
+            "weight": 3
+        },
+        {
+            "id": "advanced_engine_part",
+            "weight": 3
+        },
+        {
+            "id": "mythical_fragment",
+            "weight": 2
+        }
+    ],
+    "lava_geode": [
+        {
+            "id": "obsidian_brick",
+            "weight": 2
+        },
+        {
+            "id": "sulfur",
+            "weight": 2
+        },
+        {
+            "id": "thorium",
+            "weight": 2
+        },
+        {
+            "id": "garnet",
+            "weight": 3
+        },
+        {
+            "id": "topaz",
+            "weight": 3
+        },
+        {
+            "id": "cut_garnet",
+            "weight": 2
+        },
+        {
+            "id": "precision_mechanism",
+            "weight": 2
+        },
+        {
+            "id": "lava_stone",
+            "weight": 3
+        }
+    ],
+    "radioactive_geode": [
+        {
+            "id": "obsidian_brick",
+            "weight": 7
+        },
+        {
+            "id": "sulfur",
+            "weight": 8
+        },
+        {
+            "id": "thorium",
+            "weight": 9
+        },
+        {
+            "id": "pure_thorium",
+            "weight": 10
+        },
+        {
+            "id": "uranium",
+            "weight": 11
+        },
+        {
+            "id": "garnet",
+            "weight": 10
+        },
+        {
+            "id": "topaz",
+            "weight": 10
+        },
+        {
+            "id": "cut_garnet",
+            "weight": 10
+        },
+        {
+            "id": "cut_topaz",
+            "weight": 9
+        },
+        {
+            "id": "precision_mechanism",
+            "weight": 6
+        },
+        {
+            "id": "lava_stone",
+            "weight": 8
+        },
+        {
+            "id": "radiation_core",
+            "weight": 5
+        },
+        {
+            "id": "shattered_arm_part",
+            "weight": 1
+        }
+    ],
+    "crate": [
+        {
+            "id": "planks",
+            "weight": 1
+        },
+        {
+            "id": "stone",
+            "weight": 1
+        },
+        {
+            "id": "tin",
+            "weight": 4
+        },
+        {
+            "id": "fish_oil",
+            "weight": 2
+        },
+        {
+            "id": "aquamarine",
+            "weight": 2
+        },
+        {
+            "id": "light_rod",
+            "weight": 1
+        }
+    ],
+    "treasure_chest": [
+        {
+            "id": "planks",
+            "weight": 1
+        },
+        {
+            "id": "stone",
+            "weight": 1
+        },
+        {
+            "id": "tin",
+            "weight": 4
+        },
+        {
+            "id": "chrome",
+            "weight": 6
+        },
+        {
+            "id": "fish_oil",
+            "weight": 4
+        },
+        {
+            "id": "aquamarine",
+            "weight": 3
+        },
+        {
+            "id": "opal",
+            "weight": 1
+        },
+        {
+            "id": "tough_rod",
+            "weight": 1
+        },
+        {
+            "id": "lucky_rod",
+            "weight": 1
+        }
+    ],
+    "golden_crate": [
+        {
+            "id": "hard_planks",
+            "weight": 1
+        },
+        {
+            "id": "stone",
+            "weight": 1
+        },
+        {
+            "id": "lead",
+            "weight": 4
+        },
+        {
+            "id": "rich_fish_oil",
+            "weight": 2
+        },
+        {
+            "id": "pearl",
+            "weight": 2
+        },
+        {
+            "id": "citrine",
+            "weight": 1
+        }
+    ],
+    "abyssal_treasure_chest": [
+        {
+            "id": "hard_planks",
+            "weight": 1
+        },
+        {
+            "id": "stone",
+            "weight": 1
+        },
+        {
+            "id": "stone_chunk",
+            "weight": 2
+        },
+        {
+            "id": "lead",
+            "weight": 9
+        },
+        {
+            "id": "platinum",
+            "weight": 9
+        },
+        {
+            "id": "rich_fish_oil",
+            "weight": 8
+        },
+        {
+            "id": "mercury",
+            "weight": 5
+        },
+        {
+            "id": "citrine",
+            "weight": 3
+        },
+        {
+            "id": "onyx",
+            "weight": 2
+        },
+        {
+            "id": "abyssal_seed",
+            "weight": 1
+        }
+    ]
+}

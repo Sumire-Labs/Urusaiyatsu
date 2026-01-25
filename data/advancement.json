@@ -1,0 +1,1318 @@
+{
+    "explore_forest": {
+        "title": "森林を探索しよう",
+        "description": "/exploreで森林を選択して、アイテムを手に入れよう",
+        "complete_message": "森林を探索すると丸太や石が手に入ります。\n探索をするたびにスタミナを10消費します。スタミナは1時間ごとに10回復しますが、残量に注意してください！",
+        "clear_condition": {
+            "explore": "forest"
+        },
+        "previous_advancement": [null]
+    },
+    "get_saw_materials": {
+        "title": "丸太と石を手に入れよう",
+        "description": "森林をさらに探索して、丸太と石を1つずつ手に入れよう",
+        "complete_message": "丸石と石はどちらも色々なクラフトで使われる素材です。",
+        "clear_condition": {
+            "get_items": {
+                "wood": 1,
+                "stone": 1
+            }
+        },
+        "previous_advancement": ["explore_forest"]
+    },
+    "craft_saw": {
+        "title": "ノコギリをクラフトしよう",
+        "description": "/craftでノコギリを選択して、ノコギリを作ろう",
+        "complete_message": "ノコギリは最も初歩的なツールで、主に木材を使ったクラフトで使用されます。\nクラフトをするときにもスタミナを消費します！",
+        "clear_condition": {
+            "get_item": "saw"
+        },
+        "previous_advancement": ["get_saw_materials"]
+    },
+    "craft_planks": {
+        "title": "木材をクラフトしよう",
+        "description": "ノコギリを作ったときのように、/craftで木材を作ろう",
+        "complete_message": "木材はノコギリを使って丸太を加工して作られる、色々なクラフトで使われる素材です。\nクラフトで使用したノコギリは、10%の確率で壊れてしまいます！",
+        "clear_condition": {
+            "get_item": "planks"
+        },
+        "previous_advancement": ["craft_saw"]
+    },
+    "craft_pickaxe": {
+        "title": "ツルハシをクラフトしよう",
+        "description": "/craftでツルハシを作ろう",
+        "complete_message": "ツルハシは地下の探索で使用される初歩的なツールです。",
+        "clear_condition": {
+            "get_item": "pickaxe"
+        },
+        "previous_advancement": ["craft_planks"]
+    },
+    "explore_underground": {
+        "title": "地下を探索しよう",
+        "description": "/exploreで地下を選択して探索しよう",
+        "complete_message": "地下を探索すると、石や石炭、銅が手に入ります。\n探索で使用したツルハシは、10%の確率で壊れてしまいます！",
+        "clear_condition": {
+            "explore": "underground"
+        },
+        "previous_advancement": ["craft_pickaxe"]
+    },
+    "craft_furnace": {
+        "title": "炉を作ろう",
+        "description": "地下の探索で集めた素材で炉をクラフトしよう",
+        "complete_message": "炉は、鉱石を延べ棒に加工するのに使用される重要な設備です。",
+        "clear_condition": {
+            "get_item": "furnace"
+        },
+        "previous_advancement": ["explore_underground"]
+    },
+    "craft_copper_pickaxe": {
+        "title": "銅のツルハシを作ろう",
+        "description": "銅を延べ棒にして、銅のツルハシをクラフトしよう",
+        "complete_message": "銅のツルハシがあれば、洞窟の探索をすることができるようになります。\nまた、探索で使用したときに壊れる確率が7%と、最初のツルハシより低いです。",
+        "clear_condition": {
+            "get_item": "copper_pickaxe"
+        },
+        "previous_advancement": ["craft_furnace"]
+    },
+    "explore_caverns": {
+        "title": "洞窟を探索しよう",
+        "description": "銅のツルハシを使って洞窟を探索しよう",
+        "complete_message": "洞窟を探索すると、石や石炭、銅に加えて、鉄が手に入ります。",
+        "clear_condition": {
+            "explore": "caverns"
+        },
+        "previous_advancement": ["craft_copper_pickaxe"]
+    },
+    "craft_steel_ingot": {
+        "title": "鋼鉄の延べ棒を作ろう",
+        "description": "鉄から鉄の延べ棒を作り、更にクラフトして鋼鉄の延べ棒を手に入れよう",
+        "complete_message": "鋼鉄の延べ棒は、鉄を2回精錬してできる素材で、硬いアイテムをクラフトするのに多用されます。",
+        "clear_condition": {
+            "get_item": "steel_ingot"
+        },
+        "previous_advancement": ["explore_caverns"]
+    },
+    "craft_steel_hammer": {
+        "title": "鋼鉄のハンマーを作ろう",
+        "description": "鋼鉄の延べ棒を使って鋼鉄のハンマーをクラフトしよう",
+        "complete_message": "鋼鉄のハンマーは、主に鋼鉄などの硬い金属を使ったクラフトで用いられるツールです。",
+        "clear_condition": {
+            "get_item": "steel_hammer"
+        },
+        "previous_advancement": ["craft_steel_ingot"]
+    },
+    "craft_steel_pickaxe": {
+        "title": "鋼鉄のツルハシを作ろう",
+        "description": "鋼鉄の延べ棒を使って鋼鉄のハンマーをクラフトしよう",
+        "complete_message": "鋼鉄のツルハシがあれば、深層の洞窟と、炭鉱の探索をすることができるようになります。\nまた、探索で使用したときに壊れる確率が5%と、銅のツルハシより低いです。",
+        "clear_condition": {
+            "get_item": "steel_hammer"
+        },
+        "previous_advancement": ["craft_steel_hammer"]
+    },
+    "explore_deep_caverns": {
+        "title": "深層の洞窟を探索しよう",
+        "description": "鋼鉄のツルハシを使って洞窟を探索しよう",
+        "complete_message": "深層の洞窟を探索すると、洞窟で手に入った素材に加えて、金とクリスタルが手に入ります。\nクリスタルは比較的手に入れにくく、その分だけ売値も高いです。",
+        "clear_condition": {
+            "explore": "deep_caverns"
+        },
+        "previous_advancement": ["craft_steel_pickaxe"]
+    },
+    "explore_coal_mine": {
+        "title": "炭鉱を探索しよう",
+        "description": "鋼鉄のツルハシを使って炭鉱を探索しよう",
+        "complete_message": "炭鉱を探索すると、石や石炭、鉄が手に入り、特に石炭が出やすいです。\n鋼鉄の延べ棒はクラフトに石炭を2個も使うので、足りなくなったらここを探索することをオススメします。",
+        "clear_condition": {
+            "explore": "coal_mine"
+        },
+        "previous_advancement": ["craft_steel_pickaxe"]
+    },
+    "craft_rest_charm": {
+        "title": "休息のお守りを作ろう",
+        "description": "クリスタルを使って休息のお守りをクラフトしよう",
+        "complete_message": "/equipで休息のお守りを装備することで、1時間ごとに回復するスタミナが10から13になります！\n装備しないとアクセサリーの効果はありません！",
+        "clear_condition": {
+            "get_item": "rest_charm"
+        },
+        "previous_advancement": ["explore_deep_caverns"]
+    },
+    "craft_rest_ring": {
+        "title": "休息のリングを作ろう",
+        "description": "休息のお守りをクラフトで強化して、休息のリングにしよう(強化するときは一回お守りを外してね！)",
+        "complete_message": "休息のリングを装備すると、1時間ごとに回復するスタミナが14になります！",
+        "clear_condition": {
+            "get_item": "rest_ring"
+        },
+        "previous_advancement": ["craft_rest_charm", "craft_rose_gold_ingot"]
+    },
+    "craft_rest_artifact": {
+        "title": "休息のアーティファクトを作ろう",
+        "description": "休息のリングをクラフトで強化して、休息のアーティファクトにしよう",
+        "complete_message": "休息のアーティファクトを装備すると、1時間ごとに回復するスタミナが15になります！",
+        "clear_condition": {
+            "get_item": "rest_artifact"
+        },
+        "previous_advancement": ["craft_rest_ring", "craft_black_bronze_anvil"]
+    },
+    "craft_rose_gold_ingot": {
+        "title": "ローズゴールドの延べ棒を作ろう",
+        "description": "延べ棒にした金と銅を合わせて、ローズゴールドの延べ棒をクラフトしよう",
+        "complete_message": "ローズゴールドは金と銅が合わさった素材で、アクセサリーなどの装飾品を作るのに使われます。",
+        "clear_condition": {
+            "get_item": "rose_gold_ingot"
+        },
+        "previous_advancement": ["explore_deep_caverns"]
+    },
+
+    "craft_knife": {
+        "title": "ナイフをクラフトしよう",
+        "description": "/craftでナイフを作ろう",
+        "complete_message": "ナイフは熱帯雨林の探索で使用される初歩的なツールです。\n※熱帯雨林の探索の前に、ツルハシを作って地下の探索をしましょう！",
+        "clear_condition": {
+            "get_item": "knife"
+        },
+        "previous_advancement": ["craft_planks"]
+    },
+    "explore_jungle": {
+        "title": "熱帯雨林を探索しよう",
+        "description": "/exploreで熱帯雨林を選択して探索しよう",
+        "complete_message": "熱帯雨林を探索すると、丸太と革が手に入ります。\n探索で使用したナイフは、10%の確率で壊れてしまいます！",
+        "clear_condition": {
+            "explore": "jungle"
+        },
+        "previous_advancement": ["craft_knife"]
+    },
+    "craft_leather_boots": {
+        "title": "革のブーツを作ろう",
+        "description": "銅の延べ棒と革を使って、革のブーツをクラフトしよう",
+        "complete_message": "革のブーツは雪原での探索で使用されるアイテムです。",
+        "clear_condition": {
+            "get_item": "leather_boots"
+        },
+        "previous_advancement": ["explore_jungle", "craft_furnace"]
+    },
+    "explore_snow": {
+        "title": "雪原を探索しよう",
+        "description": "革のブーツを使って、雪原を探索しよう",
+        "complete_message": "雪原を探索すると、硬い丸太や革、絹糸が手に入ります。",
+        "clear_condition": {
+            "explore": "snow"
+        },
+        "previous_advancement": ["craft_leather_boots"]
+    },
+    "craft_loom": {
+        "title": "織機を作ろう",
+        "description": "硬い丸太を硬い木材に加工して、鉄の延べ棒と合わせて織機をクラフトしよう",
+        "complete_message": "織機は、糸や布を使用したクラフトで用いられるツールです。",
+        "clear_condition": {
+            "get_item": "loom"
+        },
+        "previous_advancement": ["explore_snow", "explore_caverns"]
+    },
+    "craft_sturdy_gloves": {
+        "title": "丈夫な手袋を作ろう",
+        "description": "織機で絹糸をシルクに加工して、鋼鉄の延べ棒と合わせて丈夫な手袋をクラフトしよう",
+        "complete_message": "丈夫な手袋は、山岳の探索で使用されるアイテムです。",
+        "clear_condition": {
+            "get_item": "sturdy_gloves"
+        },
+        "previous_advancement": ["craft_loom", "craft_steel_ingot"]
+    },
+    "explore_mountains": {
+        "title": "山岳を探索しよう",
+        "description": "丈夫な手袋を使って、山岳を探索しよう",
+        "complete_message": "山岳を探索すると、硬い丸太や革、石に加えて、銀が手に入ります。",
+        "clear_condition": {
+            "explore": "mountains"
+        },
+        "previous_advancement": ["craft_sturdy_gloves"]
+    },
+    "craft_black_bronze_ingot": {
+        "title": "ブラックブロンズの延べ棒を作ろう",
+        "description": "延べ棒にした銅、金、銀を合わせてブラックブロンズの延べ棒をクラフトしよう",
+        "complete_message": "ブラックブロンズの延べ棒は、壊れないツルハシやノコギリ、ナイフなどを作るのに必要な素材です。\nコストが比較的高く、用途もかなり多い素材となっています。\nローズゴールドに銀を加える形でブラックブロンズをクラフトすることもできます。",
+        "clear_condition": {
+            "get_item": "black_bronze_ingot"
+        },
+        "previous_advancement": ["explore_mountains", "explore_deep_caverns"]
+    },
+    "craft_black_bronze_anvil": {
+        "title": "ブラックブロンズの金床を作ろう",
+        "description": "ハンマーとブラックブロンズの延べ棒を使って、ブラックブロンズの金床をクラフトしよう",
+        "complete_message": "ブラックブロンズの金床は、より硬い金属を使ったクラフトに使用されるツールです。\n仕様時に壊れることはなく、鋼鉄のハンマーの代わりとして使うことができます。",
+        "clear_condition": {
+            "get_item": "black_bronze_ingot"
+        },
+        "previous_advancement": ["craft_black_bronze_ingot"]
+    },
+    "craft_black_bronze_pickaxe": {
+        "title": "ブラックブロンズのツルハシを作ろう",
+        "description": "ブラックブロンズを使ったツルハシをクラフトしよう",
+        "complete_message": "ブラックブロンズのツルハシは、いくら使っても壊れることのないツルハシです。",
+        "clear_condition": {
+            "get_item": "black_bronze_ingot"
+        },
+        "previous_advancement": ["craft_black_bronze_ingot"]
+    },
+    "craft_crystal_pickaxe": {
+        "title": "クリスタルのツルハシを作ろう",
+        "description": "ルビーとクリスタル、ブラックブロンズのツルハシを使って、クリスタルのツルハシをクラフトしよう",
+        "complete_message": "クリスタルのツルハシは、廃工場の探索に使用されるツールです。",
+        "clear_condition": {
+            "get_item": "crystal_pickaxe"
+        },
+        "previous_advancement": ["craft_black_bronze_pickaxe", "buy_ruby"]
+    },
+    "explore_abandoned_factory": {
+        "title": "廃工場を探索しよう",
+        "description": "クリスタルのツルハシを使って、廃工場を探索しよう",
+        "complete_message": "廃工場を探索すると、銅、鉄、金、銀に加えて、スクラップやゴミが手に入ります。\nまた、低確率で壊れたバッテリーという素材が手に入ります。",
+        "clear_condition": {
+            "explore": "abandoned_factory"
+        },
+        "previous_advancement": ["craft_crystal_pickaxe"]
+    },
+    "get_broken_battery": {
+        "title": "壊れたバッテリーを手に入れよう",
+        "description": "廃工場から低確率で手に入る、壊れたバッテリーを手に入れよう",
+        "complete_message": "壊れたバッテリーをクラフトで修繕することで、強力な効果のアクセサリーがクラフトできます。",
+        "clear_condition": {
+            "get_item": "broken_battery"
+        },
+        "previous_advancement": ["explore_abandoned_factory"]
+    },
+    "craft_robot_arm": {
+        "title": "ロボットアームを作ろう",
+        "description": "壊れたバッテリーを修繕し、それを使ってロボットアームをクラフトしよう",
+        "complete_message": "ロボットアームを装備することで、探索時に必要になるスタミナが2減ります！",
+        "clear_condition": {
+            "get_item": "robot_arm"
+        },
+        "previous_advancement": ["get_broken_battery", "craft_compressed_tungsten"]
+    },
+    "craft_recycler": {
+        "title": "リサイクラーを作ろう",
+        "description": "スクラップと鋼鉄の延べ棒でリサイクラーをクラフトしよう",
+        "complete_message": "リサイクラーは、クラフトでゴミをスクラップに、スクラップを有用な素材にするのに必要な設備です。",
+        "clear_condition": {
+            "get_item": "recycler"
+        },
+        "previous_advancement": ["explore_abandoned_factory"]
+    },
+    "craft_titanium": {
+        "title": "チタニウムを作ろう",
+        "description": "リサイクラーを使って、スクラップからチタニウムを作ろう",
+        "complete_message": "チタニウムは、高強度なツールや機械を作るのに用いられる素材です。",
+        "clear_condition": {
+            "get_item": "titanium"
+        },
+        "previous_advancement": ["craft_recycler"]
+    },
+    "craft_refiner": {
+        "title": "精製機を作ろう",
+        "description": "炉と炭窯、チタニウムを使って精製機をクラフトしよう",
+        "complete_message": "精製機は、チタニウムなどの上位の金属を精錬するのに用いられる設備で、\n炉と炭窯の代わりとして使うこともできます。",
+        "clear_condition": {
+            "get_item": "refiner"
+        },
+        "previous_advancement": ["craft_titanium", "craft_charcoal_kiln"]
+    },
+    "craft_mining_charm": {
+        "title": "採掘のお守りを作ろう",
+        "description": "精製されたチタニウムとブラックブロンズの延べ棒を使って採掘のお守りをクラフトしよう",
+        "complete_message": "採掘のお守りを装備すると、採掘時に6%の確率でアイテムがもう1つ多く手に入るようになります！",
+        "clear_condition": {
+            "get_item": "mining_charm"
+        },
+        "previous_advancement": ["craft_refiner"]
+    },
+    "craft_mining_ring": {
+        "title": "採掘のリングを作ろう",
+        "description": "採掘のお守りを強化して採掘のリングにしよう",
+        "complete_message": "採掘のリングを装備すると、採掘時アイテム増加の確率が9%になります！",
+        "clear_condition": {
+            "get_item": "mining_ring"
+        },
+        "previous_advancement": ["craft_mining_charm", "craft_compressed_tungsten"]
+    },
+    "craft_mining_artifact": {
+        "title": "採掘のアーティファクトを作ろう",
+        "description": "採掘のリングを強化して採掘のアーティファクトにしよう",
+        "complete_message": "採掘のアーティファクトを装備すると、採掘時アイテム増加の確率が12%になります！",
+        "clear_condition": {
+            "get_item": "mining_artifact"
+        },
+        "previous_advancement": ["craft_mining_ring", "explore_mythical_mines"]
+    },
+    "craft_mining_relic": {
+        "title": "採掘のレリックを作ろう",
+        "description": "採掘のアーティファクトを強化して採掘のレリックにしよう",
+        "complete_message": "採掘のレリックを装備すると、採掘時アイテム増加の確率が15%になります！",
+        "clear_condition": {
+            "get_item": "mining_relic"
+        },
+        "previous_advancement": ["craft_mining_artifact", "craft_mixed_gemstone"]
+    },
+    "craft_titanium_pickaxe": {
+        "title": "チタニウムのツルハシを作ろう",
+        "description": "精製されたチタニウムを作り、それとクリスタルのツルハシを使ってチタニウムのツルハシを作ろう",
+        "complete_message": "チタニウムのツルハシは、最深層の坑道を探索するのに使用されるツールです。",
+        "clear_condition": {
+            "get_item": "titanium_pickaxe"
+        },
+        "previous_advancement": ["craft_refiner"]
+    },
+    "explore_deepest_tunnel": {
+        "title": "最深層の坑道を探索しよう",
+        "description": "チタニウムのツルハシを使って、最深層の坑道を探索しよう",
+        "complete_message": "最深層の坑道を探索すると、石や銅、鉄、金、銀、そしてクリスタルに加えて、タングステンとアメジストが手に入ります。",
+        "clear_condition": {
+            "explore": "deepest_tunnel"
+        },
+        "previous_advancement": ["craft_titanium_pickaxe"]
+    },
+    "craft_compressed_tungsten": {
+        "title": "圧縮されたタングステンを作ろう",
+        "description": "精製されたタングステンを作り、それを使って圧縮されたタングステンをクラフトしよう",
+        "complete_message": "圧縮されたタングステンは、タングステン4つを圧縮した素材です。",
+        "clear_condition": {
+            "get_item": "compressed_tungsten"
+        },
+        "previous_advancement": ["explore_deepest_tunnel"]
+    },
+    "craft_forge": {
+        "title": "鍛造機を作ろう",
+        "description": "精製されたタングステンを作り、精製機とブラックブロンズの金床を合わせて鍛造機をクラフトしよう",
+        "complete_message": "鍛造機は、高度な素材やドリルなどの機械を作るのに使用される設備です。\n炉や炭窯、精製機、鋼鉄のハンマー、ブラックブロンズの金床の代わりとして使うこともできます。",
+        "clear_condition": {
+            "get_item": "forge"
+        },
+        "previous_advancement": ["explore_deepest_tunnel"]
+    },
+    "craft_drill_t0": {
+        "title": "T0ドリルを作ろう",
+        "description": "鍛造機を使って、タングステンのドリル D-T0をクラフトしよう",
+        "complete_message": "ドリルは、/equipで装備することで使える新しい採掘のツールです。ドリルを使用して採掘するときは、燃料が必要になります。\n/refuelで燃料を購入でき、クラフトで石炭から固形燃料を作ったり、ショップからバイオ燃料を購入して使うことで補給することができます。\nまた、ドリルにはそれぞれ個別のステータスが設定されており、使用するスタミナやアイテムの増加確率などはドリルの種類によって様々です。\nそれぞれのドリルのステータスについて詳しく見たい場合は、/item_dataコマンドでドリルの情報を確認しましょう。",
+        "clear_condition": {
+            "get_item": "drill_t0"
+        },
+        "previous_advancement": ["craft_forge"]
+    },
+    "explore_mythical_mines": {
+        "title": "神話の採掘所を探索しよう",
+        "description": "T0ドリルを装備して、神話の採掘所を探索しよう",
+        "complete_message": "神話の採掘所を探索すると、石やスクラップに加えて、コバルトやエメラルド、ジオードが手に入ります。\nまた、ごくごく稀に希少なジオードが手に入ります。",
+        "clear_condition": {
+            "explore": "mythical_mines"
+        },
+        "previous_advancement": ["craft_drill_t0"]
+    },
+    "get_common_geode": {
+        "title": "ジオードを手に入れよう",
+        "description": "神話の採掘所の探索からジオードを手に入れよう",
+        "complete_message": "ジオードを/useで使用することでランダムなアイテムを手に入れることができます。\n精密機構や発展型エンジンの部品など、探索では手に入らない素材もあります。",
+        "clear_condition": {
+            "get_item": "common_geode"
+        },
+        "previous_advancement": ["explore_mythical_mines"]
+    },
+    "get_rare_geode": {
+        "title": "希少なジオードを手に入れよう",
+        "description": "神話の採掘所の探索から希少なジオードを手に入れよう",
+        "complete_message": "希少なジオードを/useで使用することでランダムなアイテムを手に入れることができます。\n精密機構や発展型エンジンの部品、神話の断片など、探索では手に入らない素材もあります。",
+        "clear_condition": {
+            "get_item": "rare_geode"
+        },
+        "previous_advancement": ["explore_mythical_mines"]
+    },
+    "get_precision_mechanism": {
+        "title": "精密機構を手に入れよう",
+        "description": "ジオードや希少なジオードから精密機構を手に入れよう",
+        "complete_message": "精密機構は、G3ドリルや発展型ドリルエンジンを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "precision_mechanism"
+        },
+        "previous_advancement": ["get_common_geode"]
+    },
+    "get_advanced_engine_part": {
+        "title": "発展型エンジンの部品を手に入れよう",
+        "description": "ジオードや希少なジオードから発展型エンジンの部品を手に入れよう",
+        "complete_message": "発展型エンジンの部品は、発展型ドリルエンジンを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "advanced_engine_part"
+        },
+        "previous_advancement": ["get_common_geode"]
+    },
+    "get_mythical_fragment": {
+        "title": "神話の断片を手に入れよう",
+        "description": "希少なジオードから神話の断片を手に入れよう",
+        "complete_message": "神話の断片は、神話のドリルエンジンを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "mythical_fragment"
+        },
+        "previous_advancement": ["get_rare_geode"]
+    },
+    "craft_drill_engine": {
+        "title": "ドリルエンジンを作ろう",
+        "description": "コバルトやチタニウムなどを使ってドリルエンジンをクラフトしよう",
+        "complete_message": "ドリルエンジンは、T0より後のドリルを作るのに必須になる基盤的素材です。",
+        "clear_condition": {
+            "get_item": "drill_engine"
+        },
+        "previous_advancement": ["explore_mythical_mines"]
+    },
+    "craft_advanced_drill_engine": {
+        "title": "発展型ドリルエンジンを作ろう",
+        "description": "精密機構と発展型エンジンの部品を使って、ドリルエンジンを強化しよう",
+        "complete_message": "発展型ドリルエンジンは、M3ドリルや神話のドリルエンジンを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "advanced_drill_engine"
+        },
+        "previous_advancement": ["craft_drill_engine", "get_precision_mechanism", "get_advanced_engine_part"]
+    },
+    "craft_mythical_drill_engine": {
+        "title": "神話のドリルエンジンを作ろう",
+        "description": "精密機構と神話の断片を使って、発展型ドリルエンジンを更に強化しよう",
+        "complete_message": "神話のドリルエンジンは、MXドリルを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "mythical_drill_engine"
+        },
+        "previous_advancement": ["craft_advanced_drill_engine", "get_mythical_fragment"]
+    },
+    "craft_mixed_gemstone": {
+        "title": "混合宝石を作ろう",
+        "description": "大量の石とクリスタル、アメジスト、エメラルド、サファイア、ダイヤモンドを使って混合宝石をクラフトしよう",
+        "complete_message": "混合宝石は、強力なドリルやアクセサリーを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "mixed_gemstone"
+        },
+        "previous_advancement": ["explore_mythical_mines"]
+    },
+    "craft_drill_g1": {
+        "title": "G1ドリルを作ろう",
+        "description": "ドリルエンジンとアメジストを使って、アメジストのドリル D-G1をクラフトしよう",
+        "complete_message": "G1ドリル(アメジストのドリル)は、T0ドリルよりも性能の高いドリルで、スタミナと燃料の消費量が減っています。\nG系列のドリルは比較的コストが安く、先のエリアに簡単に進むことができますが、ドリルの性能はM系列に劣ります。",
+        "clear_condition": {
+            "get_item": "drill_g1"
+        },
+        "previous_advancement": ["craft_drill_engine"]
+    },
+    "craft_drill_g2": {
+        "title": "G2ドリルを作ろう",
+        "description": "G1ドリルとエメラルドを使って、エメラルドのドリル D-G2をクラフトしよう",
+        "complete_message": "G2ドリル(エメラルドのドリル)は、G1ドリルよりも性能の高いドリルで、アイテム増加の確率が上昇しています。また、このドリルで鉱石の聖域を探索することができます。",
+        "clear_condition": {
+            "get_item": "drill_g2"
+        },
+        "previous_advancement": ["craft_drill_g1"]
+    },
+    "craft_drill_g3": {
+        "title": "G3ドリルを作ろう",
+        "description": "G2ドリルとサファイア、精密機構を使って、サファイアのドリル D-G3をクラフトしよう",
+        "complete_message": "G3ドリル(サファイアのドリル)は、G2ドリルよりも性能の高いドリルで、スタミナと燃料の消費量が減っています。また、このドリルで幻の鉱床を探索することができます。",
+        "clear_condition": {
+            "get_item": "drill_g3"
+        },
+        "previous_advancement": ["craft_drill_g2", "get_precision_mechanism"]
+    },
+    "craft_drill_g4": {
+        "title": "G4ドリルを作ろう",
+        "description": "G3ドリルと混合宝石を使って、宝石のドリル D-G4をクラフトしよう",
+        "complete_message": "G4ドリル(宝石のドリル)は、G系列のドリルの最終強化版で、スタミナと燃料の消費量が減っており、アイテム増加の確率が上昇しています。",
+        "clear_condition": {
+            "get_item": "drill_g4"
+        },
+        "previous_advancement": ["craft_drill_g3", "craft_mixed_gemstone"]
+    },
+    "craft_drill_m1": {
+        "title": "M1ドリルを作ろう",
+        "description": "ドリルエンジンとコバルト、エメラルドを使って、コバルトのドリル D-M1をクラフトしよう",
+        "complete_message": "M1ドリル(コバルトのドリル)は、T0ドリルやG1ドリルよりも性能の高いドリルで、スタミナと燃料の消費量が減っており、アイテム増加の確率が上昇しています。\nM系列のドリルは比較的コストが高く、先のエリアに進むのは大変ですが、ドリルの性能も相応に高くなっています。",
+        "clear_condition": {
+            "get_item": "drill_m1"
+        },
+        "previous_advancement": ["craft_drill_engine"]
+    },
+    "craft_drill_m2": {
+        "title": "M2ドリルを作ろう",
+        "description": "M1ドリルと更に多くのコバルト、そしてサファイアを使って、コバルトのドリル D-M2をクラフトしよう",
+        "complete_message": "M2ドリル(コバルトのドリル)は、M1ドリルやG2ドリルよりも性能の高いドリルで、スタミナと燃料の消費量が減っており、アイテム増加の確率が上昇しています。\nただし、このドリルではまだ鉱石の聖域を探索することはできません。",
+        "clear_condition": {
+            "get_item": "drill_m2"
+        },
+        "previous_advancement": ["craft_drill_m1"]
+    },
+    "craft_drill_m3": {
+        "title": "M3ドリルを作ろう",
+        "description": "M2ドリルとイリジウム、そして発展型ドリルエンジンを使って、イリジウムのドリル D-M3をクラフトしよう",
+        "complete_message": "M3ドリル(イリジウムのドリル)は、M2ドリルやG3ドリルよりも性能の高いドリルで、燃料の消費量が減っており、アイテム増加の確率が上昇しています。\nまた、このドリルで鉱石の聖域を探索することができます。",
+        "clear_condition": {
+            "get_item": "drill_m3"
+        },
+        "previous_advancement": ["craft_drill_m2", "craft_advanced_drill_engine"]
+    },
+    "craft_drill_m4": {
+        "title": "M4ドリルを作ろう",
+        "description": "M3ドリルと更に多くのイリジウム、そしてダイヤモンドを使って、イリジウムのドリル D-M4をクラフトしよう",
+        "complete_message": "M4ドリル(イリジウムのドリル)は、M3ドリルやG4ドリルよりも性能の高いドリルで、スタミナと燃料の消費量が減っており、アイテム増加の確率が上昇しています。\nまた、このドリルで幻の鉱床を探索することができます。",
+        "clear_condition": {
+            "get_item": "drill_m4"
+        },
+        "previous_advancement": ["craft_drill_m3"]
+    },
+    "craft_drill_m5": {
+        "title": "M5ドリルを作ろう",
+        "description": "M4ドリルと更に多くのイリジウム、そして混合宝石を使って、イリジウムのドリル D-M5をクラフトしよう",
+        "complete_message": "M5ドリル(イリジウムのドリル)は、M4ドリルよりも性能の高いドリルで、燃料の消費量が減っており、アイテム増加の確率が上昇しています。",
+        "clear_condition": {
+            "get_item": "drill_m5"
+        },
+        "previous_advancement": ["craft_drill_m4", "craft_mixed_gemstone"]
+    },
+    "craft_drill_mx": {
+        "title": "MXドリルを作ろう",
+        "description": "M5ドリルと神話のドリルエンジンを使って、神話のドリル D-MXをクラフトしよう",
+        "complete_message": "MXドリル(神話のドリル)は、M系列のドリルの最終強化版で、スタミナと燃料の消費量が減っており、アイテム増加の確率が上昇しています。",
+        "clear_condition": {
+            "get_item": "drill_mx"
+        },
+        "previous_advancement": ["craft_drill_m5", "craft_mythical_drill_engine"]
+    },
+    "explore_ore_hallow": {
+        "title": "鉱石の聖域を探索しよう",
+        "description": "G2またはM3以上のドリルを装備して、鉱石の聖域を探索しよう",
+        "complete_message": "鉱石の聖域を探索すると、石やスクラップ、コバルト、ジオードなどに加えて、サファイアやイリジウムが手に入ります。\nまた、希少なジオードが手に入る確率が神話の採掘所より高いです。",
+        "clear_condition": {
+            "explore": "ore_hallow"
+        },
+        "previous_advancement": ["craft_drill_engine"]
+    },
+    "explore_dream_vein": {
+        "title": "幻の鉱床を探索しよう",
+        "description": "G3またはM4以上のドリルを装備して、鉱石の聖域を探索しよう",
+        "complete_message": "幻の鉱床を探索すると、石やスクラップ、コバルト、ジオード、イリジウムなどに加えて、ダイヤモンドが手に入ります。\nまた、希少なジオードが手に入る確率が鉱石の聖域より高いです。",
+        "clear_condition": {
+            "explore": "dream_vein"
+        },
+        "previous_advancement": ["explore_ore_hallow"]
+    },
+    "craft_alloy_plates": {
+        "title": "2種類の合板を作ろう",
+        "description": "色々な金属を使って、強固な板と電導性の板をクラフトしよう",
+        "complete_message": "強固な板と電導性の板は、どちらも化学的な設備やドリルレーザーの作成に使われる上級素材です。",
+        "clear_condition": {
+            "get_items": {
+                "conductive_plate": 1,
+                "durable_plate": 1
+            }
+        },
+        "previous_advancement": ["explore_ore_hallow"]
+    },
+    "craft_reaction_chamber": {
+        "title": "反応炉を作ろう",
+        "description": "2種類の合板と混合宝石を使って、反応炉をクラフトしよう",
+        "complete_message": "反応炉は、化学反応を利用した高度な素材を作ることができる設備です。",
+        "clear_condition": {
+            "get_item": "reaction_chamber"
+        },
+        "previous_advancement": ["craft_alloy_plates", "craft_mixed_gemstone"]
+    },
+    "craft_drill_laser": {
+        "title": "ドリルレーザーを作ろう",
+        "description": "反応炉で蛍光塗料を作り、それを使ってドリルレーザーをクラフトしよう",
+        "complete_message": "ドリルレーザーをG4またはM5以上のドリルと一緒に装備することで、溶岩流の洞穴での採掘ができるようになります。\nまた、使用する燃料が2倍になり、追加で資源が手に入る確率が2%上昇します。",
+        "clear_condition": {
+            "get_item": "drill_laser"
+        },
+        "previous_advancement": ["craft_reaction_chamber"]
+    },
+    "explore_lava_flowing_cave": {
+        "title": "溶岩流の洞穴を探索しよう",
+        "description": "G4またはM5以上のドリルに加えてドリルレーザーを装備して、溶岩流の洞穴を探索しよう",
+        "complete_message": "溶岩流の洞穴を探索すると、黒曜石や硫黄、ベリリウム、ガーネットなどが手に入ります。\nまた、低確率でジオードや溶岩のジオードが手に入ります。",
+        "clear_condition": {
+            "explore": "lava_flowing_cave"
+        },
+        "previous_advancement": ["craft_drill_laser"]
+    },
+    "get_lava_stone": {
+        "title": "溶岩石を手に入れよう",
+        "description": "低確率で手に入る溶岩のジオードから溶岩石を手に入れよう",
+        "complete_message": "溶岩石は、大きな熱量やエネルギーを使う装置に使われる貴重な素材です。",
+        "clear_condition": {
+            "get_item": "lava_stone"
+        },
+        "previous_advancement": ["explore_lava_flowing_cave"]
+    },
+    "craft_robust_plate": {
+        "title": "頑丈な板を作ろう",
+        "description": "2種類の合板と銅の板、高密度なベリリウムを合わせて頑丈な板をクラフトしよう",
+        "complete_message": "頑丈な板は、高い強度が必要な装置に使われるハイコストな素材です。",
+        "clear_condition": {
+            "get_item": "robust_plate"
+        },
+        "previous_advancement": ["explore_lava_flowing_cave"]
+    },
+    "craft_improved_laser": {
+        "title": "改良型レーザーを作ろう",
+        "description": "頑丈な板と研がれたガーネットを使ってドリルレーザーを強化しよう",
+        "complete_message": "改良型レーザーは、ドリルレーザーと比べて燃料の消費量が少なく、資源の追加入手確率が高くなっています。",
+        "clear_condition": {
+            "get_item": "improved_laser"
+        },
+        "previous_advancement": ["craft_robust_plate"]
+    },
+    "craft_super_battery": {
+        "title": "スーパーバッテリーを作ろう",
+        "description": "溶岩石とバッテリーを使ってスーパーバッテリーを作ろう",
+        "complete_message": "スーパーバッテリーは、大きな電力を必要とする装置で使われる高出力な素材です。",
+        "clear_condition": {
+            "get_item": "super_battery"
+        },
+        "previous_advancement": ["get_broken_battery", "get_lava_stone"]
+    },
+    "explore_radioactive_mine": {
+        "title": "放射性の鉱山を探索しよう",
+        "description": "G4またはM5以上のドリルに加えてドリルレーザーを装備して、放射性の鉱山を探索しよう",
+        "complete_message": "放射性の鉱山を探索すると、トリウムやウラニウム、トパーズなどが手に入ります。\nまた、低確率でジオードや溶岩のジオード、放射性のジオードが手に入ります。\nここの探索を続けていると、放射線が体に溜まり、放射線10ごとにスタミナの消費量が1増えてしまいます。\n除染するためには、1時間ごとに3ずつ放射線が減少するのを待つか、放射線除染剤をクラフトして使う必要があります。",
+        "clear_condition": {
+            "explore": "radioactive_mine"
+        },
+        "previous_advancement": ["explore_lava_flowing_cave"]
+    },
+    "get_radiation_core": {
+        "title": "放射線コアを手に入れよう",
+        "description": "低確率で手に入る放射性のジオードから放射線コアを手に入れよう",
+        "complete_message": "放射線コアは、放射線を利用する装置を作るために使用される貴重な素材です。",
+        "clear_condition": {
+            "get_item": "radiation_core"
+        },
+        "previous_advancement": ["explore_radioactive_mine"]
+    },
+    "craft_cooled_laser": {
+        "title": "冷却レーザーを作ろう",
+        "description": "スーパーバッテリーや高密度なトリウムを使って、レーザーを強化しよう",
+        "complete_message": "冷却レーザーを装備すると、燃料の消費量が25%に下がります。",
+        "clear_condition": {
+            "get_item": "cooled_laser"
+        },
+        "previous_advancement": ["explore_radioactive_mine", "craft_improved_laser", "craft_super_battery"]
+    },
+    "craft_heated_laser": {
+        "title": "ヒートレーザーを作ろう",
+        "description": "スーパーバッテリーや高密度なウラニウムを使って、レーザーを強化しよう",
+        "complete_message": "ヒートレーザーを装備すると、燃料の消費量が極端に高くなる代わりに、レーザーによる資源の追加入手確率が10%になります。",
+        "clear_condition": {
+            "get_item": "heated_laser"
+        },
+        "previous_advancement": ["explore_radioactive_mine", "craft_improved_laser", "craft_super_battery"]
+    },
+    "craft_atomic_reactor": {
+        "title": "原子炉を作ろう",
+        "description": "頑丈な板やその他の鉱物を使って、原子炉をクラフトしよう",
+        "complete_message": "原子炉は、トリウムやウラニウムなどの放射性物質を使った反応によって素材を作る設備です。",
+        "clear_condition": {
+            "get_item": "atomic_reactor"
+        },
+        "previous_advancement": ["explore_radioactive_mine", "craft_robust_plate"]
+    },
+    "craft_plutonium": {
+        "title": "プルトニウムを作ろう",
+        "description": "格納器や大量のウラニウムを使ってプルトニウムをクラフトしよう",
+        "complete_message": "プルトニウムは、原子炉で格納されたウラニウムを使って作られる素材で、放射線を利用した高度な装置に使われます。",
+        "clear_condition": {
+            "get_item": "plutonium"
+        },
+        "previous_advancement": ["craft_atomic_reactor"]
+    },
+    "craft_adjusted_laser": {
+        "title": "調整済みレーザーを作ろう",
+        "description": "プルトニウムを使って、ヒートレーザーと冷却レーザーを合体しよう",
+        "complete_message": "調整済みレーザーを装備すると、平均的な燃料消費量に対して高い追加入手確率を得られるようになります。",
+        "clear_condition": {
+            "get_item": "adjusted_laser"
+        },
+        "previous_advancement": ["craft_plutonium", "craft_cooled_laser", "craft_heated_laser"]
+    },
+    "craft_atomic_booster": {
+        "title": "アトミックブースターを作ろう",
+        "description": "放射線コアを使って、アトミックブースターをクラフトしよう",
+        "complete_message": "アトミックブースターは、放射線を利用する装置を作るために使用される貴重な素材です。",
+        "clear_condition": {
+            "get_item": "atomic_booster"
+        },
+        "previous_advancement": ["get_radiation_core", "craft_super_battery", "craft_plutonium"]
+    },
+    "craft_radioactive_laser": {
+        "title": "放射性レーザーを作ろう",
+        "description": "アトミックブースターを使って、レーザーを強化しよう",
+        "complete_message": "放射性レーザーは、自身の持つ放射線量が高いほど資源の追加入手確率が高くなるレーザーです。\n放射線が2増えるごとに確率が1%増加し、最大で25%まで増加します。",
+        "clear_condition": {
+            "get_item": "radioactive_laser"
+        },
+        "previous_advancement": ["craft_atomic_booster", "craft_adjusted_laser"]
+    },
+    "craft_radiation_shield": {
+        "title": "放射線シールドを作ろう",
+        "description": "トリウムを使って放射線シールドをクラフトしよう",
+        "complete_message": "放射線シールドを装備すると、採掘時に放射線が増加する確率が50%になります。\nさらに、放射線量が80を超えている場合はそれ以上増えなくなります。",
+        "clear_condition": {
+            "get_item": "radiation_shield"
+        },
+        "previous_advancement": ["explore_radioactive_mine"]
+    },
+    "craft_reinforced_radiation_shield": {
+        "title": "強化放射線シールドを作ろう",
+        "description": "純粋なウラニウムなどを使って放射線シールドを強化しよう",
+        "complete_message": "放射線シールドを装備すると、採掘時に放射線が増加する確率が25%になり、放射線量が60を超えている場合はそれ以上増えないようになります。",
+        "clear_condition": {
+            "get_item": "reinforced_radiation_shield"
+        },
+        "previous_advancement": ["craft_radiation_shield"]
+    },
+    "craft_immune_boosting_unit": {
+        "title": "免疫促進ユニットを作ろう",
+        "description": "高密度なトリウムや溶岩石を使って免疫促進ユニットをクラフトしよう",
+        "complete_message": "免疫促進ユニットを装備すると、1時間毎の放射線の減少量が3倍になります。",
+        "clear_condition": {
+            "get_item": "immune_boosting_unit"
+        },
+        "previous_advancement": ["explore_radioactive_mine", "get_lava_stone"]
+    },
+    "craft_immunosuppression_unit": {
+        "title": "免疫抑制ユニットを作ろう",
+        "description": "高密度なウラニウムやスーパーバッテリーを使って免疫抑制ユニットをクラフトしよう",
+        "complete_message": "免疫抑制ユニットを装備すると、1時間毎に放射線が減少する確率が25%になります。",
+        "clear_condition": {
+            "get_item": "immunosuppression_unit"
+        },
+        "previous_advancement": ["explore_radioactive_mine", "craft_super_battery"]
+    },
+    "craft_radiation_stopper": {
+        "title": "放射線停滞装置を作ろう",
+        "description": "免疫抑制ユニットや強化放射線シールドを使って放射線停滞装置をクラフトしよう",
+        "complete_message": "放射線停滞装置を装備すると、採掘時に放射線が増加する確率が10%になり、放射線量が50を超えている場合はそれ以上増えないようになります。\nさらに、1時間毎に放射線が減少する確率が10%になります。",
+        "clear_condition": {
+            "get_item": "radiation_stopper"
+        },
+        "previous_advancement": ["craft_immunosuppression_unit", "craft_reinforced_radiation_shield", "craft_plutonium"]
+    },
+    "get_shattered_arm_part": {
+        "title": "破損したアームの部品を手に入れよう",
+        "description": "放射性のジオードから極稀に排出される、破損したアームの部品を手に入れよう",
+        "complete_message": "破損したアームの部品は、ロボットアームを強化するのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "shattered_arm_part"
+        },
+        "previous_advancement": ["explore_radioactive_mine"]
+    },
+    "craft_atomic_arm": {
+        "title": "アトミックアームを作ろう",
+        "description": "破損したアームの部品やアトミックブースター、神話の断片を使ってロボットアームを強化しよう",
+        "complete_message": "アトミックアームを装備すると、採集で消費するスタミナが2減ることに加え、放射線による消費スタミナの増加量が1.75倍弱くなります。\nさらに、放射線が3増えるごとに資源の追加入手確率が1%上がり、最大で10%まで上昇します。",
+        "clear_condition": {
+            "get_item": "atomic_arm"
+        },
+        "previous_advancement": ["craft_robot_arm", "craft_atomic_booster", "get_mythical_fragment", "get_shattered_arm_part"]
+    },
+
+
+    "reach_level_2": {
+        "title": "レベルアップしよう",
+        "description": "探索や釣り、クラフトを何回かして、総合レベル2に到達しよう",
+        "complete_message": "レベルには3つの種類があり、一つは採集レベルで、探索やクラフトによってレベルアップします。\nもう一つは釣りレベルで、釣りをすることでレベルアップします。\nもう一つは総合レベルで、他のレベルが1上がるたびに総合レベルも1上がります。\n総合レベルが上がると、スタミナの最大量が増えるほか、一定のレベルになることで開放される色々な特典があります！",
+        "clear_condition": {
+            "level": 2
+        },
+        "previous_advancement": ["explore_forest"]
+    },
+    "reach_level_7": {
+        "title": "総合レベル7に到達しよう",
+        "description": "探索や釣り、クラフトをたくさんして、総合レベル7に到達しよう",
+        "complete_message": "総合レベルが7になると、/buyを使うことができるようになります。\n/buyを使うと、1時間ごとに内容が更新されるショップからアイテムを購入することができます。\nここで使うお金は/sellでアイテムを売却して手に入れることができます。\nもちろん、ショップからしか手に入らないアイテムもあります。ショップの内容は常にチェックしておきましょう！",
+        "clear_condition": {
+            "level": 7
+        },
+        "previous_advancement": ["reach_level_2"]
+    },
+    "reach_level_20": {
+        "title": "総合レベル20に到達しよう",
+        "description": "探索や釣り、クラフトをもっとたくさんして、総合レベル20に到達しよう",
+        "complete_message": "総合レベルが20になると、アクセサリーの装備スロットが3つになります。",
+        "clear_condition": {
+            "level": 20
+        },
+        "previous_advancement": ["reach_level_7"]
+    },
+    "reach_level_100": {
+        "title": "総合レベル100に到達しよう",
+        "description": "探索や釣り、クラフトをもっともっとたくさんして、総合レベル100に到達しよう",
+        "complete_message": "総合レベルが100になると、アクセサリーの装備スロットが4つになります。",
+        "clear_condition": {
+            "level": 100
+        },
+        "previous_advancement": ["reach_level_20"]
+    },
+    "buy_ruby": {
+        "title": "ルビーを購入しよう",
+        "description": "ショップから1000コインでルビーを購入しよう",
+        "complete_message": "ルビーは、ショップからでしか入手できない素材で、達人の釣り竿やクリスタルのツルハシを作るのに用いられます。",
+        "clear_condition": {
+            "get_item": "ruby"
+        },
+        "previous_advancement": ["reach_level_7"]
+    },
+    "craft_crafting_charm": {
+        "title": "工作のお守りを作ろう",
+        "description": "銅を延べ棒にして、工作のお守りをクラフトしよう",
+        "complete_message": "/equipで工作のお守りを装備することで、15%の確率でクラフト時にスタミナを消費しないようになります！\n装備しないとアクセサリーの効果はありません！",
+        "clear_condition": {
+            "get_item": "crafting_charm"
+        },
+        "previous_advancement": ["craft_furnace"]
+    },
+    "craft_crafting_ring": {
+        "title": "工作のリングを作ろう",
+        "description": "工作のお守りをクラフトで強化して、工作のリングにしよう(強化するときは一回お守りを外してね！)",
+        "complete_message": "工作のリングを装備すると、クラフト時にスタミナを消費しない確率が25%になります！",
+        "clear_condition": {
+            "get_item": "crafting_ring"
+        },
+        "previous_advancement": ["craft_crafting_charm", "explore_caverns", "explore_snow"]
+    },
+    "craft_crafting_artifact": {
+        "title": "工作のアーティファクトを作ろう",
+        "description": "工作のリングをクラフトで強化して、工作のアーティファクトにしよう",
+        "complete_message": "工作のアーティファクトを装備すると、クラフト時にスタミナを消費しない確率が35%になります！",
+        "clear_condition": {
+            "get_item": "crafting_artifact"
+        },
+        "previous_advancement": ["craft_crafting_ring", "explore_mountains"]
+    },
+    "craft_money_charm": {
+        "title": "金運のお守りを作ろう",
+        "description": "金の延べ棒を使って、金運のお守りをクラフトしよう",
+        "complete_message": "/equipで金運のお守りを装備することで、採掘や釣りをしたときに23%の確率で10コインが手に入ります！\n装備しないとアクセサリーの効果はありません！",
+        "clear_condition": {
+            "get_item": "money_charm"
+        },
+        "previous_advancement": ["explore_deep_caverns"]
+    },
+    "craft_money_ring": {
+        "title": "金運のリングを作ろう",
+        "description": "金運のお守りをクラフトで強化して、金運のリングにしよう(強化するときは一回お守りを外してね！)",
+        "complete_message": "金運のリングを装備すると、コインが手に入る確率が28%になります！",
+        "clear_condition": {
+            "get_item": "money_ring"
+        },
+        "previous_advancement": ["craft_money_charm"]
+    },
+    "craft_money_artifact": {
+        "title": "金運のアーティファクトを作ろう",
+        "description": "金運のリングをクラフトで強化して、金運のアーティファクトにしよう",
+        "complete_message": "金運のアーティファクトを装備すると、コインが手に入る確率が33%になります！",
+        "clear_condition": {
+            "get_item": "money_artifact"
+        },
+        "previous_advancement": ["craft_money_ring"]
+    },
+    "craft_charcoal_kiln": {
+        "title": "炭窯を作ろう",
+        "description": "鉄の延べ棒を使って炭窯を作ろう",
+        "complete_message": "炭窯は、丸太を炭にすることができる設備です。\n石炭がどうしても足りないときに効果を発揮します。",
+        "clear_condition": {
+            "get_item": "charcoal_kiln"
+        },
+        "previous_advancement": ["explore_caverns"]
+    },
+
+
+    "craft_fishing_rod": {
+        "title": "釣り竿をクラフトしよう",
+        "description": "/craftで釣り竿を作ろう",
+        "complete_message": "釣り竿は釣りで使用される初歩的なツールです。\n釣り竿は/equipで装備しないと使うことができません！",
+        "clear_condition": {
+            "get_item": "fishing_rod"
+        },
+        "previous_advancement": ["craft_planks"]
+    },
+    "fishing_pond": {
+        "title": "池で釣りをしよう",
+        "description": "釣り竿を装備して、/fishingで池を選択して釣りをしよう",
+        "complete_message": "池で釣りをすると、丸太などの素材、マスやフナなどの魚、木箱などが手に入ります。\n釣りをする際は、釣りパワーというステータスが重要になります。\n釣りパワーは、釣り竿のパワー、釣りアクセサリーの効果、餌のパワー、そして時刻によるパワー補正によって算出され、早朝の方がパワーが高くなります。\n釣りパワーを上げることで、より良いものが釣れるようになります。例えば、池で木箱を釣るには釣りパワーが最低で9必要だったり、丸太は釣りパワーが8より大きければ釣れなかったりします。\n\nまた、釣りで使用する釣り竿にはそれぞれ個別のステータスが存在しています。\nそれぞれの釣り竿の細かなステータスを知りたい場合は/item_dataで詳細情報を見てください。",
+        "clear_condition": {
+            "fishing": "pond"
+        },
+        "previous_advancement": ["craft_fishing_rod"]
+    },
+    "get_crate": {
+        "title": "木箱を手に入れよう",
+        "description": "釣りで木箱を手に入れよう",
+        "complete_message": "木箱を/useで使用することで、ランダムなアイテムを手に入れることができます。\n中には、木箱からでしか手に入らないアイテムもあります。",
+        "clear_condition": {
+            "get_item": "crate"
+        },
+        "previous_advancement": ["fishing_pond"]
+    },
+    "get_tin": {
+        "title": "錫を手に入れよう",
+        "description": "木箱から錫を手に入れよう",
+        "complete_message": "錫は木箱や宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "tin"
+        },
+        "previous_advancement": ["get_crate"]
+    },
+    "get_aquamarine": {
+        "title": "アクアマリンを手に入れよう",
+        "description": "木箱からアクアマリンを手に入れよう",
+        "complete_message": "アクアマリンは木箱や宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "aquamarine"
+        },
+        "previous_advancement": ["get_crate"]
+    },
+    "craft_fish_oil": {
+        "title": "フィッシュオイルを作ろう",
+        "description": "魚を集めてフィッシュオイルをクラフトしよう",
+        "complete_message": "フィッシュオイルは、あらゆる種類の魚から作れる素材です。\n釣りに関連する様々なクラフトに使用されるほか、餌を作るのにも必要です。",
+        "clear_condition": {
+            "get_item": "fishing_rod"
+        },
+        "previous_advancement": ["fishing_pond"]
+    },
+    "craft_fisherman_station": {
+        "title": "釣り人の作業場を作ろう",
+        "description": "フィッシュオイルと木材を使って釣り人の作業場をクラフトしよう",
+        "complete_message": "釣り人の作業場は、釣りに関連する様々なクラフトで必須になる設備です。\nクラフトに使用しても壊れることはありません。",
+        "clear_condition": {
+            "get_item": "fisherman_station"
+        },
+        "previous_advancement": ["craft_fish_oil"]
+    },
+    "craft_apprentice_rod": {
+        "title": "見習いの釣り竿を作ろう",
+        "description": "釣り人の作業場で、錫とフィッシュオイルを使って釣り竿を強化しよう",
+        "complete_message": "見習いの釣り竿は、最初の釣り竿よりも高い性能で、釣りパワーが高く、失敗確率が低くなっています。\nまた、釣りをしたときに3%の確率で2回分のアイテムが手に入るようになります。",
+        "clear_condition": {
+            "get_item": "apprentice_rod"
+        },
+        "previous_advancement": ["craft_fisherman_station", "get_tin"]
+    },
+    "craft_expert_rod": {
+        "title": "熟練の釣り竿を作ろう",
+        "description": "錫の延べ棒とアクアマリンを使って見習いの釣り竿を強化しよう",
+        "complete_message": "熟練の釣り竿は、見習いの釣り竿よりも高い性能で、釣りパワーとアイテム増加確率が高く、失敗確率が低くなっています。",
+        "clear_condition": {
+            "get_item": "expert_rod"
+        },
+        "previous_advancement": ["craft_apprentice_rod", "get_aquamarine"]
+    },
+    "craft_fishing_charm": {
+        "title": "釣りのお守りを作ろう",
+        "description": "フィッシュオイルを使って釣りのお守りをクラフトしよう",
+        "complete_message": "/equipで釣りお守りを装備することで、釣りパワーが4上昇します！\n装備しないとアクセサリーの効果はありません！",
+        "clear_condition": {
+            "get_item": "fishing_charm"
+        },
+        "previous_advancement": ["craft_fisherman_station"]
+    },
+    "craft_fishing_ring": {
+        "title": "釣りのリングを作ろう",
+        "description": "釣りのお守りをクラフトで強化して、釣りのリングにしよう(強化するときは一回お守りを外してね！)",
+        "complete_message": "釣りのリングを装備すると、釣りパワーの上昇量が7になります！",
+        "clear_condition": {
+            "get_item": "fishing_ring"
+        },
+        "previous_advancement": ["craft_fishing_charm", "get_tin"]
+    },
+    "craft_fishing_artifact": {
+        "title": "釣りのアーティファクトを作ろう",
+        "description": "釣りのリングをクラフトで強化して、釣りのアーティファクトにしよう",
+        "complete_message": "釣りのアーティファクトを装備すると、釣りパワーの上昇量が10になります！",
+        "clear_condition": {
+            "get_item": "fishing_artifact"
+        },
+        "previous_advancement": ["craft_fishing_ring", "get_aquamarine", "get_chrome"]
+    },
+    "craft_fishing_relic": {
+        "title": "釣りのレリックを作ろう",
+        "description": "釣りのアーティファクトをクラフトで強化して、釣りのレリックにしよう",
+        "complete_message": "釣りのレリックを装備すると、釣りパワーの上昇量が13になります！",
+        "clear_condition": {
+            "get_item": "fishing_relic"
+        },
+        "previous_advancement": ["craft_fishing_artifact", "craft_dwarven_alloy"]
+    },
+    "craft_biting_charm": {
+        "title": "入れ食いのお守りを作ろう",
+        "description": "錫の延べ棒とアクアマリンを使って入れ食いのお守りをクラフトしよう",
+        "complete_message": "/equipで釣りお守りを装備することで、釣りをしたときに6%の確率で追加でアイテムが釣れるようになります！\n装備しないとアクセサリーの効果はありません！",
+        "clear_condition": {
+            "get_item": "biting_charm"
+        },
+        "previous_advancement": ["craft_fisherman_station", "get_aquamarine", "get_tin"]
+    },
+    "craft_biting_ring": {
+        "title": "入れ食いのリングを作ろう",
+        "description": "入れ食いのお守りをクラフトで強化して、入れ食いのリングにしよう(強化するときは一回お守りを外してね！)",
+        "complete_message": "入れ食いのリングを装備すると、釣りのアイテム増加確率が9%になります！",
+        "clear_condition": {
+            "get_item": "biting_ring"
+        },
+        "previous_advancement": ["craft_biting_charm", "get_opal"]
+    },
+    "craft_biting_artifact": {
+        "title": "入れ食いのアーティファクトを作ろう",
+        "description": "入れ食いのリングをクラフトで強化して、入れ食いのアーティファクトにしよう",
+        "complete_message": "入れ食いのアーティファクトを装備すると、釣りのアイテム増加確率が12%になります！",
+        "clear_condition": {
+            "get_item": "biting_artifact"
+        },
+        "previous_advancement": ["craft_biting_ring", "craft_dwarven_alloy"]
+    },
+    "fishing_river": {
+        "title": "川で釣りをしよう",
+        "description": "川で釣りをしよう",
+        "complete_message": "川で釣りをすると、イワナやワカサギなどの魚、そして木箱などがが手に入ります。\n木箱を釣るのに必要な釣りパワーは池よりも高く、見習いの釣り竿や軽い釣り竿を使用することをオススメします。",
+        "clear_condition": {
+            "fishing": "river"
+        },
+        "previous_advancement": ["fishing_pond"]
+    },
+    "fishing_beach": {
+        "title": "海岸で釣りをしよう",
+        "description": "海岸で釣りをしよう",
+        "complete_message": "海岸で釣りをすると、イワシやサバなどの魚、そして木箱、宝箱などがが手に入ります。\n木箱や宝箱を釣るのに必要な釣りパワーは更に高く、熟練の釣り竿などを使うことをオススメします。",
+        "clear_condition": {
+            "fishing": "beach"
+        },
+        "previous_advancement": ["fishing_river"]
+    },
+    "get_treasure_chest": {
+        "title": "宝箱を手に入れよう",
+        "description": "海岸での釣りで宝箱を手に入れよう",
+        "complete_message": "宝箱を/useで使用することで、ランダムなアイテムを手に入れることができます。\n基本的には木箱よりも高価なアイテムが入手できます。",
+        "clear_condition": {
+            "get_item": "treasure_chest"
+        },
+        "previous_advancement": ["fishing_beach"]
+    },
+    "get_chrome": {
+        "title": "クロムを手に入れよう",
+        "description": "宝箱から錫を手に入れよう",
+        "complete_message": "クロムは宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "chrome"
+        },
+        "previous_advancement": ["get_treasure_chest"]
+    },
+    "get_opal": {
+        "title": "オパールを手に入れよう",
+        "description": "宝箱からオパールを手に入れよう",
+        "complete_message": "オパールは宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "opal"
+        },
+        "previous_advancement": ["get_treasure_chest"]
+    },
+    "craft_master_rod": {
+        "title": "達人の釣り竿を作ろう",
+        "description": "クロムの延べ棒とルビーを使って熟練の釣り竿を強化しよう",
+        "complete_message": "達人の釣り竿は、熟練の釣り竿よりも高い性能で、釣りパワーとアイテム増加確率が高く、失敗確率が低くなっています。",
+        "clear_condition": {
+            "get_item": "master_rod"
+        },
+        "previous_advancement": ["craft_expert_rod", "get_chrome", "buy_ruby"]
+    },
+    "craft_legend_rod": {
+        "title": "伝説の釣り竿を作ろう",
+        "description": "クロムの延べ棒とオパールを使って達人の釣り竿を強化しよう",
+        "complete_message": "伝説の釣り竿は、達人の釣り竿よりも高い性能で、釣りパワーとアイテム増加確率が高く、失敗確率とスタミナ消費量が低くなっています。",
+        "clear_condition": {
+            "get_item": "legend_rod"
+        },
+        "previous_advancement": ["craft_master_rod", "get_opal"]
+    },
+    "fishing_ocean": {
+        "title": "海で釣りをしよう",
+        "description": "海で釣りをしよう",
+        "complete_message": "海で釣りをすると、タイやカサゴなどの魚、そして木箱、宝箱などがが手に入ります。\n木箱や宝箱を釣るのに必要な釣りパワーは更に高く、達人の釣り竿などを使うことをオススメします。",
+        "clear_condition": {
+            "fishing": "ocean"
+        },
+        "previous_advancement": ["fishing_beach"]
+    },
+    "fishing_deep_ocean": {
+        "title": "深海で釣りをしよう",
+        "description": "深海で釣りをしよう",
+        "complete_message": "深海で釣りをすると、フグや真珠など、そして木箱、宝箱、金の箱などがが手に入ります。\n木箱や宝箱、金の箱を釣るのに必要な釣りパワーは更に高く、伝説の釣り竿などを使うことをオススメします。",
+        "clear_condition": {
+            "fishing": "deep_ocean"
+        },
+        "previous_advancement": ["fishing_ocean"]
+    },
+    "get_golden_crate": {
+        "title": "金の箱を手に入れよう",
+        "description": "深海での釣りで金の箱を手に入れよう",
+        "complete_message": "金の箱を/useで使用することで、ランダムなアイテムを手に入れることができます。\n基本的には木箱や宝箱よりも高価なアイテムが入手できます。",
+        "clear_condition": {
+            "get_item": "golden_crate"
+        },
+        "previous_advancement": ["fishing_deep_ocean"]
+    },
+    "get_lead": {
+        "title": "鉛を手に入れよう",
+        "description": "金の箱から鉛を手に入れよう",
+        "complete_message": "鉛は金の箱や深淵の宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "lead"
+        },
+        "previous_advancement": ["get_golden_crate"]
+    },
+    "get_citrine": {
+        "title": "シトリンを手に入れよう",
+        "description": "金の箱からシトリンを手に入れよう",
+        "complete_message": "シトリンは金の箱や深淵の宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "citrine"
+        },
+        "previous_advancement": ["get_golden_crate"]
+    },
+    "get_pearl": {
+        "title": "真珠を手に入れよう",
+        "description": "深海での釣りで真珠を手に入れよう",
+        "complete_message": "真珠は深海などで釣ることができる素材です。",
+        "clear_condition": {
+            "get_item": "pearl"
+        },
+        "previous_advancement": ["fishing_deep_ocean"]
+    },
+    "craft_shiny_rod": {
+        "title": "輝く釣り竿を作ろう",
+        "description": "鉛と真珠を使って輝く釣り竿をクラフトしよう",
+        "complete_message": "輝く釣り竿は、伝説の釣り竿などよりも釣りパワーが高いですが、その他の性能で大きく劣ります。",
+        "clear_condition": {
+            "get_item": "shiny_rod"
+        },
+        "previous_advancement": ["get_pearl", "get_lead"]
+    },
+    "craft_crystal_rod": {
+        "title": "結晶の釣り竿を作ろう",
+        "description": "鉛とシトリンを使って輝く釣り竿を強化しよう",
+        "complete_message": "結晶の釣り竿は、輝く釣り竿の弱い部分を少し緩和している他、パワーもより高くなっています。",
+        "clear_condition": {
+            "get_item": "crystal_rod"
+        },
+        "previous_advancement": ["craft_shiny_rod", "get_citrine"]
+    },
+    "fishing_subterranean_lake": {
+        "title": "地底湖で釣りをしよう",
+        "description": "地底湖で釣りをしよう",
+        "complete_message": "地底湖で釣りをすると、フグや真珠など、そして木箱、宝箱、金の箱、深淵の宝箱などがが手に入ります。\n木箱や宝箱、金の箱、深淵の宝箱を釣るのに必要な釣りパワーは更に高く、結晶の釣り竿などを使うことをオススメします。",
+        "clear_condition": {
+            "fishing": "subterranean_lake"
+        },
+        "previous_advancement": ["fishing_deep_ocean"]
+    },
+    "get_abyssal_treasure_chest": {
+        "title": "深淵の宝箱を手に入れよう",
+        "description": "地底湖や深淵の釣り堀での釣りで深淵の宝箱を手に入れよう",
+        "complete_message": "深淵の宝箱を/useで使用することで、ランダムなアイテムを手に入れることができます。\n基本的には金の箱よりも高価なアイテムが入手できます。",
+        "clear_condition": {
+            "get_item": "abyssal_treasure_chest"
+        },
+        "previous_advancement": ["fishing_subterranean_lake"]
+    },
+    "get_platinum": {
+        "title": "プラチナを手に入れよう",
+        "description": "深淵の宝箱からプラチナを手に入れよう",
+        "complete_message": "プラチナは深淵の宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "platinum"
+        },
+        "previous_advancement": ["get_abyssal_treasure_chest"]
+    },
+    "get_onyx": {
+        "title": "オニキスを手に入れよう",
+        "description": "深淵の宝箱からオニキスを手に入れよう",
+        "complete_message": "オニキスは深淵の宝箱から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "onyx"
+        },
+        "previous_advancement": ["get_abyssal_treasure_chest"]
+    },
+    "get_mercury": {
+        "title": "水銀を手に入れよう",
+        "description": "深淵の宝箱または深淵の釣り堀での釣りでオニキスを手に入れよう",
+        "complete_message": "水銀は深淵の宝箱、または深淵の釣り堀から手に入る素材で、より良い釣り竿を作るために使用されます。",
+        "clear_condition": {
+            "get_item": "mercury"
+        },
+        "previous_advancement": ["fishing_subterranean_lake"]
+    },
+    "craft_dwarven_alloy": {
+        "title": "ドワーフの合金を作ろう",
+        "description": "金属や宝石を集めてドワーフの合金を作ろう",
+        "complete_message": "ドワーフの合金は、釣りにおける発展的なアイテムを作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "dwarven_alloy"
+        },
+        "previous_advancement": ["get_onyx", "get_platinum", "get_lead", "get_citrine"]
+    },
+    "craft_dwarven_rod": {
+        "title": "ドワーフの釣り竿を作ろう",
+        "description": "プラチナと水銀を使って結晶の釣り竿を強化しよう",
+        "complete_message": "ドワーフの釣り竿は、結晶の釣り竿よりも高いステータスを持っていますが、その代わりにスタミナの消費量が多くなっています。",
+        "clear_condition": {
+            "get_item": "dwarven_rod"
+        },
+        "previous_advancement": ["craft_crystal_rod", "get_mercury", "get_platinum"]
+    },
+    "craft_advanced_dwarven_rod": {
+        "title": "進化したドワーフの釣り竿を作ろう",
+        "description": "ドワーフの合金を使ってドワーフの釣り竿を強化しよう",
+        "complete_message": "進化したドワーフの釣り竿は、ドワーフの釣り竿の高いスタミナの消費量を軽減し、その他のステータスも上昇しています。",
+        "clear_condition": {
+            "get_item": "advanced_dwarven_rod"
+        },
+        "previous_advancement": ["craft_dwarven_rod", "craft_dwarven_alloy"]
+    },
+    "get_abyssal_seed": {
+        "title": "深淵の種を手に入れよう",
+        "description": "深淵の宝箱から極稀に排出される、深淵の種を手に入れよう",
+        "complete_message": "深淵の種は、強力な釣り竿を作るために使用される、極端にレアな素材です。",
+        "clear_condition": {
+            "get_item": "abyssal_seed"
+        },
+        "previous_advancement": ["get_abyssal_treasure_chest"]
+    },
+    "craft_abyssal_ingot": {
+        "title": "深淵の延べ棒を作ろう",
+        "description": "2つの深淵の種と、その他の大量の素材を集めて深淵の延べ棒を作ろう",
+        "complete_message": "深淵の延べ棒は、強力な釣り竿を作るのに必要な素材です。",
+        "clear_condition": {
+            "get_item": "abyssal_ingot"
+        },
+        "previous_advancement": ["get_abyssal_seed", "craft_dwarven_alloy"]
+    },
+    "craft_abyssal_rod": {
+        "title": "深淵の釣り竿を作ろう",
+        "description": "深淵の延べ棒を使って進化したドワーフの釣り竿を強化しよう",
+        "complete_message": "深淵の釣り竿は、輝く釣り竿の最終強化版で、全てのステータスで今までの他の釣り竿を上回っています。",
+        "clear_condition": {
+            "get_item": "abyssal_rod"
+        },
+        "previous_advancement": ["craft_advanced_dwarven_rod", "craft_abyssal_ingot"]
+    },
+    "fishing_abyss_fishing_pond": {
+        "title": "深淵の釣り堀で釣りをしよう",
+        "description": "深海で釣りをしよう",
+        "complete_message": "深淵の釣り堀で釣りをすると、フグや真珠、水銀など、そして木箱、宝箱、金の箱、深淵の宝箱などがが手に入ります。\n木箱や宝箱、金の箱、深淵の宝箱を釣るのに必要な釣りパワーは更に高く、結晶の釣り竿やドワーフの釣り竿などを使うことをオススメします。",
+        "clear_condition": {
+            "fishing": "abyss_fishing_pond"
+        },
+        "previous_advancement": ["fishing_subterranean_lake"]
+    }
+}
