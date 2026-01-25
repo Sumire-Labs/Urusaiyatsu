@@ -1,7 +1,0 @@
-{
-    "bot_type": "test",
-    "token": {
-        "test": "テスト用botトークン",
-        "server": "本番用botトークン"
-    }
-}
