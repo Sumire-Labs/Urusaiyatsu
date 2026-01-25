@@ -7,6 +7,9 @@ import math
 from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
 from core.utils import new_user, save_users
 
+# 1ページあたりの表示アイテム数 (これを超えたらshortになる)
+STATUS_ITEMS_PER_PAGE = 25
+
 
 class status_paging(discord.ui.View):
     """ステータスページング用View"""
@@ -137,8 +140,8 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
 
         # forでEmbedの中身を書き込み
         t = 0
-        s = page * 25
-        m = s - 25
+        s = page * STATUS_ITEMS_PER_PAGE
+        m = s - STATUS_ITEMS_PER_PAGE
         for i in items.items():
             if 'drill_t1' in ITEMS[i[0]]['tag']:
                 dr = True
@@ -152,7 +155,7 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
             desc_text += f'\n放射線{EMOJIS["radiation"]} __**{user_f["radiation"]}**__'
 
         # タイトルを生成
-        page_max = math.ceil(t / 25)
+        page_max = math.ceil(t / STATUS_ITEMS_PER_PAGE)
         embed.title = f'{name}のステータス ({page}/{page_max})'
 
         # 装備品
