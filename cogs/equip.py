@@ -2,12 +2,11 @@
 Equip Cog
 """
 import discord
-import json
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, equippable_choices
-from core.utils import new_user
+from core.utils import new_user, save_users
 from views.equip_view import equip_select, set_equip_func
 from views.shop_view import remove_equip_choice
 
@@ -81,8 +80,7 @@ async def equip(interaction: discord.Interaction, item: str):
                 await interaction.response.send_message(f'**{item_name}**を装備しました！')
 
                 # ファイル更新
-                with open('user.json', 'w', encoding='UTF-8') as f:
-                    json.dump(USERS, f, indent=2, ensure_ascii=False)
+                save_users()
             elif ac:
                 if type_err:
                     name_item = ITEMS[conflicting_item]['name_e']

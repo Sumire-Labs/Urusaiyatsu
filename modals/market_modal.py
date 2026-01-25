@@ -3,9 +3,9 @@
 """
 import discord
 import math
-import json
 
 from core.state import USERS, ITEMS, MARKET, EMOJIS
+from core.utils import save_users, save_market
 
 
 class market_sell_amount(discord.ui.Modal):
@@ -68,10 +68,8 @@ async def market_sell_item(interaction: discord.Interaction, item: str, count: i
                 f'**{item_name}{count}**個を価格**{price}**{EMOJIS["money"]}で出品しました！(ID:{item_id})')
 
             # ファイル更新
-            with open('user.json', 'w', encoding='UTF-8') as f:
-                json.dump(USERS, f, indent=2, ensure_ascii=False)
-            with open('market.json', 'w', encoding='UTF-8') as f:
-                json.dump(MARKET, f, indent=2, ensure_ascii=False)
+            save_users()
+            save_market()
         else:
             await interaction.response.send_message(
                 f'手数料( **{value}**{EMOJIS["money"]} )を支払うための所持金が足りません。')

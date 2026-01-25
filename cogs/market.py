@@ -3,12 +3,11 @@ Market Cog
 """
 import discord
 import math
-import json
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, MARKET, ADVANCEMENTS, EMOJIS
-from core.utils import new_user, find, complete_advancement
+from core.utils import new_user, find, complete_advancement, save_users, save_market
 from views.item_select_view import item_select_view, register_callback
 from modals.market_modal import market_sell
 
@@ -95,10 +94,8 @@ class MarketCog(commands.Cog):
                     f'**{item_f}{count}**個を**{price}**{EMOJIS["money"]}で購入しました！{ret}')
 
                 # ファイル更新
-                with open('user.json', 'w', encoding='UTF-8') as f:
-                    json.dump(USERS, f, indent=2, ensure_ascii=False)
-                with open('market.json', 'w', encoding='UTF-8') as f:
-                    json.dump(MARKET, f, indent=2, ensure_ascii=False)
+                save_users()
+                save_market()
             else:
                 await interaction.response.send_message(f'このアイテムの購入には**{price}**{EMOJIS["money"]}必要です。')
         else:

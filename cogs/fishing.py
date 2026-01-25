@@ -3,14 +3,13 @@ Fishing Cog
 """
 import discord
 import random
-import json
 import datetime
 import typing
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices, bait_choices
-from core.utils import new_user, xp, complete_advancement
+from core.utils import new_user, xp, complete_advancement, save_users
 
 
 class FishingCog(commands.Cog):
@@ -184,14 +183,12 @@ class FishingCog(commands.Cog):
                         f'{place_name}での釣りによって**{item_f}**を手に入れました！{add_msg}{ret}')
 
                     # ファイル更新
-                    with open('user.json', 'w') as open_file:
-                        json.dump(USERS, open_file, indent=2)
+                    save_users()
 
                 else:
                     user_f['stamina'] -= stamina
                     USERS[str(interaction.user.id)] = user_f
-                    with open('user.json', 'w') as open_file:
-                        json.dump(USERS, open_file, indent=2)
+                    save_users()
                     place_name = place_f['name']
                     await interaction.response.send_message(
                         f'{place_name}での釣りをしましたが、魚に逃げられてしまいました...')
@@ -348,8 +345,7 @@ class FishingCog(commands.Cog):
             await interaction.response.send_message(ret, embed=embed)
 
             # ファイル更新
-            with open('user.json', 'w') as open_file:
-                json.dump(USERS, open_file, indent=2)
+            save_users()
 
 
 async def setup(bot: commands.Bot):

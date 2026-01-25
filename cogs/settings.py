@@ -1,12 +1,12 @@
 """
 Settings Cog
 """
-import json
 from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
 
 from core.state import USERS
+from core.utils import save_users
 from modals.settings_modal import set_name
 
 
@@ -36,8 +36,7 @@ class SettingsCog(commands.Cog):
                 await interaction.response.send_message('ニュースと目標を「**表示する**」に変更しました。')
 
         # ファイル更新
-        with open('user.json', 'w', encoding='UTF-8') as f:
-            json.dump(USERS, f, indent=2, ensure_ascii=False)
+        save_users()
 
 
 async def setup(bot: commands.Bot):

@@ -5,9 +5,9 @@
 import time
 import datetime
 import random
-import json
 
 from .state import USERS, ITEMS, DATA, shop_list
+from .utils import save_users, save_data
 
 
 def start_background_loop():
@@ -59,10 +59,8 @@ def start_background_loop():
 
             # ファイル更新
             DATA['date'] = dtn
-            with open('data.json', 'w', encoding='UTF-8') as f:
-                json.dump(DATA, f, indent=2)
-            with open('user.json', 'w', encoding='UTF-8') as f:
-                json.dump(USERS, f, indent=2, ensure_ascii=False)
+            save_data()
+            save_users()
 
             print(f"時間更新完了: {dtn}時")
 

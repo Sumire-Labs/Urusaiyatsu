@@ -3,9 +3,9 @@
 """
 import discord
 import ast
-import json
 
 from core.state import USERS, ITEMS, EMOJIS
+from core.utils import save_users
 
 
 class shop_choice(discord.ui.View):
@@ -60,8 +60,7 @@ class remove_equip_choice(discord.ui.View):
             await interaction.response.send_message(f'**{item_name}**を外しました。')
 
             # ファイル更新
-            with open('user.json', 'w', encoding='UTF-8') as f:
-                json.dump(USERS, f, indent=2, ensure_ascii=False)
+            save_users()
 
 
 async def shop_buy(interaction: discord.Interaction, item: str):
@@ -97,8 +96,7 @@ async def shop_buy(interaction: discord.Interaction, item: str):
                 f'**{item_f}**を**{price}**{EMOJIS["money"]}で購入しました！( このアイテムの残り購入回数: {amount} )')
 
             # ファイル更新
-            with open('user.json', 'w', encoding='UTF-8') as f:
-                json.dump(USERS, f, indent=2, ensure_ascii=False)
+            save_users()
         else:
             await interaction.response.send_message('お金が足りません。')
     else:
