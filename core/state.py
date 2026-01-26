@@ -17,7 +17,6 @@ os.chdir(DATA_DIR)
 
 # Choice lists（setup_hookで初期化）
 place_choices: list[Choice] = []
-combat_choices: list[Choice] = []
 fishing_choices: list[Choice] = []
 consumable_choices: list[Choice] = []
 shop_list: list[str] = []
@@ -33,8 +32,6 @@ with open('item.json', 'r', encoding='UTF-8') as f:
     ITEMS: dict = json.load(f)
 with open('place.json', 'r', encoding='UTF-8') as f:
     PLACES: dict = json.load(f)
-with open('combat.json', 'r', encoding='UTF-8') as f:
-    COMBAT_PLACES: dict = json.load(f)
 with open('fishing.json', 'r', encoding='UTF-8') as f:
     FISHING_PLACES: dict = json.load(f)
 with open('loot.json', 'r', encoding='UTF-8') as f:
@@ -58,7 +55,6 @@ EMOJIS: dict[str, str] = {
     'level': '',
     'level_gathering': '',
     'level_fishing': '',
-    'level_combat': '',
     'empty': '',
     'radiation': ''
 }
@@ -151,11 +147,6 @@ class Bot(commands.Bot):
 
             t += 1
         print('Item list generated:' + str(t))
-
-        # 戦闘場所選択リスト
-        for place_id, place_data in COMBAT_PLACES.items():
-            combat_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('Combat place list generated:' + str(len(combat_choices)))
 
         # 釣り場所選択リスト
         for place_id, place_data in FISHING_PLACES.items():

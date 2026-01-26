@@ -55,14 +55,11 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
     money = user_f['money']
     fuel = user_f['fuel']
     level = user_f['level_global']
-    level_combat = user_f['level_combat']
     level_fishing = user_f['level_fishing']
     level_gathering = user_f['level_gathering']
-    xp_combat = user_f['xp_combat']
     xp_fishing = user_f['xp_fishing']
     xp_gathering = user_f['xp_gathering']
     name = user_f['name']
-    level_next_combat = int((level_combat + 1) ** 1.5) * 5
     level_next_fishing = int((level_fishing + 1) ** 1.5) * 5
     level_next_gathering = int((level_gathering + 1) ** 1.5) * 5
     desc_text = ''

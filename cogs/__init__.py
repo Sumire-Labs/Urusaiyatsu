@@ -10,7 +10,6 @@ EXTENSIONS = [
     "cogs.use",
     "cogs.explore",
     "cogs.fishing",
-    "cogs.combat",
     "cogs.craft",
     "cogs.sell",
     "cogs.buy",
