@@ -7,7 +7,7 @@ import datetime
 import random
 
 from .state import USERS, ITEMS, DATA, shop_list
-from .utils import save_users, save_data
+from .utils import save_users, save_data, get_accessory_effects
 
 
 def start_background_loop():
@@ -20,19 +20,10 @@ def start_background_loop():
             for user_data in USERS.values():
                 # スタミナ回復
                 stamina = 10
-                acc_stamina = 0
-                radiation_decrease = 3
-                radiation_immune = 100
-
-                for acc in user_data['equipment']['accessory']:
-                    if acc is not None:
-                        item = ITEMS[acc]
-                        if 'acc_rest' in item['tag']:
-                            acc_stamina = item['rest_stamina']
-                        if 'acc_radiation_decrease' in item['tag']:
-                            radiation_decrease = item['radiation_decrease_multiplier']
-                        if 'acc_radiation_suppress' in item['tag']:
-                            radiation_immune = item['radiation_immune']
+                acc_effects = get_accessory_effects(user_data)
+                acc_stamina = acc_effects['acc_rest']['rest_stamina'] if 'acc_rest' in acc_effects else 0
+                radiation_decrease = acc_effects['acc_radiation_decrease']['radiation_decrease_multiplier'] if 'acc_radiation_decrease' in acc_effects else 3
+                radiation_immune = acc_effects['acc_radiation_suppress']['radiation_immune'] if 'acc_radiation_suppress' in acc_effects else 100
 
                 user_data['stamina'] += stamina + acc_stamina
 

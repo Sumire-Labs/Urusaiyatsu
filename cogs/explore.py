@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, PLACES, ADVANCEMENTS, EMOJIS, place_choices
-from core.utils import new_user, xp, complete_advancement, save_users
+from core.utils import new_user, xp, complete_advancement, save_users, get_accessory_effects
 
 
 class ExploreCog(commands.Cog):
@@ -101,24 +101,13 @@ class ExploreCog(commands.Cog):
         # アクセ効果
         stamina = 10
         money = 0
-        acc_stamina = 0
-        acc_chance = 0
-        acc_radiation = 0
-        max_radiation = 250
-        radiation_debuff = 10
+        acc_effects = get_accessory_effects(user_f)
+        acc_stamina = acc_effects['acc_explore']['stamina_reduce'] if 'acc_explore' in acc_effects else 0
+        acc_chance = acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0
+        acc_radiation = acc_effects['acc_radiation']['radiation_resistance'] if 'acc_radiation' in acc_effects else 0
+        max_radiation = acc_effects['acc_radiation']['max_radiation'] if 'acc_radiation' in acc_effects else 250
+        radiation_debuff = math.ceil(10 * acc_effects['acc_radiation_effect']['radiation_debuff']) if 'acc_radiation_effect' in acc_effects else 10
         dr = 0
-        for t in user_f['equipment']['accessory']:
-            if t is not None:
-                item = ITEMS[t]
-                if 'acc_explore' in item['tag']:
-                    acc_stamina = item['stamina_reduce']
-                if 'acc_money' in item['tag']:
-                    acc_chance = item['money_chance']
-                if 'acc_radiation' in item['tag']:
-                    acc_radiation = item['radiation_resistance']
-                    max_radiation = item['max_radiation']
-                if 'acc_radiation_effect' in item['tag']:
-                    radiation_debuff = math.ceil(radiation_debuff * item['radiation_debuff'])
         if use_drill:
             dr = drill['stamina_add']
         stamina -= (acc_stamina - dr)
@@ -168,16 +157,14 @@ class ExploreCog(commands.Cog):
                             dr_chance += int(drill_attachment['radiation_limit'] * drill_attachment['additional_chance'])
                     else:
                         dr_chance += drill_attachment['additional_chance']
-                for t in user_f['equipment']['accessory']:
-                    if t is not None:
-                        item = ITEMS[t]
-                        if 'acc_mining' in item['tag']:
-                            acc_mining_chance = item['additional_chance']
-                        if 'acc_radiation_effect' in item['tag']:
-                            if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
-                                acc_mining_chance += int(user_f['radiation'] * item['radiation_effect'])
-                            else:
-                                acc_mining_chance += int(item.get('radiation_limit', 0) * item['radiation_effect'])
+                if 'acc_mining' in acc_effects:
+                    acc_mining_chance = acc_effects['acc_mining']['additional_chance']
+                if 'acc_radiation_effect' in acc_effects:
+                    rad_effect = acc_effects['acc_radiation_effect']
+                    if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
+                        acc_mining_chance += int(user_f['radiation'] * rad_effect['radiation_effect'])
+                    else:
+                        acc_mining_chance += int(rad_effect.get('radiation_limit', 0) * rad_effect['radiation_effect'])
                 if (acc_mining_chance + dr_chance) >= random.randint(1, 100):
                     result2 = place_f['result']
                     result_list2 = []
@@ -242,25 +229,14 @@ class ExploreCog(commands.Cog):
         # アクセ効果
         default_stamina = 10
         money = 0
-        acc_stamina = 0
-        acc_chance = 0
-        acc_radiation = 0
-        max_radiation = 250
-        radiation_debuff = 10
+        acc_effects = get_accessory_effects(user_f)
+        acc_stamina = acc_effects['acc_explore']['stamina_reduce'] if 'acc_explore' in acc_effects else 0
+        acc_chance = acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0
+        acc_radiation = acc_effects['acc_radiation']['radiation_resistance'] if 'acc_radiation' in acc_effects else 0
+        max_radiation = acc_effects['acc_radiation']['max_radiation'] if 'acc_radiation' in acc_effects else 250
+        radiation_debuff = math.ceil(10 * acc_effects['acc_radiation_effect']['radiation_debuff']) if 'acc_radiation_effect' in acc_effects else 10
         dr = 0
         tool_break = False
-        for t in user_f['equipment']['accessory']:
-            if t is not None:
-                item = ITEMS[t]
-                if 'acc_explore' in item['tag']:
-                    acc_stamina = item['stamina_reduce']
-                if 'acc_money' in item['tag']:
-                    acc_chance = item['money_chance']
-                if 'acc_radiation' in item['tag']:
-                    acc_radiation = item['radiation_resistance']
-                    max_radiation = item['max_radiation']
-                if 'acc_radiation_effect' in item['tag']:
-                    radiation_debuff = math.ceil(radiation_debuff * item['radiation_debuff'])
         if use_drill:
             dr = drill['stamina_add']
         default_stamina -= (acc_stamina - dr)
@@ -313,16 +289,14 @@ class ExploreCog(commands.Cog):
                                 dr_chance += int(drill_attachment['radiation_limit'] * drill_attachment['additional_chance'])
                         else:
                             dr_chance += drill_attachment['additional_chance']
-                    for t in user_f['equipment']['accessory']:
-                        if t is not None:
-                            item = ITEMS[t]
-                            if 'acc_mining' in item['tag']:
-                                acc_mining_chance = item['additional_chance']
-                            if 'acc_radiation_effect' in item['tag']:
-                                if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
-                                    acc_mining_chance += int(user_f['radiation'] * item['radiation_effect'])
-                                else:
-                                    acc_mining_chance += int(item.get('radiation_limit', 0) * item['radiation_effect'])
+                    if 'acc_mining' in acc_effects:
+                        acc_mining_chance = acc_effects['acc_mining']['additional_chance']
+                    if 'acc_radiation_effect' in acc_effects:
+                        rad_effect = acc_effects['acc_radiation_effect']
+                        if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
+                            acc_mining_chance += int(user_f['radiation'] * rad_effect['radiation_effect'])
+                        else:
+                            acc_mining_chance += int(rad_effect.get('radiation_limit', 0) * rad_effect['radiation_effect'])
                     if (acc_mining_chance + dr_chance) >= random.randint(1, 100):
                         result2 = place_f['result']
                         result_list2 = []

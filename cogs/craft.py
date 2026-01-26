@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
-from core.utils import xp, complete_advancement, save_users
+from core.utils import xp, complete_advancement, save_users, get_accessory_effects
 from views.craft_view import crafting, set_craft_func
 
 
@@ -33,12 +33,8 @@ async def craft(interaction: discord.Interaction, recipe: int, bulk: int = 1):
         tool_c = True
 
     # アクセチェック
-    stamina_reduce_chance = 0
-    for acc in user_f['equipment']['accessory']:
-        if acc is not None:
-            item = ITEMS[acc]
-            if 'acc_crafting' in item['tag']:
-                stamina_reduce_chance = item['stamina_reduce_chance']
+    acc_effects = get_accessory_effects(user_f)
+    stamina_reduce_chance = acc_effects['acc_crafting']['stamina_reduce_chance'] if 'acc_crafting' in acc_effects else 0
 
     if tool_c:
         tool_msg = ''

@@ -127,6 +127,24 @@ def find(lst: list, x):
         return None
 
 
+def get_accessory_effects(user_f: dict) -> dict:
+    """
+    装備中のアクセサリーから全効果を取得
+
+    Returns:
+        dict: タグ名をキー、アイテムデータを値とする辞書
+              例: {'acc_explore': {'stamina_reduce': 2, ...}, 'acc_money': {...}}
+    """
+    effects = {}
+    for acc in user_f['equipment']['accessory']:
+        if acc is not None:
+            item = ITEMS[acc]
+            for tag in item.get('tag', []):
+                if tag.startswith('acc_'):
+                    effects[tag] = item
+    return effects
+
+
 def save_users():
     """ユーザーデータを保存"""
     with open('user.json', 'w', encoding='UTF-8') as f:
