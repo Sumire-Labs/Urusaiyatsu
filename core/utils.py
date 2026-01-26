@@ -4,6 +4,7 @@
 import json
 import math
 import random
+import datetime
 import discord
 
 from .state import (
@@ -184,6 +185,238 @@ def check_advancements(
             ):
                 ret += complete_advancement(interaction, adv_id)
     return ret
+
+
+# =============================================================================
+# 装備ステータス抽出ヘルパー
+# =============================================================================
+
+def get_drill_status(user_f: dict) -> dict:
+    """
+    ドリルとアタッチメントの状態を一括取得
+
+    Returns:
+        dict:
+            - use_drill: bool - ドリル装備有無
+            - drill: dict - ドリルステータス（stamina_add, fuel, chance）
+            - has_attachment: bool - アタッチメント装備有無
+            - attachment: dict - アタッチメントステータス
+            - attachment_tags: list - アタッチメントのタグ
+            - fuel_cost: int - 燃料消費量（アタッチメント補正済み）
+    """
+    result = {
+        'use_drill': False,
+        'drill': {},
+        'has_attachment': False,
+        'attachment': {},
+        'attachment_tags': [],
+        'fuel_cost': 0
+    }
+
+    drill_id = user_f['equipment']['drill']
+    if drill_id is None:
+        return result
+
+    result['use_drill'] = True
+    result['drill'] = ITEMS[drill_id]['drill_status']
+    result['fuel_cost'] = result['drill']['fuel']
+
+    attachment_id = user_f['equipment']['drill_attachment']
+    if attachment_id is not None:
+        result['has_attachment'] = True
+        result['attachment'] = ITEMS[attachment_id]['drill_attachment_status']
+        result['attachment_tags'] = ITEMS[attachment_id].get('tag', [])
+        result['fuel_cost'] = math.ceil(result['fuel_cost'] * result['attachment']['fuel_multiplier'])
+
+    return result
+
+
+def get_explore_accessory_effects(acc_effects: dict) -> dict:
+    """
+    探索用アクセサリー効果を取得
+
+    Args:
+        acc_effects: get_accessory_effects()の戻り値
+
+    Returns:
+        dict: 各効果値（デフォルト値付き）
+    """
+    return {
+        'stamina_reduce': acc_effects['acc_explore']['stamina_reduce'] if 'acc_explore' in acc_effects else 0,
+        'money_chance': acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0,
+        'radiation_resistance': acc_effects['acc_radiation']['radiation_resistance'] if 'acc_radiation' in acc_effects else 0,
+        'max_radiation': acc_effects['acc_radiation']['max_radiation'] if 'acc_radiation' in acc_effects else 250,
+        'radiation_debuff': math.ceil(10 * acc_effects['acc_radiation_effect']['radiation_debuff']) if 'acc_radiation_effect' in acc_effects else 10,
+        'mining_chance': acc_effects['acc_mining']['additional_chance'] if 'acc_mining' in acc_effects else 0,
+        'radiation_effect': acc_effects['acc_radiation_effect'] if 'acc_radiation_effect' in acc_effects else None
+    }
+
+
+def get_fishing_accessory_effects(acc_effects: dict) -> dict:
+    """
+    釣り用アクセサリー効果を取得
+
+    Args:
+        acc_effects: get_accessory_effects()の戻り値
+
+    Returns:
+        dict: 各効果値（デフォルト値付き）
+    """
+    return {
+        'stamina_reduce': acc_effects['acc_fishing']['stamina_reduce'] if 'acc_fishing' in acc_effects else 0,
+        'money_chance': acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0,
+        'power': acc_effects['acc_fish_power']['power'] if 'acc_fish_power' in acc_effects else 0,
+        'additional_chance': acc_effects['acc_fishing_chance']['additional_chance'] if 'acc_fishing_chance' in acc_effects else 0
+    }
+
+
+def pick_weighted_item(loot_table: list) -> str:
+    """
+    重み付きルートテーブルからアイテムを抽選
+
+    Args:
+        loot_table: [{'id': str, 'weight': int}, ...]形式のリスト
+
+    Returns:
+        str: 選ばれたアイテムID
+    """
+    pool = []
+    for item in loot_table:
+        pool.extend([item['id']] * item['weight'])
+    return random.choice(pool)
+
+
+def calculate_mining_bonus_chance(user_f: dict, drill_status: dict, explore_acc: dict) -> int:
+    """
+    採掘ボーナス確率を計算
+
+    Args:
+        user_f: ユーザーデータ
+        drill_status: get_drill_status()の戻り値
+        explore_acc: get_explore_accessory_effects()の戻り値
+
+    Returns:
+        int: 合計ボーナス確率（0-100+）
+    """
+    dr_chance = 0
+    acc_mining_chance = explore_acc['mining_chance']
+
+    # ドリルボーナス
+    if drill_status['use_drill']:
+        dr_chance = drill_status['drill'].get('chance', 0)
+
+    # アタッチメントボーナス
+    if drill_status['has_attachment']:
+        attachment = drill_status['attachment']
+        if 'radioactive_laser' in drill_status['attachment_tags']:
+            radiation_limit = attachment.get('radiation_limit', 0)
+            effective_radiation = min(user_f['radiation'], radiation_limit)
+            dr_chance += int(effective_radiation * attachment.get('additional_chance', 0))
+        else:
+            dr_chance += attachment.get('additional_chance', 0)
+
+    # 放射線アクセサリー効果
+    rad_effect = explore_acc['radiation_effect']
+    if rad_effect:
+        radiation_limit = rad_effect.get('radiation_limit', 0)
+        effective_radiation = min(user_f['radiation'], radiation_limit)
+        acc_mining_chance += int(effective_radiation * rad_effect.get('radiation_effect', 0))
+
+    return dr_chance + acc_mining_chance
+
+
+def get_bait_effects(bait: str, user_f: dict) -> dict:
+    """
+    餌の効果と利用可能性を取得
+
+    Args:
+        bait: 餌アイテムID（Noneの場合あり）
+        user_f: ユーザーデータ
+
+    Returns:
+        dict:
+            - valid: bool - 餌が利用可能か
+            - power: int - パワーボーナス
+            - chance: int - 追加キャッチ確率
+            - loot: dict - 追加ルート
+    """
+    result = {
+        'valid': True,
+        'power': 0,
+        'chance': 0,
+        'loot': {}
+    }
+
+    if bait is None:
+        return result
+
+    if bait not in user_f['inventory'] or user_f['inventory'][bait] <= 0:
+        result['valid'] = False
+        return result
+
+    bait_item = ITEMS[bait]
+    result['power'] = bait_item.get('power', 0)
+    result['chance'] = bait_item.get('additional_chance', 0)
+    result['loot'] = bait_item.get('additional_loot', {})
+
+    return result
+
+
+def build_fish_pool(place_results: list, power: int, bait_loot: dict, place_id: str) -> list:
+    """
+    釣り対象プールを生成（パワーフィルタリング＋餌ルート追加）
+
+    Args:
+        place_results: 場所の釣り結果リスト
+        power: 合計釣りパワー
+        bait_loot: 餌の追加ルート
+        place_id: 釣り場ID
+
+    Returns:
+        list: 重み付きアイテムIDリスト
+    """
+    pool = []
+
+    for fish in place_results:
+        power_min = fish['power_min']
+        power_max = fish['power_max']
+
+        # パワー範囲チェック
+        if power_max == -1:
+            in_range = power >= power_min
+        else:
+            in_range = power_min <= power <= power_max
+
+        if in_range:
+            pool.extend([fish['id']] * fish['weight'])
+
+    # 餌による追加ルート
+    if place_id in bait_loot:
+        pool.extend(bait_loot[place_id])
+
+    return pool
+
+
+def calculate_fishing_power(rod_power: int, acc_power: int, bait_power: int, hour: int = None) -> int:
+    """
+    合計釣りパワーを計算（時間ボーナス含む）
+
+    Args:
+        rod_power: 釣り竿パワー
+        acc_power: アクセサリーパワー
+        bait_power: 餌パワー
+        hour: 時刻（0-23）、Noneなら現在時刻
+
+    Returns:
+        int: 合計パワー
+    """
+    if hour is None:
+        hour = datetime.datetime.now().hour
+
+    # 時間ボーナス: 6時が最大、離れるほど減少
+    date_power = int((20 - abs(hour - 6)) / 3)
+
+    return rod_power + acc_power + bait_power + date_power
 
 
 def save_users():

@@ -8,7 +8,11 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, PLACES, EMOJIS, place_choices
-from core.utils import new_user, xp, save_users, get_accessory_effects, check_advancements
+from core.utils import (
+    new_user, xp, save_users, get_accessory_effects, check_advancements,
+    get_drill_status, get_explore_accessory_effects, pick_weighted_item,
+    calculate_mining_bonus_chance
+)
 
 
 class ExploreCog(commands.Cog):
@@ -37,39 +41,32 @@ class ExploreCog(commands.Cog):
             tool_tag = place_f['tool_tag']
             tool_c = False
             if tool is not None:
-                for i in ITEMS.items():
-                    if tool_tag in i[1]['tag'] and i[0] in user_f['inventory'] and user_f['inventory'][i[0]] > 0:
-                        tool = i[0]
+                for item_id, item_data in ITEMS.items():
+                    if tool_tag in item_data['tag'] and item_id in user_f['inventory'] and user_f['inventory'][item_id] > 0:
+                        tool = item_id
                         tool_c = True
                         break
             else:
                 tool_c = True
 
+            # ドリルステータス取得
+            drill_status = get_drill_status(user_f)
             dr_c = True
             dr_f = False
             dr_a = False
-            has_attachment = False
-            fuel = 0
-            use_drill = user_f['equipment']['drill'] is not None
-            drill = {}
-            drill_attachment = {}
-            if use_drill:
-                if user_f['equipment']['drill_attachment'] is None:
-                    if 'laser' in place_f['type']:
+
+            if drill_status['use_drill']:
+                # レーザーアタッチメント必須チェック
+                if 'laser' in place_f['type']:
+                    if not drill_status['has_attachment']:
                         dr_c = False
                         dr_a = True
-                else:
-                    has_attachment = True
-                    drill_attachment = ITEMS[user_f['equipment']['drill_attachment']]['drill_attachment_status']
-                    if 'laser' in place_f['type'] and 'drill_laser' not in ITEMS[user_f['equipment']['drill_attachment']]['tag']:
+                    elif 'drill_laser' not in drill_status['attachment_tags']:
                         dr_c = False
                         dr_a = True
-                drill = ITEMS[user_f['equipment']['drill']]['drill_status']
-                fuel = drill['fuel']
-                if has_attachment:
-                    fuel = math.ceil(fuel * drill_attachment['fuel_multiplier'])
+
                 tool_c = True
-                if not user_f['fuel'] >= fuel:
+                if user_f['fuel'] < drill_status['fuel_cost']:
                     dr_c = False
                     dr_f = True
             elif 'drill' in place_f['type']:
@@ -78,9 +75,9 @@ class ExploreCog(commands.Cog):
             if tool_c:
                 if dr_c:
                     if bulk == 1:
-                        await self._explore_single(interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel)
+                        await self._explore_single(interaction, user_f, place_f, place, tool, drill_status)
                     else:
-                        await self._explore_bulk(interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel, bulk)
+                        await self._explore_bulk(interaction, user_f, place_f, place, tool, drill_status, bulk)
                 elif dr_f:
                     await interaction.response.send_message('ドリルの燃料が足りません。')
                 elif dr_a:
@@ -96,30 +93,25 @@ class ExploreCog(commands.Cog):
             await interaction.response.send_message(
                 f'{place_name}を探索するには採集レベルが**{place_level}**以上でなければなりません。')
 
-    async def _explore_single(self, interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel):
+    async def _explore_single(self, interaction, user_f, place_f, place, tool, drill_status):
         """単発探索処理"""
-        # アクセ効果
+        # アクセ効果取得
+        acc_effects = get_accessory_effects(user_f)
+        explore_acc = get_explore_accessory_effects(acc_effects)
+
+        # スタミナ計算
         stamina = 10
         money = 0
-        acc_effects = get_accessory_effects(user_f)
-        acc_stamina = acc_effects['acc_explore']['stamina_reduce'] if 'acc_explore' in acc_effects else 0
-        acc_chance = acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0
-        acc_radiation = acc_effects['acc_radiation']['radiation_resistance'] if 'acc_radiation' in acc_effects else 0
-        max_radiation = acc_effects['acc_radiation']['max_radiation'] if 'acc_radiation' in acc_effects else 250
-        radiation_debuff = math.ceil(10 * acc_effects['acc_radiation_effect']['radiation_debuff']) if 'acc_radiation_effect' in acc_effects else 10
-        dr = 0
-        if use_drill:
-            dr = drill['stamina_add']
-        stamina -= (acc_stamina - dr)
-
-        # 放射能効果
-        stamina += int(user_f['radiation'] / radiation_debuff)
+        if drill_status['use_drill']:
+            stamina += drill_status['drill']['stamina_add']
+        stamina -= explore_acc['stamina_reduce']
+        stamina += int(user_f['radiation'] / explore_acc['radiation_debuff'])
 
         # スタミナチェック
         if user_f['stamina'] >= stamina:
 
             # 金運アクセ
-            if acc_chance >= random.randint(1, 100):
+            if explore_acc['money_chance'] >= random.randint(1, 100):
                 money = 10
 
             # ツールを確率で破壊
@@ -130,50 +122,17 @@ class ExploreCog(commands.Cog):
                 tool_msg = f'が、\n**{tool_name}**が壊れました...'
 
             # 場所からアイテムをランダムに取得
-            result = place_f['result']
-            result_list = []
-            for i in result:
-                t = 0
-                while t < i['weight']:
-                    result_list.append(i['id'])
-                    t += 1
-            result = random.choice(result_list)
+            result = pick_weighted_item(place_f['result'])
             item_f = ITEMS[result]['name_e']
             user_f['inventory'].setdefault(result, 0)
             user_f['inventory'][result] += 1
 
-            # アクセ効果（追加採集）
+            # 追加採集（mining場所のみ）
             add_msg = ''
             if 'mining' in place_f['type']:
-                acc_mining_chance = 0
-                dr_chance = 0
-                if use_drill:
-                    dr_chance = drill['chance']
-                if has_attachment:
-                    if 'radioactive_laser' in ITEMS[user_f['equipment']['drill_attachment']]['tag']:
-                        if user_f['radiation'] < drill_attachment['radiation_limit']:
-                            dr_chance += int(user_f['radiation'] * drill_attachment['additional_chance'])
-                        else:
-                            dr_chance += int(drill_attachment['radiation_limit'] * drill_attachment['additional_chance'])
-                    else:
-                        dr_chance += drill_attachment['additional_chance']
-                if 'acc_mining' in acc_effects:
-                    acc_mining_chance = acc_effects['acc_mining']['additional_chance']
-                if 'acc_radiation_effect' in acc_effects:
-                    rad_effect = acc_effects['acc_radiation_effect']
-                    if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
-                        acc_mining_chance += int(user_f['radiation'] * rad_effect['radiation_effect'])
-                    else:
-                        acc_mining_chance += int(rad_effect.get('radiation_limit', 0) * rad_effect['radiation_effect'])
-                if (acc_mining_chance + dr_chance) >= random.randint(1, 100):
-                    result2 = place_f['result']
-                    result_list2 = []
-                    for i in result2:
-                        t = 0
-                        while t < i['weight']:
-                            result_list2.append(i['id'])
-                            t += 1
-                    result2 = random.choice(result_list2)
+                bonus_chance = calculate_mining_bonus_chance(user_f, drill_status, explore_acc)
+                if bonus_chance >= random.randint(1, 100):
+                    result2 = pick_weighted_item(place_f['result'])
                     user_f['inventory'].setdefault(result2, 0)
                     user_f['inventory'][result2] += 1
                     result2_name = ITEMS[result2]['name_e']
@@ -182,13 +141,14 @@ class ExploreCog(commands.Cog):
             # データ変更
             user_f['money'] += money
             user_f['stamina'] -= stamina
-            user_f['fuel'] -= fuel
+            user_f['fuel'] -= drill_status['fuel_cost']
             ret = xp('gathering', interaction, place_f['xp'])
 
-            # 放射能
+            # 放射能（miningブロック外で処理）
             if 'radioactive' in place_f['type']:
-                if user_f['radiation'] < max_radiation and (acc_radiation == 0 or acc_radiation < random.randint(1, 100)):
-                    user_f['radiation'] += 1
+                if user_f['radiation'] < explore_acc['max_radiation']:
+                    if explore_acc['radiation_resistance'] == 0 or explore_acc['radiation_resistance'] < random.randint(1, 100):
+                        user_f['radiation'] += 1
 
             # 進捗
             ret += check_advancements(interaction, user_f, 'explore', place)
@@ -204,41 +164,40 @@ class ExploreCog(commands.Cog):
             await interaction.response.send_message(
                 f'この採集にはスタミナ{EMOJIS["stamina"]}が{stamina}必要です。')
 
-    async def _explore_bulk(self, interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel, bulk):
+    async def _explore_bulk(self, interaction, user_f, place_f, place, tool, drill_status, bulk):
         """バルク探索処理"""
         failed = False
         count = 0
         results = {}
+        tool_break = False
 
-        # アクセ効果
+        # アクセ効果取得
+        acc_effects = get_accessory_effects(user_f)
+        explore_acc = get_explore_accessory_effects(acc_effects)
+
+        # 基本スタミナ計算
         default_stamina = 10
         money = 0
-        acc_effects = get_accessory_effects(user_f)
-        acc_stamina = acc_effects['acc_explore']['stamina_reduce'] if 'acc_explore' in acc_effects else 0
-        acc_chance = acc_effects['acc_money']['money_chance'] if 'acc_money' in acc_effects else 0
-        acc_radiation = acc_effects['acc_radiation']['radiation_resistance'] if 'acc_radiation' in acc_effects else 0
-        max_radiation = acc_effects['acc_radiation']['max_radiation'] if 'acc_radiation' in acc_effects else 250
-        radiation_debuff = math.ceil(10 * acc_effects['acc_radiation_effect']['radiation_debuff']) if 'acc_radiation_effect' in acc_effects else 10
-        dr = 0
-        tool_break = False
-        if use_drill:
-            dr = drill['stamina_add']
-        default_stamina -= (acc_stamina - dr)
+        if drill_status['use_drill']:
+            default_stamina += drill_status['drill']['stamina_add']
+        default_stamina -= explore_acc['stamina_reduce']
         used_stamina = 0
+        fuel_cost = drill_status['fuel_cost']
 
         while not failed and count < bulk:
+            # 放射線によるスタミナ増加
+            stamina = default_stamina + int(user_f['radiation'] / explore_acc['radiation_debuff'])
 
-            stamina = default_stamina + int(user_f['radiation'] / radiation_debuff)
-
-            if use_drill:
-                if not user_f['fuel'] >= fuel * (count + 1):
+            # 燃料チェック
+            if drill_status['use_drill']:
+                if user_f['fuel'] < fuel_cost * (count + 1):
                     failed = True
 
             # スタミナチェック
             if user_f['stamina'] >= used_stamina + stamina and not failed:
 
                 # 金運アクセ
-                if acc_chance >= random.randint(1, 100):
+                if explore_acc['money_chance'] >= random.randint(1, 100):
                     money += 10
 
                 # ツールを確率で破壊
@@ -248,55 +207,24 @@ class ExploreCog(commands.Cog):
                     failed = True
 
                 # 場所からアイテムをランダムに取得
-                result = place_f['result']
-                result_list = []
-                for i in result:
-                    t = 0
-                    while t < i['weight']:
-                        result_list.append(i['id'])
-                        t += 1
-                result = random.choice(result_list)
+                result = pick_weighted_item(place_f['result'])
                 results.setdefault(result, 0)
                 results[result] += 1
 
-                # アクセ効果（追加採集）
+                # 追加採集（mining場所のみ）
                 if 'mining' in place_f['type']:
-                    acc_mining_chance = 0
-                    dr_chance = 0
-                    if use_drill:
-                        dr_chance = drill['chance']
-                    if has_attachment:
-                        if 'radioactive_laser' in ITEMS[user_f['equipment']['drill_attachment']]['tag']:
-                            if user_f['radiation'] < drill_attachment['radiation_limit']:
-                                dr_chance += int(user_f['radiation'] * drill_attachment['additional_chance'])
-                            else:
-                                dr_chance += int(drill_attachment['radiation_limit'] * drill_attachment['additional_chance'])
-                        else:
-                            dr_chance += drill_attachment['additional_chance']
-                    if 'acc_mining' in acc_effects:
-                        acc_mining_chance = acc_effects['acc_mining']['additional_chance']
-                    if 'acc_radiation_effect' in acc_effects:
-                        rad_effect = acc_effects['acc_radiation_effect']
-                        if user_f['radiation'] < drill_attachment.get('radiation_limit', 0):
-                            acc_mining_chance += int(user_f['radiation'] * rad_effect['radiation_effect'])
-                        else:
-                            acc_mining_chance += int(rad_effect.get('radiation_limit', 0) * rad_effect['radiation_effect'])
-                    if (acc_mining_chance + dr_chance) >= random.randint(1, 100):
-                        result2 = place_f['result']
-                        result_list2 = []
-                        for i in result2:
-                            t = 0
-                            while t < i['weight']:
-                                result_list2.append(i['id'])
-                                t += 1
-                        result2 = random.choice(result_list2)
+                    bonus_chance = calculate_mining_bonus_chance(user_f, drill_status, explore_acc)
+                    if bonus_chance >= random.randint(1, 100):
+                        result2 = pick_weighted_item(place_f['result'])
                         results.setdefault(result2, 0)
                         results[result2] += 1
 
-                    # 放射能
-                    if 'radioactive' in place_f['type']:
-                        if user_f['radiation'] < max_radiation and (acc_radiation == 0 or acc_radiation < random.randint(1, 100)):
+                # 放射能（miningブロック外で処理 - バグ修正）
+                if 'radioactive' in place_f['type']:
+                    if user_f['radiation'] < explore_acc['max_radiation']:
+                        if explore_acc['radiation_resistance'] == 0 or explore_acc['radiation_resistance'] < random.randint(1, 100):
                             user_f['radiation'] += 1
+
                 used_stamina += stamina
                 count += 1
             else:
@@ -304,17 +232,17 @@ class ExploreCog(commands.Cog):
         else:
             place_name = place_f['name']
             embed = discord.Embed(title=f'{place_name}での採集({count}回)の結果')
-            for i in results.items():
-                user_f['inventory'].setdefault(i[0], 0)
-                user_f['inventory'][i[0]] += i[1]
-                embed.add_field(name=ITEMS[i[0]]['name_e'] + ': ' + str(i[1]), value='', inline=False)
+            for item_id, amount in results.items():
+                user_f['inventory'].setdefault(item_id, 0)
+                user_f['inventory'][item_id] += amount
+                embed.add_field(name=ITEMS[item_id]['name_e'] + ': ' + str(amount), value='', inline=False)
             if tool_break:
                 embed.add_field(name='', value=ITEMS[tool]['name_e'] + ': -1')
 
             # データ変更
             user_f['money'] += money
             user_f['stamina'] -= used_stamina
-            user_f['fuel'] -= fuel * count
+            user_f['fuel'] -= fuel_cost * count
             ret = xp('gathering', interaction, place_f['xp'] * count)
 
             # 進捗
