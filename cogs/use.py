@@ -6,8 +6,8 @@ import random
 from discord import app_commands
 from discord.ext import commands
 
-from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
-from core.utils import new_user, complete_advancement, save_users
+from core.state import USERS, ITEMS, LOOTS, EMOJIS, consumable_choices
+from core.utils import new_user, save_users, check_advancements
 
 
 class UseCog(commands.Cog):
@@ -78,21 +78,7 @@ class UseCog(commands.Cog):
                         embed.add_field(name=ITEMS[result_item]['name_e'] + ': ' + str(amount), value='', inline=False)
 
                     # 進捗
-                    ret = ''
-                    for adv_id in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[adv_id]['clear_condition']
-                        if 'get_item' in cond:
-                            target = cond['get_item']
-                            if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                                ret += complete_advancement(interaction, adv_id)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for target_item, target_amount in cond['get_items'].items():
-                                if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, adv_id)
+                    ret = check_advancements(interaction, user_f)
 
                     # 送信
                     await interaction.response.send_message(ret, embed=embed)

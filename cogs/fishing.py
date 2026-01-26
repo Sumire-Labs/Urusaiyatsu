@@ -8,8 +8,8 @@ import typing
 from discord import app_commands
 from discord.ext import commands
 
-from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices, bait_choices
-from core.utils import new_user, xp, complete_advancement, save_users, get_accessory_effects
+from core.state import USERS, ITEMS, FISHING_PLACES, EMOJIS, fishing_choices, bait_choices
+from core.utils import new_user, xp, save_users, get_accessory_effects, check_advancements
 
 
 class FishingCog(commands.Cog):
@@ -149,23 +149,7 @@ class FishingCog(commands.Cog):
                     ret = xp('fishing', interaction, place_f['xp'])
 
                     # 進捗
-                    for i in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[i]['clear_condition']
-                        if 'fishing' in cond:
-                            if cond['fishing'] == place:
-                                ret += complete_advancement(interaction, i)
-                        elif 'get_item' in cond:
-                            j = cond['get_item']
-                            if j in user_f['inventory'] and user_f['inventory'][j] > 0:
-                                ret += complete_advancement(interaction, i)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for j in cond['get_items'].items():
-                                if not (j[0] in user_f['inventory'] and user_f['inventory'][j[0]] >= j[1]):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, i)
+                    ret += check_advancements(interaction, user_f, 'fishing', place)
 
                     # 送信
                     place_name = place_f['name']
@@ -303,23 +287,7 @@ class FishingCog(commands.Cog):
             ret = xp('fishing', interaction, place_f['xp'] * count)
 
             # 進捗
-            for i in user_f['advancement_now']:
-                cond = ADVANCEMENTS[i]['clear_condition']
-                if 'fishing' in cond:
-                    if cond['fishing'] == place:
-                        ret += complete_advancement(interaction, i)
-                elif 'get_item' in cond:
-                    j = cond['get_item']
-                    if j in user_f['inventory'] and user_f['inventory'][j] > 0:
-                        ret += complete_advancement(interaction, i)
-                elif 'get_items' in cond:
-                    complete = True
-                    for j in cond['get_items'].items():
-                        if not (j[0] in user_f['inventory'] and user_f['inventory'][j[0]] >= j[1]):
-                            complete = False
-                            break
-                    if complete:
-                        ret += complete_advancement(interaction, i)
+            ret += check_advancements(interaction, user_f, 'fishing', place)
 
             # 送信
             await interaction.response.send_message(ret, embed=embed)

@@ -145,6 +145,47 @@ def get_accessory_effects(user_f: dict) -> dict:
     return effects
 
 
+def check_advancements(
+    interaction: discord.Interaction,
+    user_f: dict,
+    action_type: str = None,
+    action_value: str = None
+) -> str:
+    """
+    進捗条件をチェックし、達成した進捗のメッセージを返す
+
+    Args:
+        interaction: Discord interaction
+        user_f: ユーザーデータ
+        action_type: アクション種別（'explore', 'fishing', None）
+        action_value: アクションの値（place名など）
+
+    Returns:
+        str: 達成メッセージ（なければ空文字）
+    """
+    ret = ''
+    for adv_id in user_f['advancement_now']:
+        cond = ADVANCEMENTS[adv_id]['clear_condition']
+
+        # アクション条件チェック（explore/fishing）
+        if action_type and action_type in cond:
+            if cond[action_type] == action_value:
+                ret += complete_advancement(interaction, adv_id)
+        # アイテム取得条件チェック
+        elif 'get_item' in cond:
+            target = cond['get_item']
+            if user_f['inventory'].get(target, 0) > 0:
+                ret += complete_advancement(interaction, adv_id)
+        # 複数アイテム取得条件チェック
+        elif 'get_items' in cond:
+            if all(
+                user_f['inventory'].get(item, 0) >= amount
+                for item, amount in cond['get_items'].items()
+            ):
+                ret += complete_advancement(interaction, adv_id)
+    return ret
+
+
 def save_users():
     """ユーザーデータを保存"""
     with open('user.json', 'w', encoding='UTF-8') as f:

@@ -6,8 +6,8 @@ import math
 from discord import app_commands
 from discord.ext import commands
 
-from core.state import USERS, ITEMS, MARKET, ADVANCEMENTS, EMOJIS
-from core.utils import new_user, find, complete_advancement, save_users, save_market
+from core.state import USERS, ITEMS, MARKET, EMOJIS
+from core.utils import new_user, find, save_users, save_market, check_advancements
 from views.item_select_view import item_select_view, register_callback
 from modals.market_modal import market_sell
 
@@ -73,21 +73,7 @@ class MarketCog(commands.Cog):
                 MARKET.pop(idx)
 
                 # 進捗
-                ret = ''
-                for adv_id in user_f['advancement_now']:
-                    cond = ADVANCEMENTS[adv_id]['clear_condition']
-                    if 'get_item' in cond:
-                        target = cond['get_item']
-                        if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                            ret += complete_advancement(interaction, adv_id)
-                    elif 'get_items' in cond:
-                        complete = True
-                        for target_item, target_amount in cond['get_items'].items():
-                            if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                complete = False
-                                break
-                        if complete:
-                            ret += complete_advancement(interaction, adv_id)
+                ret = check_advancements(interaction, user_f)
 
                 # 送信
                 await interaction.response.send_message(

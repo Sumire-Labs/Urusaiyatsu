@@ -6,8 +6,8 @@ import random
 from discord import app_commands
 from discord.ext import commands
 
-from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
-from core.utils import xp, complete_advancement, save_users, get_accessory_effects
+from core.state import USERS, ITEMS, RECIPES, EMOJIS
+from core.utils import xp, save_users, get_accessory_effects, check_advancements
 from views.craft_view import crafting, set_craft_func
 
 
@@ -70,20 +70,7 @@ async def craft(interaction: discord.Interaction, recipe: int, bulk: int = 1):
                 ret = xp('gathering', interaction, recipe_f['xp'])
 
                 # 進捗
-                for adv_id in user_f['advancement_now']:
-                    cond = ADVANCEMENTS[adv_id]['clear_condition']
-                    if 'get_item' in cond:
-                        target = cond['get_item']
-                        if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                            ret += complete_advancement(interaction, adv_id)
-                    elif 'get_items' in cond:
-                        complete = True
-                        for target_item, target_amount in cond['get_items'].items():
-                            if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                complete = False
-                                break
-                        if complete:
-                            ret += complete_advancement(interaction, adv_id)
+                ret += check_advancements(interaction, user_f)
 
                 # 送信
                 item_f = ITEMS[result]['name_e']
@@ -158,20 +145,7 @@ async def craft(interaction: discord.Interaction, recipe: int, bulk: int = 1):
                     ret = xp('gathering', interaction, recipe_f['xp'] * count)
 
                     # 進捗
-                    for adv_id in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[adv_id]['clear_condition']
-                        if 'get_item' in cond:
-                            target = cond['get_item']
-                            if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                                ret += complete_advancement(interaction, adv_id)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for target_item, target_amount in cond['get_items'].items():
-                                if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, adv_id)
+                    ret += check_advancements(interaction, user_f)
 
                     # 送信
                     item_f = ITEMS[result]['name_e']
