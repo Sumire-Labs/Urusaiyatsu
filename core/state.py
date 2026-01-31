@@ -75,7 +75,6 @@ EMOJIS: dict[str, str] = {
     'level': '',
     'level_gathering': '',
     'level_fishing': '',
-    'level_combat': '',
     'empty': '',
     'radiation': ''
 }

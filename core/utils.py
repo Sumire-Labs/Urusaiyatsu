@@ -31,8 +31,6 @@ async def new_user(user_id: int):
             'fuel': 0,
             'level_gathering': 1,
             'xp_gathering': 0,
-            'level_combat': 1,
-            'xp_combat': 0,
             'level_fishing': 1,
             'xp_fishing': 1,
             'radiation': 0,
@@ -77,10 +75,7 @@ def xp(type: str, interaction: discord.Interaction, count: int) -> str:
     """経験値付与とレベルアップ処理"""
     user_f = USERS[str(interaction.user.id)]
 
-    if type == 'combat':
-        lv = 'level_combat'
-        xp_key = 'xp_combat'
-    elif type == 'fishing':
+    if type == 'fishing':
         lv = 'level_fishing'
         xp_key = 'xp_fishing'
     else:
