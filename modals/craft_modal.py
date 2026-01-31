@@ -119,31 +119,34 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
                 save_users()
 
             elif fail == 1:
-                ingredient = ''
+                embed = discord.Embed(title="必要なアイテム")
+                embed.description = ''
                 for mat_id, mat_amount in recipe_f['ingredient'].items():
                     if mat_id in user_f["inventory"]:
                         inventory_amount = user_f["inventory"][mat_id]
                     else:
                         inventory_amount = 0
-                    ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
+                    embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテムが不足しています。{ingredient}')
+                    f'**{item_f}**のクラフトに必要なアイテムが不足しています。',embed=embed)
             elif fail == 2:
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なスタミナが不足しています。( **{stamina}**{EMOJIS["stamina"]} )')
+                    f'**{item_f}**のクラフトに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
             elif fail == 3:
-                ingredient = ''
+                embed = discord.Embed(title="必要なアイテム")
+                embed.description = ''
                 for mat_id, mat_amount in recipe_f['ingredient'].items():
                     if mat_id in user_f["inventory"]:
                         inventory_amount = user_f["inventory"][mat_id]
                     else:
                         inventory_amount = 0
-                    ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
+                    embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
+                embed.description += f'\n(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)'
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。{ingredient}\n( **{stamina}**{EMOJIS["stamina"]} )')
+                    f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。',embed=embed)
             else:
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
@@ -210,46 +213,45 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
                     save_users()
 
                 elif fail == 1:
-                    ingredient = ''
+                    embed = discord.Embed(title="必要なアイテム")
+                    embed.description = ''
                     for mat_id, mat_amount in recipe_f['ingredient'].items():
                         if mat_id in user_f["inventory"]:
                             inventory_amount = user_f["inventory"][mat_id]
                         else:
                             inventory_amount = 0
-                        ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
+                        embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテムが不足しています。{ingredient}')
+                        f'**{item_f}**のクラフトに必要なアイテムが不足しています。',embed=embed)
                 elif fail == 2:
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なスタミナが不足しています。( **{stamina}**{EMOJIS["stamina"]} )')
+                        f'**{item_f}**のクラフトに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
                 elif fail == 3:
-                    ingredient = ''
+                    embed = discord.Embed(title="必要なアイテム")
+                    embed.description = ''
                     for mat_id, mat_amount in recipe_f['ingredient'].items():
                         if mat_id in user_f["inventory"]:
                             inventory_amount = user_f["inventory"][mat_id]
                         else:
                             inventory_amount = 0
-                        ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
+                        embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
+                    embed.description += f'\n(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)'
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。{ingredient}\n( **{stamina}**{EMOJIS["stamina"]} )')
+                        f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。',embed=embed)
                 else:
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
     else:
-        tool = ''
-        additional_text = False
+        embed = discord.Embed(title="クラフト可能なツール")
+        embed.description = ''
         for item_id, item_data in ITEMS.items():
             if tool_tag in item_data['tag']:
-                if additional_text:
-                    tool += ' または\n- '
-                tool += f'**{ITEMS[item_id]["name_e"]}**'
-                additional_text = True
+                embed.description += f'**{ITEMS[item_id]["name_e"]}**\n'
         item_f = ITEMS[result]['name_e']
-        await interaction.response.send_message(f'**{item_f}**のクラフトに必要なツールが不足しています。\n- {tool}')
-
+        await interaction.response.send_message(f'**{item_f}**のクラフトに必要なツールが不足しています。',embed=embed)
 
 async def craft(interaction: discord.Interaction, recipe_id: int):
     """クラフトModalを表示"""

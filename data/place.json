@@ -3,7 +3,6 @@
         "name": "森林",
         "type": ["gathering"],
         "level": 1,
-        "tool": null,
         "tool_tag": null,
         "xp": 5,
         "result": [
@@ -21,7 +20,6 @@
         "name": "地下",
         "type": ["mining"],
         "level": 1,
-        "tool": "pickaxe",
         "tool_tag": "pickaxe_t1",
         "xp": 7,
         "result": [
@@ -43,7 +41,6 @@
         "name": "洞窟",
         "type": ["mining"],
         "level": 3,
-        "tool": "copper_pickaxe",
         "tool_tag": "pickaxe_t2",
         "xp": 10,
         "result": [
@@ -69,7 +66,6 @@
         "name": "深層の洞窟",
         "type": ["mining"],
         "level": 5,
-        "tool": "steel_pickaxe",
         "tool_tag": "pickaxe_t3",
         "xp": 15,
         "result": [
@@ -103,7 +99,6 @@
         "name": "熱帯雨林",
         "type": ["gathering"],
         "level": 2,
-        "tool": "knife",
         "tool_tag": "knife",
         "xp": 7,
         "result": [
@@ -121,7 +116,6 @@
         "name": "雪原",
         "type": ["gathering"],
         "level": 4,
-        "tool": "leather_boots",
         "tool_tag": "boots",
         "xp": 10,
         "result": [
@@ -143,7 +137,6 @@
         "name": "山岳",
         "type": ["gathering"],
         "level": 8,
-        "tool": "sturdy_gloves",
         "tool_tag": "gloves",
         "xp": 15,
         "result": [
@@ -169,7 +162,6 @@
         "name": "炭鉱",
         "type": ["mining"],
         "level": 10,
-        "tool": "steel_pickaxe",
         "tool_tag": "pickaxe_t3",
         "xp": 10,
         "result": [
@@ -191,7 +183,6 @@
         "name": "廃工場",
         "type": ["mining"],
         "level": 15,
-        "tool": "crystal_pickaxe",
         "tool_tag": "pickaxe_t4",
         "xp": 20,
         "result": [
@@ -229,7 +220,6 @@
         "name": "最深層の坑道",
         "type": ["mining"],
         "level": 22,
-        "tool": "titanium_pickaxe",
         "tool_tag": "pickaxe_t5",
         "xp": 30,
         "result": [
@@ -275,7 +265,6 @@
         "name": "神話の採掘所",
         "type": ["mining", "drill"],
         "level": 35,
-        "tool": "drill_t0",
         "tool_tag": "drill_t1",
         "xp": 32,
         "result": [
@@ -309,7 +298,6 @@
         "name": "鉱石の聖域",
         "type": ["mining", "drill"],
         "level": 40,
-        "tool": "drill_g2",
         "tool_tag": "drill_t2",
         "xp": 32,
         "result": [
@@ -347,7 +335,6 @@
         "name": "幻の鉱床",
         "type": ["mining", "drill"],
         "level": 45,
-        "tool": "drill_g3",
         "tool_tag": "drill_t3",
         "xp": 34,
         "result": [
@@ -385,7 +372,6 @@
         "name": "溶岩流の洞穴",
         "type": ["mining", "drill", "laser"],
         "level": 50,
-        "tool": "drill_g4",
         "tool_tag": "drill_t4",
         "xp": 35,
         "result": [
@@ -423,7 +409,6 @@
         "name": "放射性の鉱山",
         "type": ["mining", "drill", "laser", "radioactive"],
         "level": 56,
-        "tool": "drill_g4",
         "tool_tag": "drill_t4",
         "xp": 38,
         "result": [

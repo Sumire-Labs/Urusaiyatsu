@@ -33,13 +33,13 @@ class ExploreCog(commands.Cog):
         if place_level <= user_f['level_gathering']:
 
             # ツールチェック
-            tool = place_f['tool']
             tool_tag = place_f['tool_tag']
+            tool_id = None
             tool_c = False
-            if tool is not None:
+            if tool_tag is not None:
                 for i in ITEMS.items():
                     if tool_tag in i[1]['tag'] and i[0] in user_f['inventory'] and user_f['inventory'][i[0]] > 0:
-                        tool = i[0]
+                        tool_id = i[0]
                         tool_c = True
                         break
             else:
@@ -78,9 +78,9 @@ class ExploreCog(commands.Cog):
             if tool_c:
                 if dr_c:
                     if bulk == 1:
-                        await self._explore_single(interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel)
+                        await self._explore_single(interaction, user_f, place_f, place, tool_id, use_drill, drill, has_attachment, drill_attachment, fuel)
                     else:
-                        await self._explore_bulk(interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel, bulk)
+                        await self._explore_bulk(interaction, user_f, place_f, place, tool_id, use_drill, drill, has_attachment, drill_attachment, fuel, bulk)
                 elif dr_f:
                     await interaction.response.send_message('ドリルの燃料が足りません。')
                 elif dr_a:
@@ -89,14 +89,18 @@ class ExploreCog(commands.Cog):
                     await interaction.response.send_message('ドリルを装備してください。')
             else:
                 place_name = place_f['name']
-                tool_name = ITEMS[tool]['name_e']
-                await interaction.response.send_message(f'{place_name}の探索には**{tool_name}**が必要です。')
+                embed = discord.Embed(title="探索可能なツール")
+                embed.description = ''
+                for item_id, item_data in ITEMS.items():
+                    if tool_tag in item_data['tag']:
+                        embed.description += f'**{ITEMS[item_id]["name_e"]}**\n'
+                await interaction.response.send_message(f'{place_name}の探索に必要なツールが不足しています。',embed=embed)
         else:
             place_name = place_f['name']
             await interaction.response.send_message(
                 f'{place_name}を探索するには採集レベルが**{place_level}**以上でなければなりません。')
 
-    async def _explore_single(self, interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel):
+    async def _explore_single(self, interaction, user_f, place_f, place, tool_id, use_drill, drill, has_attachment, drill_attachment, fuel):
         """単発探索処理"""
         # アクセ効果
         stamina = 10
@@ -135,9 +139,9 @@ class ExploreCog(commands.Cog):
 
             # ツールを確率で破壊
             tool_msg = ''
-            if tool in user_f['inventory'] and ITEMS[tool]['breakability'] >= random.randint(1, 100):
-                user_f['inventory'][tool] -= 1
-                tool_name = ITEMS[tool]['name_e']
+            if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
+                user_f['inventory'][tool_id] -= 1
+                tool_name = ITEMS[tool_id]['name_e']
                 tool_msg = f'が、\n**{tool_name}**が壊れました...'
 
             # 場所からアイテムをランダムに取得
@@ -230,10 +234,11 @@ class ExploreCog(commands.Cog):
             # ファイル更新
             save_users()
         else:
+            place_name = place_f['name']
             await interaction.response.send_message(
-                f'この採集にはスタミナ{EMOJIS["stamina"]}が{stamina}必要です。')
+                f'{place_name}の探索に必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
 
-    async def _explore_bulk(self, interaction, user_f, place_f, place, tool, use_drill, drill, has_attachment, drill_attachment, fuel, bulk):
+    async def _explore_bulk(self, interaction, user_f, place_f, place, tool_id, use_drill, drill, has_attachment, drill_attachment, fuel, bulk):
         """バルク探索処理"""
         failed = False
         count = 0
@@ -282,8 +287,8 @@ class ExploreCog(commands.Cog):
                     money += 10
 
                 # ツールを確率で破壊
-                if tool in user_f['inventory'] and ITEMS[tool]['breakability'] >= random.randint(1, 100):
-                    user_f['inventory'][tool] -= 1
+                if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
+                    user_f['inventory'][tool_id] -= 1
                     tool_break = True
                     failed = True
 
@@ -351,7 +356,7 @@ class ExploreCog(commands.Cog):
                 user_f['inventory'][i[0]] += i[1]
                 embed.add_field(name=ITEMS[i[0]]['name_e'] + ': ' + str(i[1]), value='', inline=False)
             if tool_break:
-                embed.add_field(name='', value=ITEMS[tool]['name_e'] + ': -1')
+                embed.add_field(name='', value=ITEMS[tool_id]['name_e'] + ': -1')
 
             # データ変更
             user_f['money'] += money
