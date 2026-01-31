@@ -223,6 +223,6 @@ CLAUDE.md
 # data files
 # 個人データが含まれているため
 user.json
-server.json
+config.json
 data.json
 market.json
