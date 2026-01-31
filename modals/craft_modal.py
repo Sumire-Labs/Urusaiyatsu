@@ -39,16 +39,16 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
     user_id = interaction.user.id
     user_f = USERS[str(user_id)]
     recipe_f = RECIPES[recipe]
-    tool = recipe_f['tool']
     tool_tag = recipe_f['tool_tag']
     result = recipe_f['result']
 
     # ツールチェック
     tool_c = False
-    if tool is not None:
+    tool_id = None
+    if tool_tag is not None:
         for item_id, item_data in ITEMS.items():
             if tool_tag in item_data['tag'] and item_id in user_f['inventory'] and user_f['inventory'][item_id] > 0:
-                tool = item_id
+                tool_id = item_id
                 tool_c = True
                 break
     else:
@@ -80,10 +80,10 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
 
             if fail == 0:
                 # ツールを確率で破壊
-                if tool in user_f['inventory'] and ITEMS[tool]['breakability'] >= random.randint(1, 100):
-                    user_f['inventory'][tool] -= 1
-                    tool = ITEMS[tool]['name_e']
-                    tool_msg = f'が、\n**{tool}**が壊れました...'
+                if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
+                    user_f['inventory'][tool_id] -= 1
+                    tool_name = ITEMS[tool_id]['name_e']
+                    tool_msg = f'が、\n**{tool_name}**が壊れました...'
 
                 # データ変更
                 for mat_id, mat_amount in recipe_f['ingredient'].items():
@@ -121,27 +121,29 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
             elif fail == 1:
                 ingredient = ''
                 for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    if mat_amount == 1:
-                        ingredient += f'{ITEMS[mat_id]["name_e"]}'
+                    if mat_id in user_f["inventory"]:
+                        inventory_amount = user_f["inventory"][mat_id]
                     else:
-                        ingredient += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
+                        inventory_amount = 0
+                    ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテム ( **{ingredient}** ) が不足しています。')
+                    f'**{item_f}**のクラフトに必要なアイテムが不足しています。{ingredient}')
             elif fail == 2:
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトにはスタミナが ( **{stamina}**{EMOJIS["stamina"]} ) 必要です。')
+                    f'**{item_f}**のクラフトに必要なスタミナが不足しています。( **{stamina}**{EMOJIS["stamina"]} )')
             elif fail == 3:
                 ingredient = ''
                 for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    if mat_amount == 1:
-                        ingredient += f'{ITEMS[mat_id]["name_e"]}'
+                    if mat_id in user_f["inventory"]:
+                        inventory_amount = user_f["inventory"][mat_id]
                     else:
-                        ingredient += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
+                        inventory_amount = 0
+                    ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテム ( **{ingredient}** ) とスタミナ ( **{stamina}**{EMOJIS["stamina"]} ) が不足しています。')
+                    f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。{ingredient}\n( **{stamina}**{EMOJIS["stamina"]} )')
             else:
                 item_f = ITEMS[result]['name_e']
                 await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
@@ -165,10 +167,10 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
                     if random.randint(1, 100) <= stamina_reduce_chance:
                         reduced_stamina += 1
                     # ツールを確率で破壊
-                    if tool in user_f['inventory'] and ITEMS[tool]['breakability'] >= random.randint(1, 100):
-                        user_f['inventory'][tool] -= 1
-                        tool = ITEMS[tool]['name_e']
-                        tool_msg = f'が、\n**{tool}**が壊れました...'
+                    if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
+                        user_f['inventory'][tool_id] -= 1
+                        tool_name = ITEMS[tool_id]['name_e']
+                        tool_msg = f'が、\n**{tool_name}**が壊れました...'
                         fail = -1
 
                     if count >= bulk:
@@ -210,34 +212,43 @@ async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 
                 elif fail == 1:
                     ingredient = ''
                     for mat_id, mat_amount in recipe_f['ingredient'].items():
-                        if mat_amount == 1:
-                            ingredient += f'{ITEMS[mat_id]["name_e"]}'
+                        if mat_id in user_f["inventory"]:
+                            inventory_amount = user_f["inventory"][mat_id]
                         else:
-                            ingredient += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
+                            inventory_amount = 0
+                        ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテム ( **{ingredient}** ) が不足しています。')
+                        f'**{item_f}**のクラフトに必要なアイテムが不足しています。{ingredient}')
                 elif fail == 2:
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトにはスタミナが ( **{stamina}**{EMOJIS["stamina"]} ) 必要です。')
+                        f'**{item_f}**のクラフトに必要なスタミナが不足しています。( **{stamina}**{EMOJIS["stamina"]} )')
                 elif fail == 3:
                     ingredient = ''
                     for mat_id, mat_amount in recipe_f['ingredient'].items():
-                        if mat_amount == 1:
-                            ingredient += f'{ITEMS[mat_id]["name_e"]}'
+                        if mat_id in user_f["inventory"]:
+                            inventory_amount = user_f["inventory"][mat_id]
                         else:
-                            ingredient += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
+                            inventory_amount = 0
+                        ingredient += f'\n- **{ITEMS[mat_id]["name_e"]}** {inventory_amount}/{mat_amount}'
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテム ( **{ingredient}** ) とスタミナ ( **{stamina}**{EMOJIS["stamina"]} ) が不足しています。')
+                        f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。{ingredient}\n( **{stamina}**{EMOJIS["stamina"]} )')
                 else:
                     item_f = ITEMS[result]['name_e']
                     await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
     else:
+        tool = ''
+        additional_text = False
+        for item_id, item_data in ITEMS.items():
+            if tool_tag in item_data['tag']:
+                if additional_text:
+                    tool += ' または\n- '
+                tool += f'**{ITEMS[item_id]["name_e"]}**'
+                additional_text = True
         item_f = ITEMS[result]['name_e']
-        tool = ITEMS[tool]['name_e']
-        await interaction.response.send_message(f'**{item_f}**のクラフトには**{tool}**が必要です。')
+        await interaction.response.send_message(f'**{item_f}**のクラフトに必要なツールが不足しています。\n- {tool}')
 
 
 async def craft(interaction: discord.Interaction, recipe_id: int):

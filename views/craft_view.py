@@ -90,8 +90,8 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
                         ingredient += f'{ITEMS[item_id]["name"]}×{amount} '
                 ingredient = '[ ' + ingredient + ']'
                 ingredient = ITEMS[recipe['result']]['name'] + ' ⇐ ' + ingredient + ' スタミナ: ' + str(recipe['stamina'])
-                if recipe['tool'] is not None:
-                    ingredient += ' ツール:' + ITEMS[recipe['tool']]['name']
+                if recipe['tool_tag'] is not None:
+                    ingredient += f' ツールタグ: {recipe["tool_tag"]}'
                 recipe_choices.append(discord.SelectOption(label=ingredient, value=str(o)))
             e += 1
         o += 1
