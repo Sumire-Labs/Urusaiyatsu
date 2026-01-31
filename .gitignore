@@ -224,3 +224,5 @@ CLAUDE.md
 # 個人データが含まれているため
 user.json
 server.json
+data.json
+market.json
