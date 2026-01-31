@@ -17,7 +17,6 @@ class status_setting_select(discord.ui.View):
         user_id = interaction.user.id
         user_f = USERS[str(user_id)]
         
-        print(selected)
         if selected == "auto":
             user_f['settings']['status'] = 0
             await interaction.response.send_message('ステータスの短縮表示を「**自動**」に変更しました。', ephemeral=True)
