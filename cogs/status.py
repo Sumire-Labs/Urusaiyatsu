@@ -1,7 +1,6 @@
 """
 Status Cog
 """
-import typing
 from discord import app_commands
 from discord.ext import commands
 
@@ -17,19 +16,24 @@ class StatusCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="status", description="所持品などのステータスを確認します。")
-    async def view_command(self, interaction, short: typing.Optional[bool]):
+    async def view_command(self, interaction):
         user_id = interaction.user.id
         await new_user(user_id)
         user_f = USERS[str(user_id)]
 
-        # newsをリセット
-        user_f['news'] = []
+        # ステータス表示設定(0: 自動, 1: 短縮, 2: 非短縮)
+        status_setting = user_f['settings']['status']
 
-        if short is None:
+        if status_setting == 0:
             # 所持アイテム数が1ページに収まらなければ自動でshort表示
             item_count = sum(1 for count in user_f['inventory'].values() if count != 0)
             short = (item_count > STATUS_ITEMS_PER_PAGE)
+        else:
+            short = (status_setting == 1)
         await view_status(interaction, 1, short)
+
+        # newsをリセット
+        user_f['news'] = []
 
 
 async def setup(bot: commands.Bot):

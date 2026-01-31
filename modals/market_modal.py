@@ -24,9 +24,9 @@ class market_sell_amount(discord.ui.Modal):
                 content = self.custom_id
                 await market_sell_item(interaction, content, count, price)
             else:
-                await interaction.response.send_message('整数を入力してください。')
+                await interaction.response.send_message('有効な整数を入力してください。')
         except ValueError:
-            await interaction.response.send_message('整数を入力してください。')
+            await interaction.response.send_message('有効な整数を入力してください。')
 
 
 async def market_sell_item(interaction: discord.Interaction, item: str, count: int, price: int):

@@ -6,6 +6,7 @@ import math
 
 from core.state import USERS, ITEMS, RECIPES
 from core.utils import new_user
+from modals.craft_modal import craft
 
 
 # craft関数への参照（循環import回避のため遅延設定）
@@ -26,56 +27,42 @@ class craft_select(discord.ui.View):
 
     @discord.ui.select()
     async def recipe_page_1(self, interaction: discord.Interaction, select: discord.ui.Select):
-        data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         recipe_id = int(select.values[0])
-        if _craft_func:
-            await _craft_func(interaction, recipe_id, count)
+        await craft(interaction, recipe_id)
 
     @discord.ui.select()
     async def recipe_page_2(self, interaction: discord.Interaction, select: discord.ui.Select):
-        data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         recipe_id = int(select.values[0])
-        if _craft_func:
-            await _craft_func(interaction, recipe_id, count)
+        await craft(interaction, recipe_id)
 
     @discord.ui.select()
     async def recipe_page_3(self, interaction: discord.Interaction, select: discord.ui.Select):
-        data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         recipe_id = int(select.values[0])
-        if _craft_func:
-            await _craft_func(interaction, recipe_id, count)
+        await craft(interaction, recipe_id)
 
     @discord.ui.select()
     async def recipe_page_4(self, interaction: discord.Interaction, select: discord.ui.Select):
-        data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         recipe_id = int(select.values[0])
-        if _craft_func:
-            await _craft_func(interaction, recipe_id, count)
+        await craft(interaction, recipe_id)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.primary)
     async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         page = int(data[1]) - 1
         if page < 1:
             page = int(data[2])
-        await crafting(interaction, page, count)
+        await craft_selecting(interaction, page)
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.primary)
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         data = str(self.next_page.custom_id).split('/')
-        count = int(data[3])
         page = int(data[1]) + 1
         if page > int(data[2]):
             page = 1
-        await crafting(interaction, page, count)
+        await craft_selecting(interaction, page)
 
 
-async def crafting(interaction: discord.Interaction, page: int, count: int):
+async def craft_selecting(interaction: discord.Interaction, page: int):
     """クラフトレシピ選択画面を表示"""
     user_id = interaction.user.id
     await new_user(user_id)
@@ -148,7 +135,7 @@ async def crafting(interaction: discord.Interaction, page: int, count: int):
             view.recipe_page_4.options = recipe_choices[75:100]
 
         page += 1
-        view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max) + '/' + str(count)
+        view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
         if interaction.message is None:
             await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
         else:
