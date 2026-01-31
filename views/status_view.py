@@ -145,9 +145,10 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
         for i in items.items():
             if 'drill_t1' in ITEMS[i[0]]['tag']:
                 dr = True
-            if m <= t < s:
-                embed.add_field(name=f'{ITEMS[i[0]]["name_e"]} ×{i[1]}', value='')
-            t += 1
+            if i[1] != 0:
+                if m <= t < s:
+                    embed.add_field(name=f'{ITEMS[i[0]]["name_e"]} ×{i[1]}', value='')
+                t += 1
         if dr:
             desc_text += f'\n燃料{EMOJIS["fuel"]} __**{fuel}**__'
 
