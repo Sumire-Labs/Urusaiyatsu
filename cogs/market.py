@@ -97,9 +97,47 @@ class MarketCog(commands.Cog):
                 save_users()
                 save_market()
             else:
-                await interaction.response.send_message(f'このアイテムの購入には**{price}**{EMOJIS["money"]}必要です。')
+                await interaction.response.send_message(f'このアイテムの購入には**{price}**{EMOJIS["money"]}必要です。',ephemeral=True)
         else:
-            await interaction.response.send_message(f'ID{item}で出品されているアイテムはありません。')
+            await interaction.response.send_message(f'ID{item}で出品されているアイテムはありません。',ephemeral=True)
+    
+    @app_commands.command(name="market_return", description="市場に出品したアイテムをインベントリに戻します。")
+    async def mk_return(self, interaction: discord.Interaction, item: int):
+        # データ読み込み
+        user_id = interaction.user.id
+        await new_user(user_id)
+        user_f = USERS[str(user_id)]
+
+        ids = [m['id'] for m in MARKET]
+        idx = find(ids, item)
+
+        if idx is not None:
+            market_f = MARKET[idx]
+            if market_f['seller'] == user_id:
+
+                # データ作成
+                result = market_f['item']
+                user_f['inventory'].setdefault(result, 0)
+
+                # アイテム入手
+                count = market_f['amount']
+                user_f['inventory'][result] += count
+                item_f = ITEMS[result]['name_e']
+
+                # マーケットから削除
+                MARKET.pop(idx)
+
+                # 送信
+                await interaction.response.send_message(
+                    f'**{item_f}{count}**個の出品を取り消しました。')
+
+                # ファイル更新
+                save_users()
+                save_market()
+            else:
+                await interaction.response.send_message(f'自分で出品したものを選択してください。',ephemeral=True)
+        else:
+            await interaction.response.send_message(f'ID{item}で出品されているアイテムはありません。',ephemeral=True)
 
     @app_commands.command(name="market_view", description="市場に出品されているアイテムの一覧を表示します。")
     async def mk_view_command(self, interaction: discord.Interaction, page: int):
@@ -122,9 +160,9 @@ class MarketCog(commands.Cog):
             # 送信
             await interaction.response.send_message(embed=embed)
         elif page <= 0:
-            await interaction.response.send_message(f'有効な整数を入力してください。')
+            await interaction.response.send_message(f'有効な整数を入力してください。',ephemeral=True)
         else:
-            await interaction.response.send_message(f'ページ{page}には表示する商品がありません。')
+            await interaction.response.send_message(f'ページ{page}には表示する商品がありません。',ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
