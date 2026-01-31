@@ -23,11 +23,12 @@ class LeaderboardCog(commands.Cog):
         Choice(name="採集レベル", value=3),
         Choice(name="釣りレベル", value=4),
         Choice(name="目標達成数", value=5),
-        Choice(name="コイン", value=6),
-        Choice(name="スタミナ", value=7),
-        Choice(name="燃料", value=8),
-        Choice(name="アイテム数", value=9),
-        Choice(name="放射線被爆量", value=10)
+        Choice(name="総資産", value=6),
+        Choice(name="コイン", value=7),
+        Choice(name="スタミナ", value=8),
+        Choice(name="燃料", value=9),
+        Choice(name="アイテム数", value=10),
+        Choice(name="放射線被爆量", value=11)
     ])
     async def leaderboard_command(self, interaction: discord.Interaction, mode: int):
         user_id = interaction.user.id
@@ -69,25 +70,34 @@ class LeaderboardCog(commands.Cog):
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, len(user_v['advancement_completed']))
         elif mode == 6:
+            embed.title = 'リーダーボード(総資産順)'
+            embed.description = f'-# 総資産 = (アイテムの売値の合計) + (コイン)\n'
+            for user_key, user_v in USERS.items():
+                item_value_sum = 0
+                for item, count in user_v['inventory'].items():
+                    item_value_sum += ITEMS[item]['value'] * count
+                score = item_value_sum + user_v['money']
+                board.setdefault(user_key, score)
+        elif mode == 7:
             embed.title = 'リーダーボード(コイン保有数順)'
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, user_v['money'])
-        elif mode == 7:
+        elif mode == 8:
             embed.title = 'リーダーボード(スタミナ残量順)'
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, user_v['stamina'])
-        elif mode == 8:
+        elif mode == 9:
             embed.title = 'リーダーボード(燃料残量順)'
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, user_v['fuel'])
-        elif mode == 9:
+        elif mode == 10:
             embed.title = 'リーダーボード(アイテム数順)'
             for user_key, user_v in USERS.items():
                 score = 0
                 for amount in user_v['inventory'].values():
                     score += amount
                 board.setdefault(user_key, score)
-        elif mode == 10:
+        elif mode == 11:
             embed.title = 'リーダーボード(放射線被爆量順)'
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, user_v['radiation'])
