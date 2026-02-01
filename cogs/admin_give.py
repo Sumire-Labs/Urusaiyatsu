@@ -16,7 +16,7 @@ class AdminGiveCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="admin_give", description="管理者用コマンドです。ユーザーのアイテムを増減します。")
-    async def refuel_command(self, interaction: discord.Interaction, user: discord.User, item_id: str, amount: int):
+    async def admin_give_command(self, interaction: discord.Interaction, user: discord.User, item_id: str, amount: int):
         user_id = user.id
         my_id = interaction.user.id
         if my_id in ADMIN:
