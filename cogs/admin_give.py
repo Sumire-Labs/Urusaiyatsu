@@ -20,22 +20,26 @@ class AdminGiveCog(commands.Cog):
         user_id = user.id
         my_id = interaction.user.id
         if my_id in ADMIN:
-            if amount != 0:
-                await new_user(user_id)
-                user_data = USERS[str(user_id)]
-                item_name = ITEMS[item_id]['name_e']
+            if item_id in ITEMS:
+                if amount != 0:
+                    await new_user(user_id)
+                    user_data = USERS[str(user_id)]
+                    item_name = ITEMS[item_id]['name_e']
 
-                # アイテム付与
-                user_data['inventory'][item_id] += amount
+                    # アイテム付与
+                    user_data['inventory'].setdefault(item_id, 0)
+                    user_data['inventory'][item_id] += amount
 
-                # 送信
-                await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
+                    # 送信
+                    await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
 
-                # ファイル更新
-                save_users()
+                    # ファイル更新
+                    save_users()
 
+                else:
+                    await interaction.response.send_message('有効な整数を入力してください。',ephemeral=True)
             else:
-                await interaction.response.send_message('有効な整数を入力してください。',ephemeral=True)
+                await interaction.response.send_message('存在しないアイテムIDです。',ephemeral=True)
         else:
             await interaction.response.send_message('このコマンドの使用にはBotの管理権限が必要です。',ephemeral=True)
 
