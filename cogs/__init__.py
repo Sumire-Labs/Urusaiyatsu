@@ -19,5 +19,6 @@ EXTENSIONS = [
     "cogs.leaderboard",
     "cogs.settings",
     "cogs.admin_give",
-    "cogs.admin_transit"
+    "cogs.admin_transit",
+    "cogs.admin_manage"
 ]

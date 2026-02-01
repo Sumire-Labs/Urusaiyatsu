@@ -6,9 +6,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS
-from core.utils import new_user, save_users
+from core.utils import save_users
 from core.config import ADMIN
-from copy import copy
 
 class AdminTransitCog(commands.Cog):
     """管理者用ユーザーデータ移行コマンド"""
