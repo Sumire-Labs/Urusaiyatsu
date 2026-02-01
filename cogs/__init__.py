@@ -10,7 +10,6 @@ EXTENSIONS = [
     "cogs.use",
     "cogs.explore",
     "cogs.fishing",
-    "cogs.combat",
     "cogs.craft",
     "cogs.sell",
     "cogs.buy",
@@ -19,4 +18,7 @@ EXTENSIONS = [
     "cogs.item_data",
     "cogs.leaderboard",
     "cogs.settings",
+    "cogs.admin_give",
+    "cogs.admin_transit",
+    "cogs.admin_manage"
 ]

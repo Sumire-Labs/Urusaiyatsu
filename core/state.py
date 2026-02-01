@@ -3,7 +3,6 @@
 Botクラスとすべてのゲームデータを管理
 """
 import discord
-from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
 import json
@@ -17,7 +16,6 @@ os.chdir(DATA_DIR)
 
 # Choice lists（setup_hookで初期化）
 place_choices: list[Choice] = []
-combat_choices: list[Choice] = []
 fishing_choices: list[Choice] = []
 consumable_choices: list[Choice] = []
 shop_list: list[str] = []
@@ -33,8 +31,6 @@ with open('item.json', 'r', encoding='UTF-8') as f:
     ITEMS: dict = json.load(f)
 with open('place.json', 'r', encoding='UTF-8') as f:
     PLACES: dict = json.load(f)
-with open('combat.json', 'r', encoding='UTF-8') as f:
-    COMBAT_PLACES: dict = json.load(f)
 with open('fishing.json', 'r', encoding='UTF-8') as f:
     FISHING_PLACES: dict = json.load(f)
 with open('loot.json', 'r', encoding='UTF-8') as f:
@@ -43,12 +39,33 @@ with open('localization.json', 'r', encoding='UTF-8') as f:
     LOCALIZATIONS: dict = json.load(f)
 with open('advancement.json', 'r', encoding='UTF-8') as f:
     ADVANCEMENTS: dict = json.load(f)
-with open('user.json', 'r', encoding='UTF-8') as f:
-    USERS: dict = json.load(f)
-with open('market.json', 'r', encoding='UTF-8') as f:
-    MARKET: list = json.load(f)
-with open('data.json', 'r', encoding='UTF-8') as f:
-    DATA: dict = json.load(f)
+
+# 存在しない場合は自動生成
+try: 
+    with open('user.json', 'r', encoding='UTF-8') as f:
+        USERS: dict = json.load(f)
+except:
+    with open('user.json', 'w', encoding='UTF-8') as f:
+        USERS: dict = {}
+        json.dump(USERS, f, indent=2, ensure_ascii=False)
+
+try: 
+    with open('market.json', 'r', encoding='UTF-8') as f:
+        MARKET: list = json.load(f)
+except:
+    with open('market.json', 'w', encoding='UTF-8') as f:
+        MARKET: list = []
+        json.dump(MARKET, f, indent=2, ensure_ascii=False)
+
+try: 
+    with open('data.json', 'r', encoding='UTF-8') as f:
+        DATA: dict = json.load(f)
+except:
+    with open('data.json', 'w', encoding='UTF-8') as f:
+        DATA: dict = {
+            "date": 0
+        }
+        json.dump(DATA, f, indent=2, ensure_ascii=False)
 
 # 絵文字マッピング（setup_hookで更新）
 EMOJIS: dict[str, str] = {
@@ -58,7 +75,6 @@ EMOJIS: dict[str, str] = {
     'level': '',
     'level_gathering': '',
     'level_fishing': '',
-    'level_combat': '',
     'empty': '',
     'radiation': ''
 }
@@ -151,11 +167,6 @@ class Bot(commands.Bot):
 
             t += 1
         print('Item list generated:' + str(t))
-
-        # 戦闘場所選択リスト
-        for place_id, place_data in COMBAT_PLACES.items():
-            combat_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('Combat place list generated:' + str(len(combat_choices)))
 
         # 釣り場所選択リスト
         for place_id, place_data in FISHING_PLACES.items():

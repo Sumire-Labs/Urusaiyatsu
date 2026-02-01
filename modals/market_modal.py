@@ -24,9 +24,9 @@ class market_sell_amount(discord.ui.Modal):
                 content = self.custom_id
                 await market_sell_item(interaction, content, count, price)
             else:
-                await interaction.response.send_message('整数を入力してください。')
+                await interaction.response.send_message('有効な整数を入力してください。')
         except ValueError:
-            await interaction.response.send_message('整数を入力してください。')
+            await interaction.response.send_message('有効な整数を入力してください。')
 
 
 async def market_sell_item(interaction: discord.Interaction, item: str, count: int, price: int):
@@ -38,15 +38,16 @@ async def market_sell_item(interaction: discord.Interaction, item: str, count: i
 
     # アイテムチェック
     if item in user_f['inventory'] and user_f['inventory'][item] != 0:
-        # アイテムを消費
-        if user_f['inventory'][item] < count:
-            count = user_f['inventory'][item]
-        user_f['inventory'][item] -= count
 
         # 手数料
         value = math.ceil(price * 0.01)
         if user_f['money'] >= value:
             user_f['money'] -= value
+
+            # アイテム消費
+            if user_f['inventory'][item] < count:
+                count = user_f['inventory'][item]
+            user_f['inventory'][item] -= count
 
             # 出品ID生成
             i = len(MARKET)

@@ -4,7 +4,7 @@
 import discord
 
 from core.state import USERS
-
+from core.utils import save_users
 
 class set_name(discord.ui.Modal):
     """ニックネーム変更Modal"""
@@ -19,3 +19,6 @@ class set_name(discord.ui.Modal):
         user_id = interaction.user.id
         USERS[str(user_id)]['name'] = name
         await interaction.response.send_message(f'名前を**{name}**に変更しました。')
+
+        # ファイル更新
+        save_users()

@@ -88,7 +88,7 @@ async def item_data(interaction: discord.Interaction, item: str):
             material += ' ]'
             ingredient = '\n\n' + ITEMS[recipe['result']]['name_e'] + ' ⇐ ' + material
 
-            if recipe['tool'] is not None:
+            if recipe['tool_tag'] is not None:
                 tool = ''
                 for item_data in ITEMS.values():
                     if recipe['tool_tag'] in item_data['tag']:

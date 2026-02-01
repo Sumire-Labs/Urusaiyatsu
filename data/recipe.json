@@ -1,7 +1,6 @@
 [
     {
         "result": "saw",
-        "tool": null,
         "tool_tag": null,
         "stamina": 5,
         "xp": 2,
@@ -13,7 +12,6 @@
     },
     {
         "result": "planks",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 2,
         "xp": 1,
@@ -24,7 +22,6 @@
     },
     {
         "result": "pickaxe",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 3,
@@ -36,7 +33,6 @@
     },
     {
         "result": "furnace",
-        "tool": null,
         "tool_tag": null,
         "stamina": 10,
         "xp": 5,
@@ -49,7 +45,6 @@
     },
     {
         "result": "copper_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -61,7 +56,6 @@
     },
     {
         "result": "copper_pickaxe",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 5,
@@ -73,7 +67,6 @@
     },
     {
         "result": "iron_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 4,
@@ -85,7 +78,6 @@
     },
     {
         "result": "steel_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 4,
@@ -97,7 +89,6 @@
     },
     {
         "result": "steel_hammer",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 6,
@@ -109,7 +100,6 @@
     },
     {
         "result": "steel_pickaxe",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 10,
         "xp": 8,
@@ -121,7 +111,6 @@
     },
     {
         "result": "gold_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 4,
@@ -133,7 +122,6 @@
     },
     {
         "result": "rose_gold_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 4,
@@ -145,7 +133,6 @@
     },
     {
         "result": "rest_charm",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 5,
         "xp": 8,
@@ -157,7 +144,6 @@
     },
     {
         "result": "rest_ring",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 10,
         "xp": 10,
@@ -170,7 +156,6 @@
     },
     {
         "result": "rest_artifact",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 20,
         "xp": 20,
@@ -184,7 +169,6 @@
     },
     {
         "result": "copper_plate",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 3,
         "xp": 4,
@@ -195,7 +179,6 @@
     },
     {
         "result": "steel_plate",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 3,
         "xp": 4,
@@ -206,7 +189,6 @@
     },
     {
         "result": "gold_plate",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 3,
         "xp": 4,
@@ -217,7 +199,6 @@
     },
     {
         "result": "silver_plate",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 3,
         "xp": 4,
@@ -228,7 +209,6 @@
     },
     {
         "result": "money_charm",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 2,
         "xp": 6,
@@ -239,7 +219,6 @@
     },
     {
         "result": "money_ring",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 4,
         "xp": 9,
@@ -251,7 +230,6 @@
     },
     {
         "result": "money_artifact",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 7,
         "xp": 13,
@@ -263,7 +241,6 @@
     },
     {
         "result": "knife",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 3,
@@ -275,7 +252,6 @@
     },
     {
         "result": "leather_boots",
-        "tool": null,
         "tool_tag": null,
         "stamina": 5,
         "xp": 5,
@@ -287,7 +263,6 @@
     },
     {
         "result": "copper_saw",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 5,
@@ -299,7 +274,6 @@
     },
     {
         "result": "hard_planks",
-        "tool": "copper_saw",
         "tool_tag": "saw_t2",
         "stamina": 3,
         "xp": 2,
@@ -310,7 +284,6 @@
     },
     {
         "result": "loom",
-        "tool": "copper_saw",
         "tool_tag": "saw_t2",
         "stamina": 7,
         "xp": 6,
@@ -323,7 +296,6 @@
     },
     {
         "result": "silk",
-        "tool": "loom",
         "tool_tag": "loom",
         "stamina": 3,
         "xp": 3,
@@ -334,7 +306,6 @@
     },
     {
         "result": "sturdy_gloves",
-        "tool": "loom",
         "tool_tag": "loom",
         "stamina": 10,
         "xp": 8,
@@ -347,7 +318,6 @@
     },
     {
         "result": "silver_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -359,7 +329,6 @@
     },
     {
         "result": "black_bronze_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 3,
         "xp": 6,
@@ -372,7 +341,6 @@
     },
     {
         "result": "black_bronze_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 1,
         "xp": 2,
@@ -383,7 +351,6 @@
     },
     {
         "result": "black_bronze_anvil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 10,
         "xp": 12,
@@ -395,7 +362,6 @@
     },
     {
         "result": "black_bronze_pickaxe",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 12,
         "xp": 15,
@@ -407,7 +373,6 @@
     },
     {
         "result": "crystal_pickaxe",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 20,
         "xp": 20,
@@ -420,7 +385,6 @@
     },
     {
         "result": "charcoal_kiln",
-        "tool": null,
         "tool_tag": null,
         "stamina": 5,
         "xp": 3,
@@ -432,7 +396,6 @@
     },
     {
         "result": "coal",
-        "tool": "charcoal_kiln",
         "tool_tag": "charcoal_kiln",
         "stamina": 2,
         "xp": 1,
@@ -442,7 +405,6 @@
     },
     {
         "result": "coal",
-        "tool": "charcoal_kiln",
         "tool_tag": "charcoal_kiln",
         "stamina": 4,
         "xp": 1,
@@ -452,7 +414,6 @@
     },
     {
         "result": "steel_saw",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 10,
         "xp": 8,
@@ -464,7 +425,6 @@
     },
     {
         "result": "black_bronze_saw",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 12,
         "xp": 15,
@@ -476,7 +436,6 @@
     },
     {
         "result": "recycler",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 8,
         "xp": 12,
@@ -488,7 +447,6 @@
     },
     {
         "result": "titanium",
-        "tool": "recycler",
         "tool_tag": "recycler",
         "stamina": 1,
         "xp": 4,
@@ -498,7 +456,6 @@
     },
     {
         "result": "steel_ingot",
-        "tool": "recycler",
         "tool_tag": "recycler",
         "stamina": 4,
         "xp": 4,
@@ -508,7 +465,6 @@
     },
     {
         "result": "gold_shard",
-        "tool": "recycler",
         "tool_tag": "recycler",
         "stamina": 2,
         "xp": 2,
@@ -519,7 +475,6 @@
     },
     {
         "result": "gold_ingot",
-        "tool": "recycler",
         "tool_tag": "recycler",
         "stamina": 2,
         "xp": 2,
@@ -529,7 +484,6 @@
     },
     {
         "result": "gold_ingot",
-        "tool": "recycler",
         "tool_tag": "recycler",
         "stamina": 2,
         "xp": 2,
@@ -540,7 +494,6 @@
     },
     {
         "result": "refiner",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 8,
         "xp": 10,
@@ -553,7 +506,6 @@
     },
     {
         "result": "scrap",
-        "tool": "refiner",
         "tool_tag": "refiner",
         "stamina": 1,
         "xp": 1,
@@ -563,7 +515,6 @@
     },
     {
         "result": "refined_titanium",
-        "tool": "refiner",
         "tool_tag": "refiner",
         "stamina": 1,
         "xp": 3,
@@ -574,7 +525,6 @@
     },
     {
         "result": "refined_tungsten",
-        "tool": "refiner",
         "tool_tag": "refiner",
         "stamina": 1,
         "xp": 3,
@@ -585,7 +535,6 @@
     },
     {
         "result": "battery",
-        "tool": "refiner",
         "tool_tag": "refiner",
         "stamina": 4,
         "xp": 8,
@@ -597,7 +546,6 @@
     },
     {
         "result": "robot_arm",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 6,
         "xp": 15,
@@ -609,7 +557,6 @@
     },
     {
         "result": "mining_charm",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 6,
         "xp": 15,
@@ -621,7 +568,6 @@
     },
     {
         "result": "mining_ring",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 8,
         "xp": 16,
@@ -634,7 +580,6 @@
     },
     {
         "result": "mining_artifact",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 15,
         "xp": 19,
@@ -647,7 +592,6 @@
     },
     {
         "result": "mining_relic",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 20,
         "xp": 25,
@@ -660,7 +604,6 @@
     },
     {
         "result": "titanium_pickaxe",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 10,
         "xp": 13,
@@ -673,7 +616,6 @@
     },
     {
         "result": "compressed_tungsten",
-        "tool": "refiner",
         "tool_tag": "refiner",
         "stamina": 2,
         "xp": 3,
@@ -684,7 +626,6 @@
     },
     {
         "result": "copper_knife",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 5,
@@ -696,7 +637,6 @@
     },
     {
         "result": "steel_knife",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 10,
         "xp": 8,
@@ -708,7 +648,6 @@
     },
     {
         "result": "black_bronze_knife",
-        "tool": "steel_hammer",
         "tool_tag": "hammer",
         "stamina": 12,
         "xp": 15,
@@ -720,7 +659,6 @@
     },
     {
         "result": "machine_loom",
-        "tool": "black_bronze_anvil",
         "tool_tag": "anvil",
         "stamina": 11,
         "xp": 14,
@@ -733,7 +671,6 @@
     },
     {
         "result": "reinforced_boots",
-        "tool": "machine_loom",
         "tool_tag": "loom_t2",
         "stamina": 10,
         "xp": 13,
@@ -746,7 +683,6 @@
     },
     {
         "result": "reinforced_gloves",
-        "tool": "machine_loom",
         "tool_tag": "loom_t2",
         "stamina": 10,
         "xp": 13,
@@ -759,7 +695,6 @@
     },
     {
         "result": "stone_chunk",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 1,
         "xp": 2,
@@ -770,7 +705,6 @@
     },
     {
         "result": "stone_matrix",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 2,
@@ -781,7 +715,6 @@
     },
     {
         "result": "forge",
-        "tool": null,
         "tool_tag": null,
         "stamina": 10,
         "xp": 12,
@@ -795,7 +728,6 @@
     },
     {
         "result": "fine_crystal",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -806,7 +738,6 @@
     },
     {
         "result": "flawless_crystal",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 4,
@@ -817,7 +748,6 @@
     },
     {
         "result": "fine_amethyst",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -828,7 +758,6 @@
     },
     {
         "result": "flawless_amethyst",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 4,
@@ -839,7 +768,6 @@
     },
     {
         "result": "fine_emerald",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -850,7 +778,6 @@
     },
     {
         "result": "flawless_emerald",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 4,
@@ -861,7 +788,6 @@
     },
     {
         "result": "fine_sapphire",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -872,7 +798,6 @@
     },
     {
         "result": "flawless_sapphire",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 4,
@@ -883,7 +808,6 @@
     },
     {
         "result": "fine_diamond",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -894,7 +818,6 @@
     },
     {
         "result": "flawless_diamond",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 4,
@@ -905,7 +828,6 @@
     },
     {
         "result": "mixed_gemstone",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 3,
         "xp": 6,
@@ -921,7 +843,6 @@
     },
     {
         "result": "refined_cobalt",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -932,7 +853,6 @@
     },
     {
         "result": "compressed_cobalt",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 3,
@@ -943,7 +863,6 @@
     },
     {
         "result": "refined_iridium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -954,7 +873,6 @@
     },
     {
         "result": "compressed_iridium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 3,
@@ -965,7 +883,6 @@
     },
     {
         "result": "drill_engine",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 4,
         "xp": 7,
@@ -978,7 +895,6 @@
     },
     {
         "result": "advanced_drill_engine",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 6,
         "xp": 10,
@@ -991,7 +907,6 @@
     },
     {
         "result": "mythical_drill_engine",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 8,
         "xp": 20,
@@ -1004,7 +919,6 @@
     },
     {
         "result": "solid_fuel",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 3,
@@ -1015,7 +929,6 @@
     },
     {
         "result": "drill_t0",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 5,
         "xp": 7,
@@ -1027,7 +940,6 @@
     },
     {
         "result": "drill_g1",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 7,
         "xp": 10,
@@ -1039,7 +951,6 @@
     },
     {
         "result": "drill_g2",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 10,
         "xp": 12,
@@ -1051,7 +962,6 @@
     },
     {
         "result": "drill_g3",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 15,
         "xp": 17,
@@ -1064,7 +974,6 @@
     },
     {
         "result": "drill_g4",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 20,
         "xp": 24,
@@ -1076,7 +985,6 @@
     },
     {
         "result": "drill_m1",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 10,
         "xp": 12,
@@ -1089,7 +997,6 @@
     },
     {
         "result": "drill_m2",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 12,
         "xp": 15,
@@ -1102,7 +1009,6 @@
     },
     {
         "result": "drill_m3",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 15,
         "xp": 17,
@@ -1115,7 +1021,6 @@
     },
     {
         "result": "drill_m4",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 20,
         "xp": 24,
@@ -1128,7 +1033,6 @@
     },
     {
         "result": "drill_m5",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 25,
         "xp": 30,
@@ -1141,7 +1045,6 @@
     },
     {
         "result": "drill_mx",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 30,
         "xp": 50,
@@ -1153,7 +1056,6 @@
     },
     {
         "result": "fishing_rod",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 2,
@@ -1165,7 +1067,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1176,7 +1077,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1186,7 +1086,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1196,7 +1095,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1206,7 +1104,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1216,7 +1113,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1226,7 +1122,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1236,7 +1131,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1246,7 +1140,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1256,7 +1149,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1266,7 +1158,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1276,7 +1167,6 @@
     },
     {
         "result": "fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 1,
         "xp": 1,
@@ -1286,7 +1176,6 @@
     },
     {
         "result": "rich_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 1,
@@ -1296,7 +1185,6 @@
     },
     {
         "result": "rich_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 1,
@@ -1306,7 +1194,6 @@
     },
     {
         "result": "rich_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 1,
@@ -1317,7 +1204,6 @@
     },
     {
         "result": "extra_rich_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 2,
@@ -1328,7 +1214,6 @@
     },
     {
         "result": "fisherman_station",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 10,
         "xp": 7,
@@ -1340,7 +1225,6 @@
     },
     {
         "result": "tin_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -1352,7 +1236,6 @@
     },
     {
         "result": "chrome_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -1364,7 +1247,6 @@
     },
     {
         "result": "apprentice_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 8,
         "xp": 6,
@@ -1377,7 +1259,6 @@
     },
     {
         "result": "expert_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 12,
         "xp": 10,
@@ -1391,7 +1272,6 @@
     },
     {
         "result": "master_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 15,
         "xp": 16,
@@ -1405,7 +1285,6 @@
     },
     {
         "result": "legend_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 20,
         "xp": 24,
@@ -1419,7 +1298,6 @@
     },
     {
         "result": "basic_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 1,
         "xp": 2,
@@ -1430,7 +1308,6 @@
     },
     {
         "result": "delicious_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1441,7 +1318,6 @@
     },
     {
         "result": "rare_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1453,7 +1329,6 @@
     },
     {
         "result": "rare_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1464,7 +1339,6 @@
     },
     {
         "result": "rare_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1475,7 +1349,6 @@
     },
     {
         "result": "rare_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1486,7 +1359,6 @@
     },
     {
         "result": "rare_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1497,7 +1369,6 @@
     },
     {
         "result": "treasure_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1509,7 +1380,6 @@
     },
     {
         "result": "treasure_bait",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 2,
         "xp": 3,
@@ -1520,7 +1390,6 @@
     },
     {
         "result": "fishing_charm",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 5,
         "xp": 3,
@@ -1532,7 +1401,6 @@
     },
     {
         "result": "fishing_ring",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 10,
         "xp": 6,
@@ -1545,7 +1413,6 @@
     },
     {
         "result": "fishing_artifact",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 15,
         "xp": 10,
@@ -1558,7 +1425,6 @@
     },
     {
         "result": "fishing_relic",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 20,
         "xp": 20,
@@ -1572,7 +1438,6 @@
     },
     {
         "result": "biting_charm",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 6,
         "xp": 4,
@@ -1584,7 +1449,6 @@
     },
     {
         "result": "biting_ring",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 12,
         "xp": 8,
@@ -1597,7 +1461,6 @@
     },
     {
         "result": "biting_artifact",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 15,
         "xp": 12,
@@ -1611,7 +1474,6 @@
     },
     {
         "result": "lead_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -1623,7 +1485,6 @@
     },
     {
         "result": "platinum_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 2,
         "xp": 3,
@@ -1635,7 +1496,6 @@
     },
     {
         "result": "supreme_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 3,
@@ -1646,7 +1506,6 @@
     },
     {
         "result": "ultimate_fish_oil",
-        "tool": null,
         "tool_tag": null,
         "stamina": 2,
         "xp": 3,
@@ -1657,7 +1516,6 @@
     },
     {
         "result": "dwarven_alloy",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 4,
         "xp": 8,
@@ -1671,7 +1529,6 @@
     },
     {
         "result": "mercury_compound",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 5,
         "xp": 7,
@@ -1685,7 +1542,6 @@
     },
     {
         "result": "abyssal_amalgam",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 8,
         "xp": 10,
@@ -1699,7 +1555,6 @@
     },
     {
         "result": "abyssal_ingot",
-        "tool": "furnace",
         "tool_tag": "furnace",
         "stamina": 8,
         "xp": 10,
@@ -1712,7 +1567,6 @@
     },
     {
         "result": "shiny_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 8,
         "xp": 13,
@@ -1726,7 +1580,6 @@
     },
     {
         "result": "crystal_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 10,
         "xp": 15,
@@ -1740,7 +1593,6 @@
     },
     {
         "result": "dwarven_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 12,
         "xp": 18,
@@ -1754,7 +1606,6 @@
     },
     {
         "result": "advanced_dwarven_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 15,
         "xp": 20,
@@ -1768,7 +1619,6 @@
     },
     {
         "result": "abyssal_rod",
-        "tool": "fisherman_station",
         "tool_tag": "fisherman_station",
         "stamina": 20,
         "xp": 28,
@@ -1782,7 +1632,6 @@
     },
     {
         "result": "crafting_charm",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 3,
         "xp": 4,
@@ -1794,7 +1643,6 @@
     },
     {
         "result": "crafting_ring",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 4,
         "xp": 7,
@@ -1807,7 +1655,6 @@
     },
     {
         "result": "crafting_artifact",
-        "tool": "saw",
         "tool_tag": "saw",
         "stamina": 5,
         "xp": 9,
@@ -1820,7 +1667,6 @@
     },
     {
         "result": "durable_plate",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 3,
         "xp": 3,
@@ -1833,7 +1679,6 @@
     },
     {
         "result": "conductive_plate",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 3,
         "xp": 3,
@@ -1847,7 +1692,6 @@
     },
     {
         "result": "reaction_chamber",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 7,
         "xp": 9,
@@ -1861,7 +1705,6 @@
     },
     {
         "result": "fluorescent_paint",
-        "tool": "reaction_chamber",
         "tool_tag": "reaction_chamber",
         "stamina": 2,
         "xp": 3,
@@ -1874,7 +1717,6 @@
     },
     {
         "result": "drill_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 6,
         "xp": 8,
@@ -1888,7 +1730,6 @@
     },
     {
         "result": "obsidian_brick",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 1,
@@ -1899,7 +1740,6 @@
     },
     {
         "result": "obsidian_glass",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -1910,7 +1750,6 @@
     },
     {
         "result": "pure_beryllium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -1921,7 +1760,6 @@
     },
     {
         "result": "dense_beryllium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -1932,7 +1770,6 @@
     },
     {
         "result": "pure_thorium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -1943,7 +1780,6 @@
     },
     {
         "result": "dense_thorium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -1954,7 +1790,6 @@
     },
     {
         "result": "pure_uranium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -1965,7 +1800,6 @@
     },
     {
         "result": "dense_uranium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -1976,7 +1810,6 @@
     },
     {
         "result": "cut_garnet",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -1987,7 +1820,6 @@
     },
     {
         "result": "perfect_garnet",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -1998,7 +1830,6 @@
     },
     {
         "result": "cut_topaz",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -2009,7 +1840,6 @@
     },
     {
         "result": "perfect_topaz",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -2020,7 +1850,6 @@
     },
     {
         "result": "obsidian_glass",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 2,
         "xp": 2,
@@ -2031,7 +1860,6 @@
     },
     {
         "result": "radiation_remover",
-        "tool": "reaction_chamber",
         "tool_tag": "reaction_chamber",
         "stamina": 3,
         "xp": 4,
@@ -2044,7 +1872,6 @@
     },
     {
         "result": "sulfide_fuel",
-        "tool": "reaction_chamber",
         "tool_tag": "reaction_chamber",
         "stamina": 1,
         "xp": 2,
@@ -2056,7 +1883,6 @@
     },
     {
         "result": "uranium",
-        "tool": "atomic_reactor",
         "tool_tag": "atomic_reactor",
         "stamina": 1,
         "xp": 1,
@@ -2066,7 +1892,6 @@
     },
     {
         "result": "robust_plate",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 3,
         "xp": 5,
@@ -2080,7 +1905,6 @@
     },
     {
         "result": "atomic_reactor",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 8,
         "xp": 9,
@@ -2094,7 +1918,6 @@
     },
     {
         "result": "container",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 4,
         "xp": 6,
@@ -2107,7 +1930,6 @@
     },
     {
         "result": "contained_uranium",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 1,
         "xp": 2,
@@ -2119,7 +1941,6 @@
     },
     {
         "result": "plutonium",
-        "tool": "atomic_reactor",
         "tool_tag": "atomic_reactor",
         "stamina": 2,
         "xp": 2,
@@ -2131,7 +1952,6 @@
     },
     {
         "result": "super_battery",
-        "tool": "reaction_chamber",
         "tool_tag": "reaction_chamber",
         "stamina": 3,
         "xp": 6,
@@ -2145,7 +1965,6 @@
     },
     {
         "result": "atomic_booster",
-        "tool": "reaction_chamber",
         "tool_tag": "reaction_chamber",
         "stamina": 4,
         "xp": 7,
@@ -2159,7 +1978,6 @@
     },
     {
         "result": "improved_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 7,
         "xp": 10,
@@ -2172,7 +1990,6 @@
     },
     {
         "result": "heated_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 8,
         "xp": 11,
@@ -2186,7 +2003,6 @@
     },
     {
         "result": "cooled_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 7,
         "xp": 10,
@@ -2200,7 +2016,6 @@
     },
     {
         "result": "adjusted_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 9,
         "xp": 12,
@@ -2213,7 +2028,6 @@
     },
     {
         "result": "radioactive_laser",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 12,
         "xp": 15,
@@ -2226,7 +2040,6 @@
     },
     {
         "result": "radiation_shield",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 7,
         "xp": 10,
@@ -2240,7 +2053,6 @@
     },
     {
         "result": "reinforced_radiation_shield",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 9,
         "xp": 14,
@@ -2254,7 +2066,6 @@
     },
     {
         "result": "immune_boosting_unit",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 8,
         "xp": 12,
@@ -2267,7 +2078,6 @@
     },
     {
         "result": "immunosuppression_unit",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 8,
         "xp": 12,
@@ -2280,7 +2090,6 @@
     },
     {
         "result": "radiation_stopper",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 11,
         "xp": 18,
@@ -2294,7 +2103,6 @@
     },
     {
         "result": "atomic_arm",
-        "tool": "forge",
         "tool_tag": "forge",
         "stamina": 15,
         "xp": 22,
