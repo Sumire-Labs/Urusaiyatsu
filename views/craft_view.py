@@ -66,7 +66,7 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
     """クラフトレシピ選択画面を表示"""
     user_id = interaction.user.id
     await new_user(user_id)
-    user_f = USERS[str(user_id)]
+    user_data = USERS[str(user_id)]
     recipe_choices = []
     page -= 1
     e = 0
@@ -78,7 +78,7 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
         in_page = page * 100 <= e < (page + 1) * 100
 
         for item_id in recipe['ingredient']:
-            if item_id in user_f['inventory'] and user_f['inventory'][item_id] > 0:
+            if item_id in user_data['inventory'] and user_data['inventory'][item_id] > 0:
                 has_ingredient = True
 
         if has_ingredient:

@@ -19,7 +19,6 @@ place_choices: list[Choice] = []
 fishing_choices: list[Choice] = []
 consumable_choices: list[Choice] = []
 shop_list: list[str] = []
-bait_choices: list[Choice] = []
 equip_slot: list[str] = []
 item_choices: list[list[discord.SelectOption]] = []
 equippable_choices: list[list[discord.SelectOption]] = []
@@ -56,16 +55,6 @@ except:
     with open('market.json', 'w', encoding='UTF-8') as f:
         MARKET: list = []
         json.dump(MARKET, f, indent=2, ensure_ascii=False)
-
-try: 
-    with open('data.json', 'r', encoding='UTF-8') as f:
-        DATA: dict = json.load(f)
-except:
-    with open('data.json', 'w', encoding='UTF-8') as f:
-        DATA: dict = {
-            "date": 0
-        }
-        json.dump(DATA, f, indent=2, ensure_ascii=False)
 
 # 絵文字マッピング（setup_hookで更新）
 EMOJIS: dict[str, str] = {
@@ -129,12 +118,16 @@ class Bot(commands.Bot):
                 item_data.setdefault('emoji', f':{item_id}:')
             item_data['name_e'] = item_data['emoji'] + item_data['name']
 
+            # メタデータを設定
+            if 'meta' not in item_data:
+                item_data.setdefault('meta', {})
+
             # 売値を設定
             if 'value' not in item_data:
                 set_item_value(item_id)
 
             # アイテム選択リストを登録
-            item_name = item_data['name'] + ' ( 売値: ' + str(item_data['value']) + ' )'
+            item_name = item_data['name']
             page = int(t / 25)
             try:
                 item_choices[page]
@@ -149,8 +142,6 @@ class Bot(commands.Bot):
                     shop_list.append(item_id)
                 if 'consumable' in item_data['tag']:
                     consumable_choices.append(Choice(name=item_data['name'], value=item_id))
-                if 'bait' in item_data['tag']:
-                    bait_choices.append(Choice(name=item_data['name'], value=item_id))
                 if 'equippable' in item_data['tag']:
                     page = int(e / 25)
                     try:

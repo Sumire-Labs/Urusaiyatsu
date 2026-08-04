@@ -5,7 +5,7 @@ import discord
 import random
 
 from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
-from core.utils import xp, complete_advancement, save_users
+from core.utils import xp, complete_advancement, save_users, get_stats, get_item_stacked, get_item_index, remove_item_stacked, get_item, modify_item, add_item, remove_item_from_index
 
 
 class craft_amount(discord.ui.Modal):
@@ -33,225 +33,155 @@ class craft_amount(discord.ui.Modal):
             await interaction.response.send_message('有効な整数を入力してください。')
 
 
-async def craft_item(interaction: discord.Interaction, recipe: int, bulk: int = 1):
+async def craft_item(interaction: discord.Interaction, recipe: int, count: int = 1):
     """クラフト処理"""
     # データ読み込み
     user_id = interaction.user.id
-    user_f = USERS[str(user_id)]
-    recipe_f = RECIPES[recipe]
-    tool_tag = recipe_f['tool_tag']
-    result = recipe_f['result']
+    user_data = USERS[str(user_id)]
+    recipe_data = RECIPES[recipe]
+    stats = get_stats(user_id)
 
-    # ツールチェック
-    tool_c = False
-    tool_id = None
+    # ツール
+    tool_item = user_data['inventory']
+    tool_tag = recipe_data['tool_tag']
+    tool_index = 0
+    tool_id = ''
     if tool_tag is not None:
-        for item_id, item_data in ITEMS.items():
-            if tool_tag in item_data['tag'] and item_id in user_f['inventory'] and user_f['inventory'][item_id] > 0:
-                tool_id = item_id
-                tool_c = True
+        for item in user_data['inventory']:
+            if tool_tag in ITEMS[item['id']]['tag']:
+                tool_item = item
+                tool_id = tool_item['id']
                 break
-    else:
-        tool_c = True
-
-    # アクセチェック
-    stamina_reduce_chance = 0
-    for acc in user_f['equipment']['accessory']:
-        if acc is not None:
-            item = ITEMS[acc]
-            if 'acc_crafting' in item['tag']:
-                stamina_reduce_chance = item['stamina_reduce_chance']
-
-    if tool_c:
-        tool_msg = ''
-        fail = 0
-        stamina = recipe_f['stamina']
-
-        if bulk == 1:
-            # アイテムチェック
-            for mat_id, mat_amount in recipe_f['ingredient'].items():
-                if not (mat_id in user_f['inventory'] and user_f['inventory'][mat_id] >= mat_amount):
-                    fail += 1
-                    break
-
-            # スタミナチェック
-            if user_f['stamina'] < stamina:
-                fail += 2
-
-            if fail == 0:
-                # ツールを確率で破壊
-                if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
-                    user_f['inventory'][tool_id] -= 1
-                    tool_name = ITEMS[tool_id]['name_e']
-                    tool_msg = f'が、\n**{tool_name}**が壊れました...'
-
-                # データ変更
-                for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    user_f['inventory'][mat_id] -= mat_amount
-                user_f['inventory'].setdefault(result, 0)
-                user_f['inventory'][result] += 1
-                if random.randint(1, 100) > stamina_reduce_chance:
-                    user_f['stamina'] -= stamina
-
-                ret = xp('gathering', interaction, recipe_f['xp'])
-
-                # 進捗
-                for adv_id in user_f['advancement_now']:
-                    cond = ADVANCEMENTS[adv_id]['clear_condition']
-                    if 'get_item' in cond:
-                        target = cond['get_item']
-                        if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                            ret += complete_advancement(interaction, adv_id)
-                    elif 'get_items' in cond:
-                        complete = True
-                        for target_item, target_amount in cond['get_items'].items():
-                            if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                complete = False
-                                break
-                        if complete:
-                            ret += complete_advancement(interaction, adv_id)
-
-                # 送信
-                item_f = ITEMS[result]['name_e']
-                await interaction.response.send_message(f'**{item_f}**をクラフトしました！{tool_msg}{ret}')
-
-                # ファイル更新
-                save_users()
-
-            elif fail == 1:
-                embed = discord.Embed(title="必要なアイテム")
-                embed.description = ''
-                for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    if mat_id in user_f["inventory"]:
-                        inventory_amount = user_f["inventory"][mat_id]
-                    else:
-                        inventory_amount = 0
-                    embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
-                item_f = ITEMS[result]['name_e']
-                await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテムが不足しています。',embed=embed)
-            elif fail == 2:
-                item_f = ITEMS[result]['name_e']
-                await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
-            elif fail == 3:
-                embed = discord.Embed(title="必要なアイテム")
-                embed.description = ''
-                for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    if mat_id in user_f["inventory"]:
-                        inventory_amount = user_f["inventory"][mat_id]
-                    else:
-                        inventory_amount = 0
-                    embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
-                embed.description += f'\n(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)'
-                item_f = ITEMS[result]['name_e']
-                await interaction.response.send_message(
-                    f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。',embed=embed)
-            else:
-                item_f = ITEMS[result]['name_e']
-                await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
+            tool_index += 1
         else:
-            # バルククラフト
-            count = 0
-            reduced_stamina = 0
+            embed = discord.Embed(title="クラフト可能なツール")
+            embed.description = ''
+            for item_id, item_data in ITEMS.items():
+                if tool_tag in item_data['tag']:
+                    embed.description += f'**{ITEMS[item_id]["name_e"]}**\n'
+            await interaction.response.send_message('クラフトに必要なツールが不足しています。',embed=embed)
+            return
+        
 
-            while fail == 0:
-                for mat_id, mat_amount in recipe_f['ingredient'].items():
-                    if not (mat_id in user_f['inventory'] and user_f['inventory'][mat_id] >= mat_amount * (count + 1)):
-                        fail += 1
-                        break
+    # スタミナ
+    stamina_uses = recipe_data['stamina']
+    if user_data['stamina'] < stamina_uses:
+        await interaction.response.send_message(
+            f'スタミナが足りません。(**{user_data["stamina"]}/{stamina_uses}{EMOJIS["stamina"]}**)'
+        )
+        return
 
-                # スタミナチェック
-                if user_f['stamina'] < stamina * (count + 1):
-                    fail += 2
+    # 素材
+    crafting_counts = [count]
+    embed = discord.Embed(title="必要なアイテム")
+    embed.description = ''
+    for ingredient_id, ingredient_count in recipe_data['ingredient'].items():
+        inventory_item = get_item_stacked(user_id, ingredient_id, ingredient_count)
+        inventory_count = 0
+        if inventory_item == []:
+            crafting_counts.append(0)
+        else:
+            for i in inventory_item:
+                inventory_count += i['count']
+            crafting_counts.append(inventory_count // ingredient_count)
 
-                if fail == 0:
-                    count += 1
-                    if random.randint(1, 100) <= stamina_reduce_chance:
-                        reduced_stamina += 1
-                    # ツールを確率で破壊
-                    if tool_id in user_f['inventory'] and ITEMS[tool_id]['breakability'] >= random.randint(1, 100):
-                        user_f['inventory'][tool_id] -= 1
-                        tool_name = ITEMS[tool_id]['name_e']
-                        tool_msg = f'が、\n**{tool_name}**が壊れました...'
-                        fail = -1
+        embed.description += f'\n**{ITEMS[ingredient_id]["name_e"]}** (**{inventory_count}/{ingredient_count}**)'
 
-                    if count >= bulk:
-                        fail = -1
-            else:
-                if count > 0:
-                    # データ変更
-                    for mat_id, mat_amount in recipe_f['ingredient'].items():
-                        user_f['inventory'][mat_id] -= mat_amount * count
-                    user_f['inventory'].setdefault(result, 0)
-                    user_f['inventory'][result] += count
-                    user_f['stamina'] -= stamina * (count - reduced_stamina)
-                    ret = xp('gathering', interaction, recipe_f['xp'] * count)
+    count = min(crafting_counts)
+    if count == 0:
+        await interaction.response.send_message('クラフトに必要なアイテムが不足しています。',embed=embed)
+        return
 
-                    # 進捗
-                    for adv_id in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[adv_id]['clear_condition']
-                        if 'get_item' in cond:
-                            target = cond['get_item']
-                            if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                                ret += complete_advancement(interaction, adv_id)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for target_item, target_amount in cond['get_items'].items():
-                                if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, adv_id)
+    # クラフト処理
+    broken_tool = {}
+    process_count = 0
+    for i in range(count):
 
-                    # 送信
-                    item_f = ITEMS[result]['name_e']
-                    await interaction.response.send_message(
-                        f'**{item_f}**を**{count}**個クラフトしました！{tool_msg}{ret}')
+        # スタミナチェック
+        if user_data['stamina'] < stamina_uses:
+            break
+        elif stats['crafting_stamina_saving_chance'] >= random.random():
+            user_data['stamina'] -= stamina_uses
+            
+        process_count += 1
 
-                    # ファイル更新
-                    save_users()
+        # ツール耐久
+        if tool_tag is not None:
+            max_damage = ITEMS[tool_id].get('max_damage')
+            if max_damage is not None:
 
-                elif fail == 1:
-                    embed = discord.Embed(title="必要なアイテム")
-                    embed.description = ''
-                    for mat_id, mat_amount in recipe_f['ingredient'].items():
-                        if mat_id in user_f["inventory"]:
-                            inventory_amount = user_f["inventory"][mat_id]
-                        else:
-                            inventory_amount = 0
-                        embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
-                    item_f = ITEMS[result]['name_e']
-                    await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテムが不足しています。',embed=embed)
-                elif fail == 2:
-                    item_f = ITEMS[result]['name_e']
-                    await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
-                elif fail == 3:
-                    embed = discord.Embed(title="必要なアイテム")
-                    embed.description = ''
-                    for mat_id, mat_amount in recipe_f['ingredient'].items():
-                        if mat_id in user_f["inventory"]:
-                            inventory_amount = user_f["inventory"][mat_id]
-                        else:
-                            inventory_amount = 0
-                        embed.description += f'\n**{ITEMS[mat_id]["name_e"]}** (**{inventory_amount}/{mat_amount}**)'
-                    embed.description += f'\n(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)'
-                    item_f = ITEMS[result]['name_e']
-                    await interaction.response.send_message(
-                        f'**{item_f}**のクラフトに必要なアイテムとスタミナが不足しています。',embed=embed)
+                # ダメージを加算
+                tool_item = user_data['inventory'][tool_index]
+                meta = tool_item['meta'].copy()
+                tool_damage = meta['damage']
+                tool_damage += 1
+
+                if tool_damage < max_damage:
+                    tool_index = modify_item(user_id, tool_index, meta)
                 else:
-                    item_f = ITEMS[result]['name_e']
-                    await interaction.response.send_message(f'**{item_f}**をクラフトできませんでした。')
-    else:
-        embed = discord.Embed(title="クラフト可能なツール")
-        embed.description = ''
-        for item_id, item_data in ITEMS.items():
-            if tool_tag in item_data['tag']:
-                embed.description += f'**{ITEMS[item_id]["name_e"]}**\n'
-        item_f = ITEMS[result]['name_e']
-        await interaction.response.send_message(f'**{item_f}**のクラフトに必要なツールが不足しています。',embed=embed)
+
+                    # 破損時
+                    remove_item_from_index(user_id, tool_index)
+                    if tool_id in broken_tool:
+                        broken_tool[tool_id] += 1
+                    else:
+                        broken_tool.setdefault(tool_id, 1)
+
+                    # ツール交換
+                    if user_data['settings']['crafting_tool_replacement'] == 0:
+                        tool_index = get_item_index(user_id, tool_id)
+                        if tool_index is None:
+                            break
+
+                    elif user_data['settings']['crafting_tool_replacement'] == 1:
+                        for item in user_data['inventory']:
+                            tool_index = 0
+                            if tool_tag in ITEMS[item['id']]['tag']:
+                                tool_item = item
+                                tool_id = tool_item['id']
+                                break
+                            tool_index += 1
+                        else:
+                            break
+
+    # データ変更
+    result_id = recipe_data['result']
+    description = ''
+    for ingredient_id, ingredient_count in recipe_data['ingredient'].items():
+        ingredient_name = ITEMS[ingredient_id]['name_e']
+        used_count = ingredient_count * process_count
+
+        description += f'\n-# -{used_count} {ingredient_name}'
+        remove_item_stacked(user_id, ingredient_id, used_count)
+
+    for tool_id, tool_count in broken_tool.items():
+        tool_name = ITEMS[tool_id]['name_e']
+        description += f'\n-# -{tool_count} {tool_name}'
+
+    add_item(user_id, result_id, process_count)
+    adv_message = xp(user_id, recipe_data['type'], recipe_data['xp'] * process_count)
+
+    # 進捗
+    for adv_id in user_data['advancement_now']:
+        cond = ADVANCEMENTS[adv_id]['clear_condition']
+        if 'get_item' in cond:
+            item_id = cond['get_item']
+            if get_item(user_id, item_id):
+                adv_message += complete_advancement(user_id, adv_id)
+        elif 'get_items' in cond:
+            for item_id, item_count in cond['get_items'].items():
+                if not get_item(user_id, item_id, item_count):
+                    break
+            else:
+                adv_message += complete_advancement(user_id, adv_id)
+
+    # 送信
+    item_name = ITEMS[result_id]['name_e']
+    await interaction.response.send_message(
+        f'**{item_name}×{process_count}**をクラフトしました！{description}{adv_message}')
+
+    # ファイル更新
+    save_users()
 
 async def craft(interaction: discord.Interaction, recipe_id: int):
     """クラフトModalを表示"""

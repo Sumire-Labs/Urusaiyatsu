@@ -8,7 +8,7 @@ EXTENSIONS = [
     "cogs.status",
     "cogs.equip",
     "cogs.use",
-    "cogs.explore",
+    "cogs.gather",
     "cogs.fishing",
     "cogs.craft",
     "cogs.sell",

@@ -33,21 +33,21 @@ async def market_sell_item(interaction: discord.Interaction, item: str, count: i
     """マーケット出品処理"""
     # データ読み込み
     user_id = interaction.user.id
-    user_f = USERS[str(user_id)]
+    user_data = USERS[str(user_id)]
     item_f = ITEMS[item]
 
     # アイテムチェック
-    if item in user_f['inventory'] and user_f['inventory'][item] != 0:
+    if item in user_data['inventory'] and user_data['inventory'][item] != 0:
 
         # 手数料
         value = math.ceil(price * 0.01)
-        if user_f['money'] >= value:
-            user_f['money'] -= value
+        if user_data['money'] >= value:
+            user_data['money'] -= value
 
             # アイテム消費
-            if user_f['inventory'][item] < count:
-                count = user_f['inventory'][item]
-            user_f['inventory'][item] -= count
+            if user_data['inventory'][item] < count:
+                count = user_data['inventory'][item]
+            user_data['inventory'][item] -= count
 
             # 出品ID生成
             i = len(MARKET)

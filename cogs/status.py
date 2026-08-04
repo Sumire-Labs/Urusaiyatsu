@@ -19,21 +19,21 @@ class StatusCog(commands.Cog):
     async def view_command(self, interaction):
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
+        user_data = USERS[str(user_id)]
 
         # ステータス表示設定(0: 自動, 1: 短縮, 2: 非短縮)
-        status_setting = user_f['settings']['status']
+        status_setting = user_data['settings']['status']
 
         if status_setting == 0:
             # 所持アイテム数が1ページに収まらなければ自動でshort表示
-            item_count = sum(1 for count in user_f['inventory'].values() if count != 0)
+            item_count = sum(1 for count in user_data['inventory'].values() if count != 0)
             short = (item_count > STATUS_ITEMS_PER_PAGE)
         else:
             short = (status_setting == 1)
         await view_status(interaction, 1, short)
 
         # newsをリセット
-        user_f['news'] = []
+        user_data['news'] = []
 
 
 async def setup(bot: commands.Bot):

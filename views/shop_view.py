@@ -33,18 +33,18 @@ class remove_equip_choice(discord.ui.View):
         item = value[0]
         slot = value[1]
         user_id = interaction.user.id
-        user_f = USERS[str(user_id)]
+        user_data = USERS[str(user_id)]
         remove_fail = True
 
         if slot == 'accessory':
-            acc = user_f['equipment']['accessory']
+            acc = user_data['equipment']['accessory']
             if item in acc:
                 acc = [None if i == item else i for i in acc]
-                user_f['equipment']['accessory'] = acc
+                user_data['equipment']['accessory'] = acc
                 remove_fail = False
         else:
-            if user_f['equipment'][slot] == item:
-                user_f['equipment'][slot] = None
+            if user_data['equipment'][slot] == item:
+                user_data['equipment'][slot] = None
                 remove_fail = False
 
         if remove_fail:
@@ -53,7 +53,7 @@ class remove_equip_choice(discord.ui.View):
             await interaction.response.send_message(f'**{item_name}**は装備していません。')
         else:
             # データ変更
-            user_f['inventory'][item] += 1
+            user_data['inventory'][item] += 1
 
             # 送信
             item_name = ITEMS[item]['name_e']
@@ -67,28 +67,28 @@ async def shop_buy(interaction: discord.Interaction, item: str):
     """ショップからアイテムを購入"""
     # データ読み込み
     user_id = interaction.user.id
-    user_f = USERS[str(user_id)]
-    shop_content = user_f['shop_content'].index(item)
-    count = user_f['shop_count'][shop_content] + 1
+    user_data = USERS[str(user_id)]
+    shop_content = user_data['shop_content'].index(item)
+    count = user_data['shop_count'][shop_content] + 1
     price = ITEMS[item]['price']
     amount = ITEMS[item]['shop_amount']
 
     # 購入回数チェック
     if count <= amount:
         # お金チェック
-        if user_f['money'] >= price:
+        if user_data['money'] >= price:
             # お金を消費
-            user_f['money'] -= price
+            user_data['money'] -= price
 
             # データ作成
-            user_f['inventory'].setdefault(item, 0)
+            user_data['inventory'].setdefault(item, 0)
 
             # アイテム入手
-            user_f['inventory'][item] += 1
+            user_data['inventory'][item] += 1
             item_f = ITEMS[item]['name_e']
 
             # 購入回数を増加
-            user_f['shop_count'][shop_content] += 1
+            user_data['shop_count'][shop_content] += 1
             amount = amount - count
 
             # 送信

@@ -19,11 +19,11 @@ class RefuelCog(commands.Cog):
         if amount > 0:
             user_id = interaction.user.id
             await new_user(user_id)
-            user_f = USERS[str(user_id)]
+            user_data = USERS[str(user_id)]
 
-            if user_f['money'] >= amount * 2:
-                user_f['money'] -= amount * 2
-                user_f['fuel'] += amount
+            if user_data['money'] >= amount * 2:
+                user_data['money'] -= amount * 2
+                user_data['fuel'] += amount
 
                 # 送信
                 await interaction.response.send_message(f'燃料を**{amount}**{EMOJIS["fuel"]}購入しました！')

@@ -20,11 +20,11 @@ class BuyCog(commands.Cog):
     async def shop_buy_command(self, interaction: discord.Interaction):
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
+        user_data = USERS[str(user_id)]
 
-        if user_f['level_global'] >= 7:
+        if user_data['level_global'] >= 7:
             view = shop_choice()
-            shop_content = user_f['shop_content']
+            shop_content = user_data['shop_content']
             shop_choices = []
             for item_id in shop_content:
                 shop_choices.append(

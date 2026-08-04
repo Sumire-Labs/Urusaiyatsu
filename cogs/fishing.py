@@ -4,12 +4,12 @@ Fishing Cog
 import discord
 import random
 import datetime
-import typing
+from copy import copy
 from discord import app_commands
 from discord.ext import commands
 
-from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices, bait_choices
-from core.utils import new_user, xp, complete_advancement, save_users
+from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices
+from core.utils import new_user, xp, complete_advancement, save_users, get_stats, get_item, add_item, table_roll
 
 
 class FishingCog(commands.Cog):
@@ -20,338 +20,169 @@ class FishingCog(commands.Cog):
 
     @app_commands.command(name="fishing", description="釣りによってアイテムを手に入れます。スタミナを消費し、任意の餌を消費します。")
     @app_commands.choices(place=fishing_choices)
-    @app_commands.choices(bait=bait_choices)
-    async def fishing_command(self, interaction: discord.Interaction, place: str, bait: typing.Optional[str] = None, count: int = 1):
-        bulk = count
+    async def fishing_command(self, interaction: discord.Interaction, place: str, count: int = 1):
 
+        
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
-        place_f = FISHING_PLACES[place]
-        place_level = place_f['level']
-        rod = user_f['equipment']['fishing_rod']
+        user_data = USERS[str(user_id)]
+        place_data = FISHING_PLACES[place]
+        stats = get_stats(user_id)
 
-        if rod is not None:
+        # 釣り竿装備
+        tool = user_data['equipment']['fishing_rod']
+        if tool == {}:
+            await interaction.response.send_message(f'釣り竿を装備してください。')
+            return
 
-            # レベルチェック
-            if place_level <= user_f['level_fishing']:
+        # レベル
+        required_level = place_data['required_level']
+        if user_data['level_fishing'] < required_level:
+            await interaction.response.send_message(
+                f'{place_data["name"]}での釣りには釣りレベルが**{required_level}**以上必要です。')
+            return
 
-                if bulk == 1:
-                    await self._fishing_single(interaction, user_f, place_f, place, rod, bait)
-                else:
-                    await self._fishing_bulk(interaction, user_f, place_f, place, rod, bait, bulk)
-            else:
-                place_name = place_f['name']
-                await interaction.response.send_message(
-                    f'{place_name}で釣りをするには釣りレベルが**{place_level}**以上でなければなりません。')
+        # スタミナ
+        stamina_uses = stats['fishing_stamina_uses']
+        if user_data['stamina'] < stamina_uses:
+            await interaction.response.send_message(
+                f'スタミナが足りません。(**{user_data["stamina"]}/{stamina_uses}{EMOJIS["stamina"]}**)'
+            )
+            return
+
+
+        # 釣り処理
+        process_count = 0
+        roll = 0
+
+        fishing_bait = user_data['equipment']['fishing_bait']
+        bait_id = ''
+        bait_used = 0
+        bait_exhaust = False
+        table_before_exhaust = []
+        roll_before_exhaust = 0
+
+        if fishing_bait != {}:
+            bait_id = fishing_bait['id']
+            table = get_fishing_loot_table(place, stats['fishing_power'], bait_id)
         else:
-            await interaction.response.send_message('釣り竿を装備してください。')
+            table = get_fishing_loot_table(place, stats['fishing_power'])
 
-    async def _fishing_single(self, interaction, user_f, place_f, place, rod, bait):
-        """単発釣り処理"""
-        # 餌チェック
-        bt_c = True
-        bait_loot = {}
-        bait_power = 0
-        bait_chance = 0
-        if bait is not None:
-            if bait in user_f['inventory'] and user_f['inventory'][bait] > 0:
-                bait_power = ITEMS[bait]['power']
-                bait_chance = ITEMS[bait]['additional_chance']
-                if 'additional_loot' in ITEMS[bait]:
-                    bait_loot = ITEMS[bait]['additional_loot']
-                if random.randint(1, 2) == 1:
-                    user_f['inventory'][bait] -= 1
-            else:
-                bt_c = False
-        if bt_c:
+        while process_count < count:
 
-            # アクセ効果
-            rod_status = ITEMS[rod]['fishing_status']
-            stamina = rod_status['stamina']
-            money = 0
-            acc_money_chance = 0
-            acc_stamina = 0
-            acc_power = 0
-            acc_chance = 0
-            for t in user_f['equipment']['accessory']:
-                if t is not None:
-                    item = ITEMS[t]
-                    if 'acc_fishing' in item['tag']:
-                        acc_stamina = item['stamina_reduce']
-                    if 'acc_money' in item['tag']:
-                        acc_money_chance = item['money_chance']
-                    if 'acc_fish_power' in item['tag']:
-                        acc_power = item['power']
-                    if 'acc_fishing_chance' in item['tag']:
-                        acc_chance = item['additional_chance']
-            stamina -= acc_stamina
+            # スタミナ
+            if user_data['stamina'] < stamina_uses:
+                break
 
-            # スタミナチェック
-            if user_f['stamina'] >= stamina:
+            process_count += 1
 
-                # 確率で魚を逃す
-                if rod_status['miss_chance'] <= random.randint(1, 100):
+            # 釣り失敗
+            if stats['fishing_miss_chance'] < random.random():
+                roll += 1
 
-                    # 金運アクセ
-                    if acc_money_chance >= random.randint(1, 100):
-                        money = 10
+            # プレイヤーステータス
+            user_data['stamina'] -= stats['fishing_stamina_uses']
+            user_data['money'] += stats['money_bonus']
 
-                    # 場所からアイテムをランダムに取得
-                    date_power = int((20 - abs(datetime.datetime.now().hour - 6)) / 3)
-                    power = rod_status['power'] + acc_power + bait_power + date_power
-                    result = place_f['result']
-                    result_list = []
-                    for i in result:
-                        power_max = i['power_max']
-                        power_min = i['power_min']
-                        if power_max == -1:
-                            fish_c = power >= power_min
-                        else:
-                            fish_c = power_max >= power >= power_min
-                        if fish_c:
-                            t = 0
-                            while t < i['weight']:
-                                result_list.append(i['id'])
-                                t += 1
-                    for i in bait_loot.items():
-                        if i[0] == place:
-                            for t in i[1]:
-                                result_list.append(t)
-                    result = random.choice(result_list)
-                    item_f = ITEMS[result]['name_e']
-                    user_f['inventory'].setdefault(result, 0)
-                    user_f['inventory'][result] += 1
+            # ロール回数を増加
+            additional_loot_chance = stats['additional_fishing_loot_chance'] * (1 - stats['fishing_miss_chance'])
+            if additional_loot_chance >= 1:
+                roll += int(additional_loot_chance)
+                additional_loot_chance -= int(additional_loot_chance)
+            if additional_loot_chance >= random.random():
+                roll += 1
 
-                    # 追加釣り
-                    chance = rod_status['chance'] + acc_chance + bait_chance
-                    if chance >= random.randint(1, 100):
-                        result2 = place_f['result']
-                        result_list2 = []
-                        for i in result2:
-                            power_max = i['power_max']
-                            power_min = i['power_min']
-                            if power_max == -1:
-                                fish_c = power >= power_min
-                            else:
-                                fish_c = power_max >= power >= power_min
-                            if fish_c:
-                                t = 0
-                                while t < i['weight']:
-                                    result_list2.append(i['id'])
-                                    t += 1
-                        for i in bait_loot.items():
-                            if i[0] == place:
-                                for t in i[1]:
-                                    result_list2.append(t)
-                        result2 = random.choice(result_list2)
-                        user_f['inventory'].setdefault(result2, 0)
-                        user_f['inventory'][result2] += 1
-                        result2_name = ITEMS[result2]['name_e']
-                        add_msg = f'さらに、**{result2_name}**も手に入れました！'
+            # 餌消費
+            if fishing_bait != {} and random.randint(0, 1):
+
+                bait_used -= 1
+                fishing_bait['count'] -= 1
+                if fishing_bait['count'] == 0:
+                    fishing_bait = {}
+                    if user_data['settings']['continue_fishing']:
+                        bait_exhaust = True
+                        table_before_exhaust = table.copy()
+                        roll_before_exhaust = roll
+
+                        # 統計を再計算
+                        stats = get_stats(user_id)
+                        table = get_fishing_loot_table(place, stats['fishing_power'])
                     else:
-                        add_msg = ''
+                        break
 
-                    # データ変更
-                    user_f['money'] += money
-                    user_f['stamina'] -= stamina
-                    ret = xp('fishing', interaction, place_f['xp'])
+        # 結果処理
+        if bait_exhaust:
+            result = table_roll(table_before_exhaust, roll_before_exhaust)
 
-                    # 進捗
-                    for i in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[i]['clear_condition']
-                        if 'fishing' in cond:
-                            if cond['fishing'] == place:
-                                ret += complete_advancement(interaction, i)
-                        elif 'get_item' in cond:
-                            j = cond['get_item']
-                            if j in user_f['inventory'] and user_f['inventory'][j] > 0:
-                                ret += complete_advancement(interaction, i)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for j in cond['get_items'].items():
-                                if not (j[0] in user_f['inventory'] and user_f['inventory'][j[0]] >= j[1]):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, i)
-
-                    # 送信
-                    place_name = place_f['name']
-                    await interaction.response.send_message(
-                        f'{place_name}での釣りによって**{item_f}**を手に入れました！{add_msg}{ret}')
-
-                    # ファイル更新
-                    save_users()
-
+            for item_id, item_count in table_roll(table, roll - roll_before_exhaust):
+                if item_id in result:
+                    result[item_id] += item_count
                 else:
-                    user_f['stamina'] -= stamina
-                    USERS[str(interaction.user.id)] = user_f
-                    save_users()
-                    place_name = place_f['name']
-                    await interaction.response.send_message(
-                        f'{place_name}での釣りをしましたが、魚に逃げられてしまいました...')
+                    result.setdefault(item_id, item_count)
+
+            if bait_id in result:
+                result[bait_id] -= bait_used
             else:
-                await interaction.response.send_message(
-                    f'{place_f["name"]}での釣りに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
+                result.setdefault(bait_id, bait_used)
         else:
-            await interaction.response.send_message('その餌は持っていません。')
+            result = table_roll(table, roll)
+        
+        place_name = place_data['name']
+        embed = discord.Embed(title=f'{place_name}での釣り({process_count}回)の結果')
+        for item_id, item_count in result:
+            if item_count > 0:
+                add_item(user_id, item_id)
+            embed.add_field(name=ITEMS[item_id]['name_e'] + ': ' + str(item_count), value='', inline=False)
 
-    async def _fishing_bulk(self, interaction, user_f, place_f, place, rod, bait, bulk):
-        """バルク釣り処理"""
-        failed = False
-        count = 0
-        results = {}
-        date_power = int((20 - abs(datetime.datetime.now().hour - 6)) / 3)
+        # データ変更
+        adv_message = xp(user_id, 'fishing', place_data['xp'] * roll)
 
-        # アクセ効果
-        rod_status = ITEMS[rod]['fishing_status']
-        stamina = rod_status['stamina']
-        money = 0
-        acc_money_chance = 0
-        acc_stamina = 0
-        acc_power = 0
-        acc_chance = 0
-        for t in user_f['equipment']['accessory']:
-            if t is not None:
-                item = ITEMS[t]
-                if 'acc_fishing' in item['tag']:
-                    acc_stamina = item['stamina_reduce']
-                if 'acc_money' in item['tag']:
-                    acc_money_chance = item['money_chance']
-                if 'acc_fish_power' in item['tag']:
-                    acc_power = item['power']
-                if 'acc_fishing_chance' in item['tag']:
-                    acc_chance = item['additional_chance']
-        stamina -= acc_stamina
-
-        # 餌チェック
-        bait_loot = {}
-        bait_power = 0
-        bait_chance = 0
-        if bait is not None:
-            if bait in user_f['inventory'] and user_f['inventory'][bait] > 0:
-                bait_power = ITEMS[bait]['power']
-                bait_chance = ITEMS[bait]['additional_chance']
-                if 'additional_loot' in ITEMS[bait]:
-                    bait_loot = ITEMS[bait]['additional_loot']
-            else:
-                failed = True
-
-        # スタミナチェック
-        if user_f['stamina'] >= stamina:
-            while not failed and count < bulk:
-
-                # 餌チェック
-                if bait is not None:
-                    if random.randint(1, 2) == 1:
-                        user_f['inventory'][bait] -= 1
-                        if user_f['inventory'][bait] == 0:
-                            failed = True
-
-                # スタミナチェック
-                if user_f['stamina'] >= stamina * (count + 1):
-
-                    # 確率で魚を逃す
-                    if rod_status['miss_chance'] <= random.randint(1, 100):
-
-                        # 金運アクセ
-                        if acc_money_chance >= random.randint(1, 100):
-                            money += 10
-
-                        # 場所からアイテムをランダムに取得
-                        power = rod_status['power'] + acc_power + bait_power + date_power
-                        result = place_f['result']
-                        result_list = []
-                        for i in result:
-                            power_max = i['power_max']
-                            power_min = i['power_min']
-                            if power_max == -1:
-                                fish_c = power >= power_min
-                            else:
-                                fish_c = power_max >= power >= power_min
-                            if fish_c:
-                                t = 0
-                                while t < i['weight']:
-                                    result_list.append(i['id'])
-                                    t += 1
-                        for i in bait_loot.items():
-                            if i[0] == place:
-                                for t in i[1]:
-                                    result_list.append(t)
-                        result = random.choice(result_list)
-                        results.setdefault(result, 0)
-                        results[result] += 1
-
-                        # 追加釣り
-                        chance = rod_status['chance'] + acc_chance + bait_chance
-                        if chance >= random.randint(1, 100):
-                            result2 = place_f['result']
-                            result_list2 = []
-                            for i in result2:
-                                power_max = i['power_max']
-                                power_min = i['power_min']
-                                if power_max == -1:
-                                    fish_c = power >= power_min
-                                else:
-                                    fish_c = power_max >= power >= power_min
-                                if fish_c:
-                                    t = 0
-                                    while t < i['weight']:
-                                        result_list2.append(i['id'])
-                                        t += 1
-                            for i in bait_loot.items():
-                                if i[0] == place:
-                                    for t in i[1]:
-                                        result_list2.append(t)
-                            result2 = random.choice(result_list2)
-                            results.setdefault(result2, 0)
-                            results[result2] += 1
-                    count += 1
+        # 進捗
+        for adv_id in user_data['advancement_now']:
+            cond = ADVANCEMENTS[adv_id]['clear_condition']
+            if 'fishing' in cond:
+                if cond['fishing'] == place:
+                    adv_message += complete_advancement(user_id, adv_id)
+            elif 'get_item' in cond:
+                item_id = cond['get_item']
+                if get_item(user_id, item_id):
+                    adv_message += complete_advancement(user_id, adv_id)
+            elif 'get_items' in cond:
+                for item_id, item_count in cond['get_items'].items():
+                    if not get_item(user_id, item_id, item_count):
+                        break
                 else:
-                    failed = True
-            else:
-                place_name = place_f['name']
-                embed = discord.Embed(title=f'{place_name}での釣り({count}回)の結果')
-                for i in results.items():
-                    user_f['inventory'].setdefault(i[0], 0)
-                    user_f['inventory'][i[0]] += i[1]
-                    embed.add_field(name=ITEMS[i[0]]['name_e'] + ': ' + str(i[1]), value='', inline=False)
+                    adv_message += complete_advancement(user_id, adv_id)
 
-                # データ変更
-                user_f['money'] += money
-                user_f['stamina'] -= stamina * count
-                ret = xp('fishing', interaction, place_f['xp'] * count)
-
-                # 進捗
-                for i in user_f['advancement_now']:
-                    cond = ADVANCEMENTS[i]['clear_condition']
-                    if 'fishing' in cond:
-                        if cond['fishing'] == place:
-                            ret += complete_advancement(interaction, i)
-                    elif 'get_item' in cond:
-                        j = cond['get_item']
-                        if j in user_f['inventory'] and user_f['inventory'][j] > 0:
-                            ret += complete_advancement(interaction, i)
-                    elif 'get_items' in cond:
-                        complete = True
-                        for j in cond['get_items'].items():
-                            if not (j[0] in user_f['inventory'] and user_f['inventory'][j[0]] >= j[1]):
-                                complete = False
-                                break
-                        if complete:
-                            ret += complete_advancement(interaction, i)
-
-                # 送信
-                await interaction.response.send_message(ret, embed=embed)
-
-                # ファイル更新
-                save_users()
         # 送信
-        await interaction.response.send_message(
-            f'{place_f["name"]}での釣りに必要なスタミナが不足しています。(**{user_f["stamina"]}/{stamina}{EMOJIS["stamina"]}**)')
+        await interaction.response.send_message(adv_message, embed=embed)
 
+        # ファイル更新
+        save_users()
+
+def get_fishing_loot_table(place: str, power: int, bait: str | None = None) -> list:
+    """釣りのルートテーブルを取得"""
+    table = FISHING_PLACES[place]['table']
+    result = []
+
+    # 時刻による釣りパワーボーナス
+    power += int((20 - abs(datetime.datetime.now().hour - 6)) / 3)
+
+    # 餌の追加アイテムを反映
+    if bait is not None:
+        addition = ITEMS[bait].get('table_addition')
+        if addition is not None:
+            for entry in table:
+                if entry['id'] in addition.keys():
+                    entry['weight'] += addition[entry['id']]
+
+    # 釣りパワーを反映
+    for entry in table:
+        if entry['min_power'] <= power <= entry['max_power']:
+            result.append(entry)
+
+    return result
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(FishingCog(bot))

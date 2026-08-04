@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS
-from core.utils import new_user, save_users
+from core.utils import new_user, save_users, add_item, remove_item
 from core.config import ADMIN
 
 class AdminGiveCog(commands.Cog):
@@ -26,12 +26,19 @@ class AdminGiveCog(commands.Cog):
                     user_data = USERS[str(user_id)]
                     item_name = ITEMS[item_id]['name_e']
 
-                    # アイテム付与
-                    user_data['inventory'].setdefault(item_id, 0)
-                    user_data['inventory'][item_id] += amount
+                    if amount > 0:
+                        # アイテム付与
+                        add_item(user_id, item_id, amount)
 
-                    # 送信
-                    await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
+                        # 送信
+                        await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
+
+                    else:
+                        # アイテム剥奪
+                        remove_item(user_id, item_id, amount)
+
+                        # 送信
+                        await interaction.response.send_message(f'{user_data["name"]}から{item_name}{amount}個を剥奪しました。',ephemeral=True)
 
                     # ファイル更新
                     save_users()

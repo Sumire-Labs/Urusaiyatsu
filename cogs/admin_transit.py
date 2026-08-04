@@ -16,8 +16,8 @@ class AdminTransitCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="admin_transit", description="管理者用コマンドです。ユーザーのデータを移行します。")
-    async def admin_transit_command(self, interaction: discord.Interaction, user_from: discord.User, user_to: discord.User):
-        user_id_from = str(user_from.id)
+    async def admin_transit_command(self, interaction: discord.Interaction, user_datarom: discord.User, user_to: discord.User):
+        user_id_from = str(user_datarom.id)
         user_id_to = str(user_to.id)
         my_id = interaction.user.id
         if my_id in ADMIN:

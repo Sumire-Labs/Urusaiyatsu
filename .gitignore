@@ -224,5 +224,7 @@ CLAUDE.md
 # 個人データが含まれているため
 user.json
 config.json
-data.json
 market.json
+
+# vsc settings
+.vscode/

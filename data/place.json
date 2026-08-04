@@ -1,11 +1,10 @@
 {
     "forest": {
         "name": "森林",
-        "type": ["gathering"],
-        "level": 1,
-        "tool_tag": null,
+        "required_level": 1,
+        "required_gathering_power": 0,
         "xp": 5,
-        "result": [
+        "table": [
             {
                 "id": "wood",
                 "weight": 2
@@ -18,11 +17,10 @@
     },
     "underground": {
         "name": "地下",
-        "type": ["mining"],
-        "level": 1,
-        "tool_tag": "pickaxe_t1",
+        "required_level": 2,
+        "required_gathering_power": 1,
         "xp": 7,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 3
@@ -39,11 +37,10 @@
     },
     "caverns": {
         "name": "洞窟",
-        "type": ["mining"],
-        "level": 3,
-        "tool_tag": "pickaxe_t2",
+        "required_level": 3,
+        "required_gathering_power": 2,
         "xp": 10,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 3
@@ -64,11 +61,10 @@
     },
     "deep_caverns": {
         "name": "深層の洞窟",
-        "type": ["mining"],
-        "level": 5,
-        "tool_tag": "pickaxe_t3",
+        "required_level": 5,
+        "required_gathering_power": 3,
         "xp": 15,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 4
@@ -86,8 +82,12 @@
                 "weight": 5
             },
             {
-                "id": "gold",
+                "id": "silver",
                 "weight": 3
+            },
+            {
+                "id": "gold",
+                "weight": 2
             },
             {
                 "id": "crystal",
@@ -95,76 +95,12 @@
             }
         ]
     },
-    "jungle": {
-        "name": "熱帯雨林",
-        "type": ["gathering"],
-        "level": 2,
-        "tool_tag": "knife",
-        "xp": 7,
-        "result": [
-            {
-                "id": "wood",
-                "weight": 3
-            },
-            {
-                "id": "leather",
-                "weight": 2
-            }
-        ]
-    },
-    "snow": {
-        "name": "雪原",
-        "type": ["gathering"],
-        "level": 4,
-        "tool_tag": "boots",
-        "xp": 10,
-        "result": [
-            {
-                "id": "hard_wood",
-                "weight": 1
-            },
-            {
-                "id": "leather",
-                "weight": 1
-            },
-            {
-                "id": "string",
-                "weight": 1
-            }
-        ]
-    },
-    "mountains": {
-        "name": "山岳",
-        "type": ["gathering"],
-        "level": 8,
-        "tool_tag": "gloves",
-        "xp": 15,
-        "result": [
-            {
-                "id": "hard_wood",
-                "weight": 4
-            },
-            {
-                "id": "leather",
-                "weight": 2
-            },
-            {
-                "id": "stone",
-                "weight": 3
-            },
-            {
-                "id": "silver",
-                "weight": 3
-            }
-        ]
-    },
     "coal_mine": {
         "name": "炭鉱",
-        "type": ["mining"],
-        "level": 10,
-        "tool_tag": "pickaxe_t3",
+        "required_level": 10,
+        "required_gathering_power": 3,
         "xp": 10,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 3
@@ -181,11 +117,10 @@
     },
     "abandoned_factory": {
         "name": "廃工場",
-        "type": ["mining"],
-        "level": 15,
-        "tool_tag": "pickaxe_t4",
+        "required_level": 15,
+        "required_gathering_power": 4,
         "xp": 20,
-        "result": [
+        "table": [
             {
                 "id": "copper",
                 "weight": 20
@@ -218,11 +153,10 @@
     },
     "deepest_tunnel": {
         "name": "最深層の坑道",
-        "type": ["mining"],
-        "level": 22,
-        "tool_tag": "pickaxe_t5",
+        "required_level": 22,
+        "required_gathering_power": 5,
         "xp": 30,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 4
@@ -263,11 +197,10 @@
     },
     "mythical_mines": {
         "name": "神話の採掘所",
-        "type": ["mining", "drill"],
-        "level": 35,
-        "tool_tag": "drill_t1",
+        "required_level": 35,
+        "required_gathering_power": 6,
         "xp": 32,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 50
@@ -296,11 +229,10 @@
     },
     "ore_hallow": {
         "name": "鉱石の聖域",
-        "type": ["mining", "drill"],
-        "level": 40,
-        "tool_tag": "drill_t2",
+        "required_level": 40,
+        "required_gathering_power": 7,
         "xp": 32,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 22
@@ -333,11 +265,10 @@
     },
     "dream_vein": {
         "name": "幻の鉱床",
-        "type": ["mining", "drill"],
-        "level": 45,
-        "tool_tag": "drill_t3",
+        "required_level": 45,
+        "required_gathering_power": 8,
         "xp": 34,
-        "result": [
+        "table": [
             {
                 "id": "stone",
                 "weight": 16
@@ -370,11 +301,10 @@
     },
     "lava_flowing_cave": {
         "name": "溶岩流の洞穴",
-        "type": ["mining", "drill", "laser"],
-        "level": 50,
-        "tool_tag": "drill_t4",
+        "required_level": 50,
+        "required_gathering_power": 9,
         "xp": 35,
-        "result": [
+        "table": [
             {
                 "id": "obsidian",
                 "weight": 24
@@ -407,11 +337,11 @@
     },
     "radioactive_mine": {
         "name": "放射性の鉱山",
-        "type": ["mining", "drill", "laser", "radioactive"],
-        "level": 56,
-        "tool_tag": "drill_t4",
+        "radioactive": true,
+        "required_level": 56,
+        "required_gathering_power": 10,
         "xp": 38,
-        "result": [
+        "table": [
             {
                 "id": "obsidian",
                 "weight": 29

@@ -32,7 +32,7 @@ class MarketCog(commands.Cog):
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
+        user_data = USERS[str(user_id)]
 
         ids = [m['id'] for m in MARKET]
         idx = find(ids, item)
@@ -42,17 +42,17 @@ class MarketCog(commands.Cog):
             price = market_f['price']
 
             # お金チェック
-            if user_f['money'] >= price:
+            if user_data['money'] >= price:
                 # お金を消費
-                user_f['money'] -= price
+                user_data['money'] -= price
 
                 # データ作成
                 result = market_f['item']
-                user_f['inventory'].setdefault(result, 0)
+                user_data['inventory'].setdefault(result, 0)
 
                 # アイテム入手
                 count = market_f['amount']
-                user_f['inventory'][result] += count
+                user_data['inventory'][result] += count
                 item_f = ITEMS[result]['name_e']
 
                 # 販売者のお金を加算
@@ -74,16 +74,16 @@ class MarketCog(commands.Cog):
 
                 # 進捗
                 ret = ''
-                for adv_id in user_f['advancement_now']:
+                for adv_id in user_data['advancement_now']:
                     cond = ADVANCEMENTS[adv_id]['clear_condition']
                     if 'get_item' in cond:
                         target = cond['get_item']
-                        if target in user_f['inventory'] and user_f['inventory'][target] > 0:
+                        if target in user_data['inventory'] and user_data['inventory'][target] > 0:
                             ret += complete_advancement(interaction, adv_id)
                     elif 'get_items' in cond:
                         complete = True
                         for target_item, target_amount in cond['get_items'].items():
-                            if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
+                            if not (target_item in user_data['inventory'] and user_data['inventory'][target_item] >= target_amount):
                                 complete = False
                                 break
                         if complete:
@@ -106,7 +106,7 @@ class MarketCog(commands.Cog):
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
+        user_data = USERS[str(user_id)]
 
         ids = [m['id'] for m in MARKET]
         idx = find(ids, item)
@@ -117,11 +117,11 @@ class MarketCog(commands.Cog):
 
                 # データ作成
                 result = market_f['item']
-                user_f['inventory'].setdefault(result, 0)
+                user_data['inventory'].setdefault(result, 0)
 
                 # アイテム入手
                 count = market_f['amount']
-                user_f['inventory'][result] += count
+                user_data['inventory'][result] += count
                 item_f = ITEMS[result]['name_e']
 
                 # マーケットから削除

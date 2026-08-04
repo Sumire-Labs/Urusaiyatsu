@@ -2,9 +2,10 @@
 売却関連Modal
 """
 import discord
+from copy import copy
 
 from core.state import USERS, ITEMS, EMOJIS
-from core.utils import save_users
+from core.utils import save_users, remove_item_from_dict
 
 
 class sell_amount(discord.ui.Modal):
@@ -32,36 +33,33 @@ class sell_amount(discord.ui.Modal):
             await interaction.response.send_message('有効な整数を入力してください。')
 
 
-async def sell_item(interaction: discord.Interaction, item: str, count: int):
+async def sell_item(interaction: discord.Interaction, index: int, count: int):
     """アイテム売却処理"""
     # データ読み込み
     user_id = interaction.user.id
-    user_f = USERS[str(user_id)]
+    user_data = USERS[str(user_id)]
 
-    # アイテムチェック
-    if item in user_f['inventory'] and user_f['inventory'][item] != 0:
-        item_f = ITEMS[item]
-        # アイテムを消費
-        if user_f['inventory'][item] < count:
-            count = user_f['inventory'][item]
-        user_f['inventory'][item] -= count
+    # アイテムを消費
+    sell_item = copy(user_data['inventory'][index])
+    count = min(count, sell_item['count'])
+    sell_item['count'] = count
+    remove_item_from_dict(user_id, sell_item)
 
-        # お金入手
-        result = item_f['value'] * count
-        item_name = item_f['name_e']
-        user_f['money'] += result
+    item_data = ITEMS[sell_item['id']]
 
-        # 送信
-        await interaction.response.send_message(f'**{item_name}{count}**個を**{result}**{EMOJIS["money"]}で売却しました！')
+    # お金入手
+    result = item_data['value'] * count
+    user_data['money'] += result
 
-        # ファイル更新
-        save_users()
-    else:
-        item_name = ITEMS[item]['name_e']
-        await interaction.response.send_message(f'**{item_name}**は持っていません。')
+    # 送信
+    item_name = item_data['name_e']
+    await interaction.response.send_message(f'**{item_name}×{count}**を**{result}**{EMOJIS["money"]}で売却しました！')
+
+    # ファイル更新
+    save_users()
 
 
-async def sell(interaction: discord.Interaction, item: str):
+async def sell(interaction: discord.Interaction, index: int):
     """売却Modalを表示"""
-    modal = sell_amount(custom_id=item, title="売却する個数を設定:")
+    modal = sell_amount(custom_id=index, title="売却する個数を設定:")
     await interaction.response.send_modal(modal)

@@ -2,7 +2,7 @@
     "value": "売値",
     "price": "買値",
     "shop_amount": "ショップ販売個数",
-    "breakability": "破損確率",
+    "max_damage": "最大耐久",
     "equip_slot": "装備スロット",
     "equip_type": "アクセサリーの種類",
     "drill_status": "ドリルの能力",
@@ -47,11 +47,11 @@
     "con_loot": "ランダムドロップアイテム",
 
     "acc_rest": "休息アクセサリー",
-    "acc_mining": "採掘追加ドロップアクセサリー",
+    "acc_gathering": "採集追加ドロップアクセサリー",
     "acc_money": "金運アクセサリー",
     "acc_fish_power": "釣りパワーアクセサリー",
     "acc_fishing_chance": "釣り追加ドロップアクセサリー",
-    "acc_explore": "採集スタミナ減少アクセサリー",
+    "acc_gather": "採集スタミナ減少アクセサリー",
     "acc_crafting": "クラフトスタミナ減少アクセサリー",
 
     "pickaxe_t1": "ツルハシ(Tier1)",

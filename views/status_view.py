@@ -47,19 +47,19 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
 
     # データ作成
     await new_user(user_id)
-    user_f = USERS[str(user_id)]
-    items = user_f['inventory']
-    equip = user_f['equipment']
-    stamina = user_f['stamina']
-    stamina_max = user_f['stamina_max']
-    money = user_f['money']
-    fuel = user_f['fuel']
-    level = user_f['level_global']
-    level_fishing = user_f['level_fishing']
-    level_gathering = user_f['level_gathering']
-    xp_fishing = user_f['xp_fishing']
-    xp_gathering = user_f['xp_gathering']
-    name = user_f['name']
+    user_data = USERS[str(user_id)]
+    items = user_data['inventory']
+    equip = user_data['equipment']
+    stamina = user_data['stamina']
+    stamina_max = user_data['stamina_max']
+    money = user_data['money']
+    fuel = user_data['fuel']
+    level = user_data['level_global']
+    level_fishing = user_data['level_fishing']
+    level_gathering = user_data['level_gathering']
+    xp_fishing = user_data['xp_fishing']
+    xp_gathering = user_data['xp_gathering']
+    name = user_data['name']
     level_next_fishing = int((level_fishing + 1) ** 1.5) * 5
     level_next_gathering = int((level_gathering + 1) ** 1.5) * 5
     desc_text = ''
@@ -93,8 +93,8 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
         if dr:
             desc_text += f'\n{EMOJIS["fuel"]}__**{fuel}**__'
 
-        if user_f['radiation'] > 0:
-            desc_text += f'\n{EMOJIS["radiation"]}__**{user_f["radiation"]}**__'
+        if user_data['radiation'] > 0:
+            desc_text += f'\n{EMOJIS["radiation"]}__**{user_data["radiation"]}**__'
 
         desc_text += '\n\n'
         for i in equip.items():
@@ -149,8 +149,8 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
         if dr:
             desc_text += f'\n燃料{EMOJIS["fuel"]} __**{fuel}**__'
 
-        if user_f['radiation'] > 0:
-            desc_text += f'\n放射線{EMOJIS["radiation"]} __**{user_f["radiation"]}**__'
+        if user_data['radiation'] > 0:
+            desc_text += f'\n放射線{EMOJIS["radiation"]} __**{user_data["radiation"]}**__'
 
         # タイトルを生成
         page_max = math.ceil(t / STATUS_ITEMS_PER_PAGE)
@@ -189,10 +189,10 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
     embeds = [embed]
 
     # ニュース
-    if user_f['settings']['news']:
+    if user_data['settings']['news']:
         advancement = discord.Embed(title=f'{name}のニュース')
         desc_text = ''
-        for i in user_f['news']:
+        for i in user_data['news']:
             if i['type'] == 'market_bought':
                 if str(i["user"]) in USERS:
                     market_user = USERS[str(i["user"])]["name"]
@@ -201,11 +201,11 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
                 desc_text += f'市場に**{i["price"]}{EMOJIS["money"]}**で出品した**{ITEMS[i["item"]]["name_e"]}×{i["count"]}**が{market_user}に購入されました！\n'
 
         # 目標
-        if len(user_f['advancement_now']) == 0:
+        if len(user_data['advancement_now']) == 0:
             desc_text += '### 全ての目標を達成しました！'
         else:
             desc_text += '### 現在の目標\n'
-            for i in user_f['advancement_now']:
+            for i in user_data['advancement_now']:
                 adv_f = ADVANCEMENTS[i]
                 desc_text += f'**{adv_f["title"]}**\n　{adv_f["description"]}\n\n'
 

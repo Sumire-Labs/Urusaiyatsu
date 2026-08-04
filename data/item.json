@@ -520,257 +520,571 @@
     },
 
 
-    "black_bronze_pickaxe": {
-        "name": "ブラックブロンズのツルハシ",
-        "breakability": 0,
-        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3"]
-    },
-    "crystal_pickaxe": {
-        "name": "クリスタルのツルハシ",
-        "breakability": 0,
-        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4"]
-    },
-    "titanium_pickaxe": {
-        "name": "チタニウムのツルハシ",
-        "breakability": 0,
-        "tag": ["pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5"]
-    },
-
-    "drill_t0": {
-        "name": "タングステンのドリル D-T0",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
-        "drill_status": {
-            "stamina_add": 3,
-            "fuel": 10,
-            "chance": 3
-        }
-    },
-    "drill_g1": {
-        "name": "アメジストのドリル D-G1",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
-        "drill_status": {
-            "stamina_add": 2,
-            "fuel": 9,
-            "chance": 3
-        }
-    },
-    "drill_m1": {
-        "name": "コバルトのドリル D-M1",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
-        "drill_status": {
-            "stamina_add": 2,
-            "fuel": 9,
-            "chance": 4
-        }
-    },
-    "drill_g2": {
-        "name": "エメラルドのドリル D-G2",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2"],
-        "drill_status": {
-            "stamina_add": 2,
-            "fuel": 9,
-            "chance": 4
-        }
-    },
-    "drill_g3": {
-        "name": "サファイアのドリル D-G3",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3"],
-        "drill_status": {
-            "stamina_add": 1,
-            "fuel": 8,
-            "chance": 4
-        }
-    },
-    "drill_m2": {
-        "name": "コバルトのドリル D-M2",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1"],
-        "drill_status": {
-            "stamina_add": 1,
-            "fuel": 8,
-            "chance": 5
-        }
-    },
-    "drill_g4": {
-        "name": "宝石のドリル D-G4",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
-        "drill_status": {
-            "stamina_add": 0,
-            "fuel": 7,
-            "chance": 5
-        }
-    },
-    "drill_m3": {
-        "name": "イリジウムのドリル D-M3",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2"],
-        "drill_status": {
-            "stamina_add": 1,
-            "fuel": 7,
-            "chance": 6
-        }
-    },
-    "drill_m4": {
-        "name": "イリジウムのドリル D-M4",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3"],
-        "drill_status": {
-            "stamina_add": 0,
-            "fuel": 6,
-            "chance": 8
-        }
-    },
-    "drill_m5": {
-        "name": "イリジウムのドリル D-M5",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
-        "drill_status": {
-            "stamina_add": 0,
-            "fuel": 5,
-            "chance": 10
-        }
-    },
-    "drill_mx": {
-        "name": "神話のドリル D-MX",
-        "breakability": 0,
-        "equip_slot": "drill",
-        "tag": ["equippable", "pickaxe_t1", "pickaxe_t2", "pickaxe_t3", "pickaxe_t4", "pickaxe_t5", "drill_t1", "drill_t2", "drill_t3", "drill_t4"],
-        "drill_status": {
-            "stamina_add": -1,
-            "fuel": 4,
-            "chance": 15
-        }
-    },
     "pickaxe": {
         "name": "ツルハシ",
         "shop_amount": 1,
-        "breakability": 10,
-        "tag": ["pickaxe_t1", "spawnable_in_shop"]
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable", "spawnable_in_shop"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 1
+            }
+        ],
+        "max_damage": 15,
+        "meta": {
+            "damage": 0
+        }
     },
     "copper_pickaxe": {
         "name": "銅のツルハシ",
-        "breakability": 7,
-        "tag": ["pickaxe_t1","pickaxe_t2"]
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            }
+        ],
+        "max_damage": 25,
+        "meta": {
+            "damage": 0
+        }
     },
     "steel_pickaxe": {
         "name": "鋼鉄のツルハシ",
-        "breakability": 5,
-        "tag": ["pickaxe_t1","pickaxe_t2","pickaxe_t3"]
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 3
+            }
+        ],
+        "max_damage": 50,
+        "meta": {
+            "damage": 0
+        }
+    },
+    "black_bronze_pickaxe": {
+        "name": "ブラックブロンズのツルハシ",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 3
+            }
+        ]
+    },
+    "crystal_pickaxe": {
+        "name": "クリスタルのツルハシ",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 4
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.01
+            }
+        ]
+    },
+    "titanium_pickaxe": {
+        "name": "チタニウムのツルハシ",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 5
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.02
+            }
+        ]
+    },
+
+    "drill_t": {
+        "name": "タングステンのドリル DR-T",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 6
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 3
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 10
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.03
+            }
+        ]
+    },
+
+    "drill_g1": {
+        "name": "アメジストのドリル DR-G01",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 6
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 9
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.03
+            }
+        ]
+    },
+    "drill_g2": {
+        "name": "エメラルドのドリル DR-G02",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 7
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 9
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.04
+            }
+        ]
+    },
+    "drill_g3": {
+        "name": "サファイアのドリル DR-G03",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 8
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 8
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.04
+            }
+        ]
+    },
+    "drill_g4": {
+        "name": "宝石のドリル DR-G04",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 8
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 7
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.05
+            }
+        ]
+    },
+
+    "drill_c1": {
+        "name": "コバルトのドリル DR-C01",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 5
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 7
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.08
+            }
+        ]
+    },
+    "drill_c2": {
+        "name": "コバルトのドリル DR-C02",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 6
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 5
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.11
+            }
+        ]
+    },
+    "drill_c3": {
+        "name": "コバルトのドリル DR-C03",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 6
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 3
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.16
+            }
+        ]
+    },
+
+    "drill_i1": {
+        "name": "イリジウムのドリル DR-I01",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 6
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 7
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.06
+            }
+        ]
+    },
+    "drill_i2": {
+        "name": "イリジウムのドリル DR-I02",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 7
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 7
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.08
+            }
+        ]
+    },
+    "drill_i3": {
+        "name": "イリジウムのドリル DR-I03",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 8
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 6
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.1
+            }
+        ]
+    },
+    "drill_i4": {
+        "name": "イリジウムのドリル DR-I04",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 8
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 5
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.12
+            }
+        ]
+    },
+    "drill_x": {
+        "name": "神話のドリル DR-X",
+        "equip_slot": "gathering_tool",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 9
+            },
+            {
+                "id": "gathering_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 4
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.15
+            }
+        ]
     },
 
     "drill_laser": {
         "name": "ドリルレーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 2,
-            "additional_chance": 2
-        },
-        "tag": ["equippable", "drill_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 1
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 2,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.02
+            }
+        ]
     },
     "improved_laser": {
         "name": "改良型レーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 1.5,
-            "additional_chance": 5
-        },
-        "tag": ["equippable", "drill_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 1.5,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.05
+            }
+        ]
     },
     "heated_laser": {
         "name": "ヒートレーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 4,
-            "additional_chance": 10
-        },
-        "tag": ["equippable", "drill_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 2,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.2
+            }
+        ]
     },
     "cooled_laser": {
         "name": "冷却レーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 0.25,
-            "additional_chance": 5
-        },
-        "tag": ["equippable", "drill_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 0.5,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.05
+            }
+        ]
     },
     "adjusted_laser": {
         "name": "調整済みレーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 1.5,
-            "additional_chance": 12
-        },
-        "tag": ["equippable", "drill_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 1.25,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.12
+            }
+        ]
     },
     "radioactive_laser": {
         "name": "放射性レーザー",
-        "equip_slot": "drill_attachment",
-        "drill_attachment_status": {
-            "fuel_multiplier": 1.25,
-            "additional_chance": 0.5,
-            "radiation_limit": 50
-        },
-        "tag": ["equippable", "drill_laser", "radioactive_laser"]
+        "equip_slot": "gathering_equipment",
+        "tag": ["equippable", "unique_behavior"],
+        "stats": [
+            {
+                "id": "gathering_power",
+                "amount": 2
+            },
+            {
+                "id": "fuel_uses",
+                "amount": 1.25,
+                "multiply": true
+            },
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.1
+            }
+        ]
     },
 
-    "black_bronze_knife": {
-        "name": "ブラックブロンズのナイフ",
-        "breakability": 0,
-        "tag": ["knife"]
-    },
     "knife": {
         "name": "ナイフ",
-        "breakability": 10,
+        "max_damage": 15,
+        "meta": {
+            "damage": 0
+        },
         "shop_amount": 1,
         "tag": ["knife", "spawnable_in_shop"]
     },
     "copper_knife": {
         "name": "銅のナイフ",
-        "breakability": 7,
+        "max_damage": 25,
+        "meta": {
+            "damage": 0
+        },
         "tag": ["knife"]
     },
     "steel_knife": {
         "name": "鋼鉄のナイフ",
-        "breakability": 5,
+        "max_damage": 50,
+        "meta": {
+            "damage": 0
+        },
+        "tag": ["knife"]
+    },
+    "black_bronze_knife": {
+        "name": "ブラックブロンズのナイフ",
         "tag": ["knife"]
     },
 
-    "reinforced_boots": {
-        "name": "補強されたブーツ",
-        "breakability": 0,
-        "tag": ["boots"]
-    },
     "leather_boots": {
         "name": "革のブーツ",
-        "breakability": 7,
+        "max_damage": 25,
+        "meta": {
+            "damage": 0
+        },
+        "tag": ["boots"]
+    },
+    "reinforced_boots": {
+        "name": "補強されたブーツ",
         "tag": ["boots"]
     },
 
-    "reinforced_gloves": {
-        "name": "補強された手袋",
-        "breakability": 0,
-        "tag": ["gloves"]
-    },
     "sturdy_gloves": {
         "name": "丈夫な手袋",
-        "breakability": 5,
+        "max_damage": 50,
+        "meta": {
+            "damage": 0
+        },
+        "tag": ["gloves"]
+    },
+    "reinforced_gloves": {
+        "name": "補強された手袋",
         "tag": ["gloves"]
     },
 
@@ -778,485 +1092,879 @@
     "fishing_rod": {
         "name": "釣り竿",
         "shop_amount": 1,
-        "fishing_status": {
-            "power": 5,
-            "stamina": 10,
-            "chance": 0,
-            "miss_chance": 15
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod","spawnable_in_shop"]
+        "tag": ["equippable", "spawnable_in_shop"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 5
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.15
+            }
+        ]
     },
     "apprentice_rod": {
         "name": "見習いの釣り竿",
-        "fishing_status": {
-            "power": 10,
-            "stamina": 10,
-            "chance": 3,
-            "miss_chance": 12
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 10
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.03
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.12
+            }
+        ]
     },
     "expert_rod": {
         "name": "熟練の釣り竿",
-        "fishing_status": {
-            "power": 15,
-            "stamina": 10,
-            "chance": 5,
-            "miss_chance": 10
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 15
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.05
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.1
+            }
+        ]
     },
     "master_rod": {
         "name": "達人の釣り竿",
-        "fishing_status": {
-            "power": 20,
-            "stamina": 10,
-            "chance": 10,
-            "miss_chance": 8
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 20
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.1
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.08
+            }
+        ]
     },
     "legend_rod": {
         "name": "伝説の釣り竿",
-        "fishing_status": {
-            "power": 25,
-            "stamina": 9,
-            "chance": 15,
-            "miss_chance": 5
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 25
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.15
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.05
+            }
+        ]
     },
     "lucky_rod": {
         "name": "幸運の釣り竿",
         "value": 300,
-        "fishing_status": {
-            "power": 20,
-            "stamina": 11,
-            "chance": 30,
-            "miss_chance": 15
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 20
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.3
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.15
+            }
+        ]
     },
     "tough_rod": {
         "name": "強靭な釣り竿",
         "value": 270,
-        "fishing_status": {
-            "power": 20,
-            "stamina": 11,
-            "chance": 2,
-            "miss_chance": 1
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 20
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.07
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.01
+            }
+        ]
     },
     "light_rod": {
         "name": "軽い釣り竿",
         "value": 120,
-        "fishing_status": {
-            "power": 10,
-            "stamina": 8,
-            "chance": 2,
-            "miss_chance": 20
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 10
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": -2
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.02
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.20
+            }
+        ]
     },
     "shiny_rod": {
         "name": "輝く釣り竿",
-        "fishing_status": {
-            "power": 39,
-            "stamina": 9,
-            "chance": 4,
-            "miss_chance": 15
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 39
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.04
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.15
+            }
+        ]
     },
     "crystal_rod": {
         "name": "結晶の釣り竿",
-        "fishing_status": {
-            "power": 42,
-            "stamina": 9,
-            "chance": 6,
-            "miss_chance": 15
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 42
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.06
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.15
+            }
+        ]
     },
     "dwarven_rod": {
         "name": "ドワーフの釣り竿",
-        "fishing_status": {
-            "power": 46,
-            "stamina": 11,
-            "chance": 15,
-            "miss_chance": 10
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 46
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.15
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.1
+            }
+        ]
     },
     "advanced_dwarven_rod": {
         "name": "進化したドワーフの釣り竿",
-        "fishing_status": {
-            "power": 52,
-            "stamina": 10,
-            "chance": 15,
-            "miss_chance": 8
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 52
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": 0
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.15
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.08
+            }
+        ]
     },
     "abyssal_rod": {
         "name": "深淵の釣り竿",
-        "fishing_status": {
-            "power": 60,
-            "stamina": 9,
-            "chance": 20,
-            "miss_chance": 3
-        },
         "equip_slot": "fishing_rod",
-        "tag": ["equippable","fishing_rod"]
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 60
+            },
+            {
+                "id": "fishing_stamina_uses",
+                "amount": -1
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.2
+            },
+            {
+                "id": "fishing_miss_chance",
+                "amount": 0.03
+            }
+        ]
     },
 
 
     "basic_bait": {
         "name": "基本の餌",
-        "shop_amount": 1,
-        "power": 7,
-        "additional_chance": 4,
-        "tag": ["bait", "spawnable_in_shop"]
+        "shop_amount": 3,
+        "equip_slot": "fishing_bait",
+        "tag": ["equippable", "spawnable_in_shop"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 7
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.04
+            }
+        ]
     },
     "delicious_bait": {
         "name": "おいしい餌",
-        "power": 10,
-        "additional_chance": 8,
-        "tag": ["bait"]
+        "shop_amount": 1,
+        "equip_slot": "fishing_bait",
+        "tag": ["equippable", "spawnable_in_shop"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 12
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.1
+            }
+        ]
     },
     "rare_bait": {
         "name": "レア魚の餌",
-        "power": 6,
-        "additional_chance": 5,
-        "additional_loot": {
-            "pond": ["carp"],
-            "river": ["salmon"],
-            "beach": ["flounder"],
-            "ocean": ["tuna", "pufferfish", "pufferfish"],
-            "deep_ocean": ["pufferfish", "pearl"],
-            "subterranean_lake": ["pufferfish", "pearl"],
-            "abyss_fishing_pond": ["pufferfish", "pearl", "pearl"]
-        },
-        "tag": ["bait"]
+        "equip_slot": "fishing_bait",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 8
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.05
+            }
+        ],
+        "table_addition": {
+            "pond": {
+                "carp": 1
+            },
+            "river": {
+                "flounder": 1
+            },
+            "beach": {
+                "tuna": 1
+            },
+            "ocean": {
+                "tuna": 1,
+                "pufferfish": 2
+            },
+            "deep_ocean": {
+                "pufferfish": 1,
+                "pearl": 1
+            },
+            "subterranean_lake": {
+                "pufferfish": 1,
+                "pearl": 1
+            },
+            "abyss_fishing_pond": {
+                "pufferfish": 1,
+                "pearl": 2
+            }
+        }
     },
     "treasure_bait": {
         "name": "お宝の餌",
-        "power": 4,
-        "additional_chance": 2,
-        "additional_loot": {
-            "pond": ["crate", "crate", "crate"],
-            "river": ["crate", "crate", "crate"],
-            "beach": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest"],
-            "ocean": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest"],
-            "deep_ocean": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate"],
-            "subterranean_lake": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate", "golden_crate", "abyssal_treasure_chest"],
-            "abyss_fishing_pond": ["crate", "crate", "crate", "crate", "treasure_chest", "treasure_chest", "treasure_chest", "treasure_chest", "golden_crate", "golden_crate", "golden_crate", "abyssal_treasure_chest", "abyssal_treasure_chest"]
-        },
-        "tag": ["bait"]
+        "equip_slot": "fishing_bait",
+        "tag": ["equippable"],
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 8
+            },
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.05
+            }
+        ],
+        "table_addition": {
+            "pond": {
+                "crate": 3
+            },
+            "river": {
+                "crate": 3
+            },
+            "beach": {
+                "crate": 4,
+                "treasure_chest": 3
+            },
+            "ocean": {
+                "crate": 4,
+                "treasure_chest": 4
+            },
+            "deep_ocean": {
+                "crate": 4,
+                "treasure_chest": 4,
+                "golden_crate": 2
+            },
+            "subterranean_lake": {
+                "crate": 4,
+                "treasure_chest": 4,
+                "golden_crate": 3,
+                "abyssal_treasure_chest": 1
+            },
+            "abyss_fishing_pond": {
+                "crate": 4,
+                "treasure_chest": 4,
+                "golden_crate": 3,
+                "abyssal_treasure_chest": 2
+            }
+        }
     },
 
 
     "black_bronze_saw": {
         "name": "ブラックブロンズのノコギリ",
-        "breakability": 0,
         "tag": ["saw", "saw_t2", "saw_t3"]
     },
     "saw": {
         "name": "ノコギリ",
         "shop_amount": 1,
-        "breakability": 10,
+        "max_damage": 15,
+        "meta": {
+            "damage": 0
+        },
         "tag": ["saw", "spawnable_in_shop"]
     },
     "copper_saw": {
         "name": "銅のノコギリ",
-        "breakability": 7,
+        "max_damage": 25,
+        "meta": {
+            "damage": 0
+        },
         "tag": ["saw", "saw_t2"]
     },
     "steel_saw": {
         "name": "鋼鉄のノコギリ",
-        "breakability": 5,
+        "max_damage": 50,
+        "meta": {
+            "damage": 0
+        },
         "tag": ["saw", "saw_t2", "saw_t3"]
-    },
-    "forge": {
-        "name": "鍛造機",
-        "breakability": 0,
-        "tag": ["furnace", "hammer", "anvil", "charcoal_kiln", "refiner", "forge"]
-    },
-    "black_bronze_anvil": {
-        "name": "ブラックブロンズの金床",
-        "breakability": 0,
-        "tag": ["hammer", "anvil"]
-    },
-    "steel_hammer": {
-        "name": "鋼鉄のハンマー",
-        "breakability": 10,
-        "tag": ["hammer"]
     },
     "furnace": {
         "name": "炉",
-        "breakability": 0,
         "tag": ["furnace"]
     },
-    "loom": {
-        "name": "織機",
-        "breakability": 0,
-        "tag": ["loom"]
+    "steel_hammer": {
+        "name": "鋼鉄のハンマー",
+        "max_damage": 15,
+        "meta": {
+            "damage": 0
+        },
+        "tag": ["hammer"]
+    },
+    "black_bronze_anvil": {
+        "name": "ブラックブロンズの金床",
+        "tag": ["hammer", "anvil"]
+    },
+    "charcoal_kiln": {
+        "name": "炭窯",
+        "max_damage": 100,
+        "meta": {
+            "damage": 0
+        },
+        "tag": ["charcoal_kiln"]
     },
     "recycler": {
         "name": "リサイクラー",
-        "breakability": 0,
         "tag": ["recycler"]
     },
     "refiner": {
         "name": "精製機",
-        "breakability": 0,
         "tag": ["furnace", "charcoal_kiln", "refiner"]
     },
-    "charcoal_kiln": {
-        "name": "炭窯",
-        "breakability": 5,
-        "tag": ["charcoal_kiln"]
+    "forge": {
+        "name": "鍛造機",
+        "tag": ["furnace", "hammer", "anvil", "charcoal_kiln", "refiner", "forge"]
+    },
+    "loom": {
+        "name": "織機",
+        "tag": ["loom"]
     },
     "machine_loom": {
         "name": "電動織機",
-        "breakability": 0,
         "tag": ["loom", "loom_t2"]
     },
     "fisherman_station": {
         "name": "釣り人の作業場",
-        "breakability": 0,
         "tag": ["fisherman_station"]
     },
     "reaction_chamber": {
         "name": "反応炉",
-        "breakability": 0,
         "tag": ["reaction_chamber"]
     },
     "atomic_reactor": {
         "name": "原子炉",
-        "breakability": 0,
         "tag": ["atomic_reactor"]
     },
 
 
     "rest_charm": {
         "name": "休息のお守り",
-        "rest_stamina": 3,
+        "stats": [
+            {
+                "id": "stamina_regeneration_rate",
+                "amount": 1.05,
+                "multiply": true
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "rest",
-        "tag": ["equippable", "acc_rest"]
+        "tag": ["equippable"]
     },
     "rest_ring": {
         "name": "休息のリング",
-        "rest_stamina": 4,
+        "stats": [
+            {
+                "id": "stamina_regeneration_rate",
+                "amount": 1.1,
+                "multiply": true
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "rest",
-        "tag": ["equippable", "acc_rest"]
+        "tag": ["equippable"]
     },
     "rest_artifact": {
         "name": "休息のアーティファクト",
-        "rest_stamina": 5,
+        "stats": [
+            {
+                "id": "stamina_regeneration_rate",
+                "amount": 1.15,
+                "multiply": true
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "rest",
-        "tag": ["equippable", "acc_rest"]
+        "tag": ["equippable"]
     },
 
-    "mining_charm": {
-        "name": "採掘のお守り",
-        "additional_chance": 6,
+    "gathering_charm": {
+        "name": "採集のお守り",
+        "stats": [
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.06
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "mining",
-        "tag": ["equippable", "acc_mining"]
+        "equip_type": "gathering",
+        "tag": ["equippable"]
     },
-    "mining_ring": {
-        "name": "採掘のリング",
-        "additional_chance": 9,
+    "gathering_ring": {
+        "name": "採集のリング",
+        "stats": [
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.09
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "mining",
-        "tag": ["equippable", "acc_mining"]
+        "equip_type": "gathering",
+        "tag": ["equippable"]
     },
-    "mining_artifact": {
-        "name": "採掘のアーティファクト",
-        "additional_chance": 12,
+    "gathering_artifact": {
+        "name": "採集のアーティファクト",
+        "stats": [
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.12
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "mining",
-        "tag": ["equippable", "acc_mining"]
+        "equip_type": "gathering",
+        "tag": ["equippable"]
     },
-    "mining_relic": {
-        "name": "採掘のレリック",
-        "additional_chance": 15,
+    "gathering_relic": {
+        "name": "採集のレリック",
+        "stats": [
+            {
+                "id": "additional_gathering_loot_chance",
+                "amount": 0.15
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "mining",
-        "tag": ["equippable", "acc_mining"]
+        "equip_type": "gathering",
+        "tag": ["equippable"]
     },
 
     "money_charm": {
         "name": "金運のお守り",
-        "money_chance": 23,
+        "stats": [
+            {
+                "id": "money_bonus",
+                "amount": 1
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "money",
-        "tag": ["equippable", "acc_money"]
+        "tag": ["equippable"]
     },
     "money_ring": {
         "name": "金運のリング",
-        "money_chance": 28,
+        "stats": [
+            {
+                "id": "money_bonus",
+                "amount": 2
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "money",
-        "tag": ["equippable", "acc_money"]
+        "tag": ["equippable"]
     },
     "money_artifact": {
         "name": "金運のアーティファクト",
-        "money_chance": 33,
+        "stats": [
+            {
+                "id": "money_bonus",
+                "amount": 3
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "money",
-        "tag": ["equippable", "acc_money"]
+        "tag": ["equippable"]
     },
 
     "fishing_charm": {
         "name": "釣りのお守り",
-        "power": 4,
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 4
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_power",
-        "tag": ["equippable", "acc_fish_power"]
+        "equip_type": "fishing",
+        "tag": ["equippable"]
     },
     "fishing_ring": {
         "name": "釣りのリング",
-        "power": 7,
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 7
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_power",
-        "tag": ["equippable", "acc_fish_power"]
+        "equip_type": "fishing",
+        "tag": ["equippable"]
     },
     "fishing_artifact": {
         "name": "釣りのアーティファクト",
-        "power": 10,
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 10
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_power",
-        "tag": ["equippable", "acc_fish_power"]
+        "equip_type": "fishing",
+        "tag": ["equippable"]
     },
     "fishing_relic": {
         "name": "釣りのレリック",
-        "power": 13,
+        "stats": [
+            {
+                "id": "fishing_power",
+                "amount": 13
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_power",
-        "tag": ["equippable", "acc_fish_power"]
+        "equip_type": "fishing",
+        "tag": ["equippable"]
     },
 
     "biting_charm": {
         "name": "入れ食いのお守り",
-        "additional_chance": 6,
+        "stats": [
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.06
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_chance",
-        "tag": ["equippable", "acc_fishing_chance"]
+        "equip_type": "biting",
+        "tag": ["equippable"]
     },
     "biting_ring": {
         "name": "入れ食いのリング",
-        "additional_chance": 9,
+        "stats": [
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.09
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_chance",
-        "tag": ["equippable", "acc_fishing_chance"]
+        "equip_type": "biting",
+        "tag": ["equippable"]
     },
     "biting_artifact": {
         "name": "入れ食いのアーティファクト",
-        "additional_chance": 12,
+        "stats": [
+            {
+                "id": "additional_fishing_loot_chance",
+                "amount": 0.12
+            }
+        ],
         "equip_slot": "accessory",
-        "equip_type": "fish_chance",
-        "tag": ["equippable", "acc_fishing_chance"]
+        "equip_type": "biting",
+        "tag": ["equippable"]
     },
 
     "crafting_charm": {
         "name": "工作のお守り",
+        "stats": [
+            {
+                "id": "crafting_stamina_saving_chance",
+                "amount": 0.15
+            }
+        ],
         "stamina_reduce_chance": 15,
         "equip_slot": "accessory",
         "equip_type": "crafting",
-        "tag": ["equippable", "acc_crafting"]
+        "tag": ["equippable"]
     },
     "crafting_ring": {
         "name": "工作のリング",
-        "stamina_reduce_chance": 25,
+        "stats": [
+            {
+                "id": "crafting_stamina_saving_chance",
+                "amount": 0.25
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "crafting",
-        "tag": ["equippable", "acc_crafting"]
+        "tag": ["equippable"]
     },
     "crafting_artifact": {
         "name": "工作のアーティファクト",
-        "stamina_reduce_chance": 35,
+        "stats": [
+            {
+                "id": "crafting_stamina_saving_chance",
+                "amount": 0.35
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "crafting",
-        "tag": ["equippable", "acc_crafting"]
+        "tag": ["equippable"]
     },
 
     "radiation_shield": {
         "name": "放射線シールド",
-        "radiation_resistance": 50,
-        "max_radiation": 80,
+        "stats": [
+            {
+                "id": "radiation_protecting_chance",
+                "amount": 0.5
+            },
+            {
+                "id": "max_radiation",
+                "amount": -175
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "radiation_shield",
-        "tag": ["equippable", "acc_radiation"]
+        "tag": ["equippable"]
     },
     "reinforced_radiation_shield": {
         "name": "強化放射線シールド",
-        "radiation_resistance": 75,
-        "max_radiation": 60,
+        "stats": [
+            {
+                "id": "radiation_protecting_chance",
+                "amount": 0.75
+            },
+            {
+                "id": "max_radiation",
+                "amount": -200
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "radiation_shield",
-        "tag": ["equippable", "acc_radiation"]
+        "tag": ["equippable"]
     },
 
     "immune_boosting_unit": {
         "name": "免疫促進ユニット",
-        "radiation_decrease_multiplier": 9,
+        "stats": [
+            {
+                "id": "radiation_decrease_rate",
+                "amount": 3.0,
+                "multiply": true
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "radiation_unit",
-        "tag": ["equippable", "acc_radiation_decrease"]
+        "tag": ["equippable"]
     },
     "immunosuppression_unit": {
         "name": "免疫抑制ユニット",
-        "radiation_immune": 25,
+        "stats": [
+            {
+                "id": "radiation_decrease_rate",
+                "amount": 0.25,
+                "multiply": true
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "radiation_unit",
-        "tag": ["equippable", "acc_radiation_suppress"]
+        "tag": ["equippable"]
     },
 
     "radiation_stopper": {
         "name": "放射線停滞装置",
-        "radiation_resistance": 90,
-        "radiation_immune": 10,
-        "max_radiation": 50,
+        "stats": [
+            {
+                "id": "radiation_protecting_chance",
+                "amount": 0.9
+            },
+            {
+                "id": "radiation_decrease_rate",
+                "amount": 0.1,
+                "multiply": true
+            },
+            {
+                "id": "max_radiation",
+                "amount": -200
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "radiation_unit",
-        "tag": ["equippable", "acc_radiation_suppress", "acc_radiation"]
+        "tag": ["equippable"]
     },
 
     "robot_arm": {
         "name": "ロボットアーム",
-        "stamina_reduce": 2,
+        "stats": [
+            {
+                "id": "gathering_stamina_uses",
+                "amount": -2
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "robot_arm",
-        "tag": ["equippable", "acc_explore"]
+        "tag": ["equippable"]
     },
 
     "atomic_arm": {
         "name": "アトミックアーム",
-        "stamina_reduce": 2,
-        "radiation_effect": 0.35,
-        "radiation_debuff": 1.75,
-        "radiation_limit": 30,
+        "stats": [
+            {
+                "id": "gathering_stamina_uses",
+                "amount": -2
+            },
+            {
+                "id": "radiation_effect",
+                "amount": -0.065
+            }
+        ],
         "equip_slot": "accessory",
         "equip_type": "robot_arm",
-        "tag": ["equippable", "acc_explore", "acc_radiation_effect"]
+        "tag": ["equippable", "unique_behavior"]
     },
 
     

@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
-from core.utils import new_user, complete_advancement, save_users
+from core.utils import new_user, complete_advancement, save_users, get_item, remove_item_stacked, table_roll, add_item
 
 
 class UseCog(commands.Cog):
@@ -18,110 +18,80 @@ class UseCog(commands.Cog):
 
     @app_commands.command(name="use", description="アイテムを使用します。")
     @app_commands.choices(item=consumable_choices)
-    async def use_command(self, interaction: discord.Interaction, item: str, count: int = 1):
+    async def use_command(self, interaction: discord.Interaction, item_id: str, count: int = 1):
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)
-        user_f = USERS[str(user_id)]
-        item_f = ITEMS[item]['name_e']
+        user_data = USERS[str(user_id)]
 
-        if item in user_f['inventory'] and user_f['inventory'][item] > 0:
-            if user_f['inventory'][item] < count:
-                count = user_f['inventory'][item]
+        removed_item = remove_item_stacked(user_id, item_id, count)
+        if removed_item == []:
+            item_name = ITEMS[item_id]['name_e']
+            await interaction.response.send_message(f'**{item_name}**は持っていません。')
+            return
 
-            if 'con_stamina' in ITEMS[item]['tag']:
-                # スタミナ回復
-                stamina = ITEMS[item]['stamina_restore'] * count
-                user_f['stamina'] += stamina
-                if user_f['stamina'] > user_f['stamina_max']:
-                    user_f['stamina'] = user_f['stamina_max']
+        count = 0
+        for item in removed_item:
+            count += item['count']
 
-                # 送信
-                await interaction.response.send_message(f'スタミナが**{stamina}**{EMOJIS["stamina"]}回復しました！')
+        item_tag = ITEMS[item_id]['tag']
+        if 'con_stamina' in item_tag:
+            # スタミナ回復
+            stamina = ITEMS[item_id]['stamina_restore'] * count
+            user_data['stamina'] += stamina
+            if user_data['stamina'] > user_data['stamina_max']:
+                user_data['stamina'] = user_data['stamina_max']
 
-            if 'con_loot' in ITEMS[item]['tag']:
-                # ランダムにアイテムを取得
-                if count == 1:
-                    result_list = []
-                    for loot in LOOTS[ITEMS[item]['table']]:
-                        t = 0
-                        while t < loot['weight']:
-                            result_list.append(loot['id'])
-                            t += 1
-                    result = random.choice(result_list)
-                    user_f['inventory'].setdefault(result, 0)
-                    user_f['inventory'][result] += 1
-                    result_name = ITEMS[result]['name_e']
+            # 送信
+            await interaction.response.send_message(f'スタミナが**{stamina}**{EMOJIS["stamina"]}回復しました！')
 
-                    # 送信
-                    await interaction.response.send_message(f'**{item_f}**から**{result_name}**を手に入れました！')
-                else:
-                    x = 0
-                    results = {}
-                    while x < count:
-                        result_list = []
-                        for loot in LOOTS[ITEMS[item]['table']]:
-                            t = 0
-                            while t < loot['weight']:
-                                result_list.append(loot['id'])
-                                t += 1
-                        result = random.choice(result_list)
-                        results.setdefault(result, 0)
-                        results[result] += 1
-                        x += 1
+        elif 'con_loot' in item_tag:
+            # ランダムにアイテムを取得
+            results = table_roll(LOOTS[ITEMS[item_id]['table']], count)
+            embed = discord.Embed(title='手に入れたアイテム')
+            for result_id, result_count in results:
+                add_item(user_id, result_id, result_count)
+                embed.add_field(name=ITEMS[result_id]['name_e'] + ': ' + str(result_count), value='', inline=False)
 
-                    # Embedを作成
-                    embed = discord.Embed(title=f'{item_f}({count}個)から手に入れたアイテム')
-                    for result_item, amount in results.items():
-                        user_f['inventory'].setdefault(result_item, 0)
-                        user_f['inventory'][result_item] += amount
-                        embed.add_field(name=ITEMS[result_item]['name_e'] + ': ' + str(amount), value='', inline=False)
+            # 進捗
+            adv_message = ''
+            for adv_id in user_data['advancement_now']:
+                cond = ADVANCEMENTS[adv_id]['clear_condition']
+                if 'get_item' in cond:
+                    item_id = cond['get_item']
+                    if get_item(user_id, item_id):
+                        adv_message += complete_advancement(user_id, adv_id)
+                elif 'get_items' in cond:
+                    for item_id, item_count in cond['get_items'].items():
+                        if not get_item(user_id, item_id, item_count):
+                            break
+                    else:
+                        adv_message += complete_advancement(user_id, adv_id)
 
-                    # 進捗
-                    ret = ''
-                    for adv_id in user_f['advancement_now']:
-                        cond = ADVANCEMENTS[adv_id]['clear_condition']
-                        if 'get_item' in cond:
-                            target = cond['get_item']
-                            if target in user_f['inventory'] and user_f['inventory'][target] > 0:
-                                ret += complete_advancement(interaction, adv_id)
-                        elif 'get_items' in cond:
-                            complete = True
-                            for target_item, target_amount in cond['get_items'].items():
-                                if not (target_item in user_f['inventory'] and user_f['inventory'][target_item] >= target_amount):
-                                    complete = False
-                                    break
-                            if complete:
-                                ret += complete_advancement(interaction, adv_id)
+            # 送信
+            await interaction.response.send_message(adv_message, embed=embed)
 
-                    # 送信
-                    await interaction.response.send_message(ret, embed=embed)
+        if 'con_fuel' in item_tag:
+            # 燃料回復
+            fuel = ITEMS[item_id]['fuel_restore'] * count
+            user_data['fuel'] += fuel
 
-            if 'con_fuel' in ITEMS[item]['tag']:
-                # 燃料回復
-                fuel = ITEMS[item]['fuel_restore'] * count
-                user_f['fuel'] += fuel
+            # 送信
+            await interaction.response.send_message(f'燃料が**{fuel}**{EMOJIS["fuel"]}回復しました！')
 
-                # 送信
-                await interaction.response.send_message(f'燃料が**{fuel}**{EMOJIS["fuel"]}回復しました！')
+        if 'con_radiation' in item_tag:
+            # 放射線除去
+            rad = ITEMS[item_id]['radiation_remove'] * count
+            user_data['radiation'] -= rad
 
-            if 'con_radiation' in ITEMS[item]['tag']:
-                # 放射線除去
-                rad = ITEMS[item]['radiation_remove'] * count
-                user_f['radiation'] -= rad
+            if user_data['radiation'] < 0:
+                user_data['radiation'] = 0
 
-                # アンダーフロー
-                if user_f['radiation'] < 0:
-                    user_f['radiation'] = 0
+            # 送信
+            await interaction.response.send_message(f'放射線が**{rad}**{EMOJIS["radiation"]}除染されました！')
 
-                # 送信
-                await interaction.response.send_message(f'放射線が**{rad}**{EMOJIS["radiation"]}除染されました！')
-
-            # ファイル更新
-            user_f['inventory'][item] -= count
-            save_users()
-        else:
-            await interaction.response.send_message(f'**{item_f}**は持っていません。')
+        # ファイル更新
+        save_users()
 
 
 async def setup(bot: commands.Bot):
