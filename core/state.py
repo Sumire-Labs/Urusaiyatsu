@@ -48,14 +48,6 @@ except:
         USERS: dict = {}
         json.dump(USERS, f, indent=2, ensure_ascii=False)
 
-try: 
-    with open('market.json', 'r', encoding='UTF-8') as f:
-        MARKET: list = json.load(f)
-except:
-    with open('market.json', 'w', encoding='UTF-8') as f:
-        MARKET: list = []
-        json.dump(MARKET, f, indent=2, ensure_ascii=False)
-
 # 絵文字マッピング（setup_hookで更新）
 EMOJIS: dict[str, str] = {
     'stamina': '',

@@ -14,7 +14,6 @@ EXTENSIONS = [
     "cogs.sell",
     "cogs.buy",
     "cogs.refuel",
-    "cogs.market",
     "cogs.item_data",
     "cogs.leaderboard",
     "cogs.settings",

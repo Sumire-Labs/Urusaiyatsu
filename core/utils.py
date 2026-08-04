@@ -458,10 +458,3 @@ def save_users():
     """ユーザーデータを保存"""
     with open('user.json', 'w', encoding='UTF-8') as f:
         json.dump(USERS, f, indent=2, ensure_ascii=False)
-
-
-def save_market():
-    """マーケットデータを保存"""
-    from .state import MARKET
-    with open('market.json', 'w', encoding='UTF-8') as f:
-        json.dump(MARKET, f, indent=2, ensure_ascii=False)

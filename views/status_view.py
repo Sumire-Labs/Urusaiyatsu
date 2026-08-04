@@ -192,14 +192,7 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
     if user_data['settings']['news']:
         advancement = discord.Embed(title=f'{name}のニュース')
         desc_text = ''
-        for i in user_data['news']:
-            if i['type'] == 'market_bought':
-                if str(i["user"]) in USERS:
-                    market_user = USERS[str(i["user"])]["name"]
-                else:
-                    market_user = f'{EMOJIS["empty"]}存在しないユーザー{EMOJIS["empty"]}'
-                desc_text += f'市場に**{i["price"]}{EMOJIS["money"]}**で出品した**{ITEMS[i["item"]]["name_e"]}×{i["count"]}**が{market_user}に購入されました！\n'
-
+        
         # 目標
         if len(user_data['advancement_now']) == 0:
             desc_text += '### 全ての目標を達成しました！'
