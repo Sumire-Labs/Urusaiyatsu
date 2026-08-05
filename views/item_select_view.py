@@ -7,6 +7,7 @@ import math
 from core.state import ITEMS, item_choices
 from core.utils import new_user
 
+SELECT_OPTION_DISABLED = [discord.SelectOption(label='選択肢がありません', value='None')]
 
 class item_select(discord.ui.View):
     """アイテム選択用View（4ページ分のセレクト）"""
@@ -50,39 +51,28 @@ class item_select(discord.ui.View):
             page = int(data[2]) - 1
         view = item_select()
         pages = page * 4
+
+        length = len(item_choices)
         view.item_page_1.options = item_choices[pages]
 
-        try:
-            item_choices[pages + 3]
-        except IndexError:
-            try:
-                item_choices[pages + 2]
-            except IndexError:
-                try:
-                    item_choices[pages + 1]
-                except IndexError:
-                    view.item_page_2.options, view.item_page_2.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_3.options, view.item_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_4.options, view.item_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                else:
-                    view.item_page_2.options = item_choices[pages + 1]
-                    view.item_page_3.options, view.item_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_4.options, view.item_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-            else:
-                view.item_page_2.options = item_choices[pages + 1]
-                view.item_page_3.options = item_choices[pages + 2]
-                view.item_page_4.options, view.item_page_4.disabled = [
-                    discord.SelectOption(label='選択肢がありません', value='None')], True
-        else:
+        if length > pages + 1:
             view.item_page_2.options = item_choices[pages + 1]
-            view.item_page_3.options = item_choices[pages + 2]
-            view.item_page_4.options = item_choices[pages + 3]
+        else:
+            view.item_page_2.options = SELECT_OPTION_DISABLED
+            view.item_page_2.disabled = True
 
+        if length > pages + 2:
+            view.item_page_3.options = item_choices[pages + 2]
+        else:
+            view.item_page_3.options = SELECT_OPTION_DISABLED
+            view.item_page_3.disabled = True
+        
+        if length > pages + 3:
+            view.item_page_4.options = item_choices[pages + 3]
+        else:
+            view.item_page_4.options = SELECT_OPTION_DISABLED
+            view.item_page_4.disabled = True
+        
         page_max = math.ceil(len(ITEMS) / 100)
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max) + '/' + data[3]
         page += 1
@@ -96,38 +86,27 @@ class item_select(discord.ui.View):
             page = 0
         view = item_select()
         pages = page * 4
+        
+        length = len(item_choices)
         view.item_page_1.options = item_choices[pages]
 
-        try:
-            item_choices[pages + 3]
-        except IndexError:
-            try:
-                item_choices[pages + 2]
-            except IndexError:
-                try:
-                    item_choices[pages + 1]
-                except IndexError:
-                    view.item_page_2.options, view.item_page_2.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_3.options, view.item_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_4.options, view.item_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                else:
-                    view.item_page_2.options = item_choices[pages + 1]
-                    view.item_page_3.options, view.item_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.item_page_4.options, view.item_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-            else:
-                view.item_page_2.options = item_choices[pages + 1]
-                view.item_page_3.options = item_choices[pages + 2]
-                view.item_page_4.options, view.item_page_4.disabled = [
-                    discord.SelectOption(label='選択肢がありません', value='None')], True
-        else:
+        if length > pages + 1:
             view.item_page_2.options = item_choices[pages + 1]
+        else:
+            view.item_page_2.options = SELECT_OPTION_DISABLED
+            view.item_page_2.disabled = True
+
+        if length > pages + 2:
             view.item_page_3.options = item_choices[pages + 2]
+        else:
+            view.item_page_3.options = SELECT_OPTION_DISABLED
+            view.item_page_3.disabled = True
+        
+        if length > pages + 3:
             view.item_page_4.options = item_choices[pages + 3]
+        else:
+            view.item_page_4.options = SELECT_OPTION_DISABLED
+            view.item_page_4.disabled = True
 
         page_max = math.ceil(len(ITEMS) / 100)
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max) + '/' + data[3]

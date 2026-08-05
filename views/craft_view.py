@@ -18,6 +18,7 @@ def set_craft_func(func):
     global _craft_func
     _craft_func = func
 
+SELECT_OPTION_DISABLED = [discord.SelectOption(label='選択肢がありません', value='None')]
 
 class craft_select(discord.ui.View):
     """クラフトレシピ選択用View"""
@@ -101,37 +102,26 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
         page_max = math.ceil(e / 100)
         view = craft_select()
 
+        length = len(recipe_choices)
         view.recipe_page_1.options = recipe_choices[:25]
-        try:
-            recipe_choices[75]
-        except IndexError:
-            try:
-                recipe_choices[50]
-            except IndexError:
-                try:
-                    recipe_choices[25]
-                except IndexError:
-                    view.recipe_page_2.options, view.recipe_page_2.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.recipe_page_3.options, view.recipe_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.recipe_page_4.options, view.recipe_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                else:
-                    view.recipe_page_2.options = recipe_choices[25:50]
-                    view.recipe_page_3.options, view.recipe_page_3.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-                    view.recipe_page_4.options, view.recipe_page_4.disabled = [
-                        discord.SelectOption(label='選択肢がありません', value='None')], True
-            else:
-                view.recipe_page_2.options = recipe_choices[25:50]
-                view.recipe_page_3.options = recipe_choices[50:75]
-                view.recipe_page_4.options, view.recipe_page_4.disabled = [
-                    discord.SelectOption(label='選択肢がありません', value='None')], True
-        else:
+
+        if length > 25:
             view.recipe_page_2.options = recipe_choices[25:50]
+        else:
+            view.recipe_page_2.options = SELECT_OPTION_DISABLED
+            view.recipe_page_2.disabled = True
+
+        if length > 50:
             view.recipe_page_3.options = recipe_choices[50:75]
+        else:
+            view.recipe_page_3.options = SELECT_OPTION_DISABLED
+            view.recipe_page_3.disabled = True
+        
+        if length > 75:
             view.recipe_page_4.options = recipe_choices[75:100]
+        else:
+            view.recipe_page_4.options = SELECT_OPTION_DISABLED
+            view.recipe_page_4.disabled = True
 
         page += 1
         view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)

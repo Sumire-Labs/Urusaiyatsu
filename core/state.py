@@ -121,9 +121,7 @@ class Bot(commands.Bot):
             # アイテム選択リストを登録
             item_name = item_data['name']
             page = int(t / 25)
-            try:
-                item_choices[page]
-            except IndexError:
+            if len(item_choices) <= page:
                 item_choices.append([])
             item_choices[page].append(discord.SelectOption(label=item_name, value=item_id))
 
@@ -136,9 +134,7 @@ class Bot(commands.Bot):
                     consumable_choices.append(Choice(name=item_data['name'], value=item_id))
                 if 'equippable' in item_data['tag']:
                     page = int(e / 25)
-                    try:
-                        equippable_choices[page]
-                    except IndexError:
+                    if len(equippable_choices) <= page:
                         equippable_choices.append([discord.SelectOption(label='装備品を外す', value='remove_item')])
                         e += 1
                     equippable_choices[page].append(discord.SelectOption(label=item_data['name'], value=item_id))
