@@ -1,0 +1,64 @@
+# Git 関連
+.git/
+.gitignore
+
+# macOS
+.DS_Store
+
+# Python バイトコード / キャッシュ
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pyc
+.pyo
+
+# テスト / lint / 型チェックキャッシュ
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.hypothesis/
+
+# 仮想環境
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.pixi/
+__pypackages__/
+
+# 環境変数ファイル
+.env
+.env.*
+
+# ローカル可変データ・秘密情報
+data/config.json
+data/user.json
+runtime/
+
+# ログ / カバレッジ
+*.log
+logs/
+
+# IDE / エディタ生成物
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.spyderproject
+.spyproject
+.ropeproject

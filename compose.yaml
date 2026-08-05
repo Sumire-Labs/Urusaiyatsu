@@ -1,0 +1,41 @@
+# Urusaiyatsu Discord Bot - Docker Compose 定義
+# 外部サービス・ポートはなし。永続化は bot_runtime ボリュームの user.json のみ。
+# 設定は data/config.json を read-only file secret として /run/secrets/bot_config にマウントし、
+# エントリポイントが /run/urusaiyatsu（tmpfs）へ複製した後にアプリユーザーへ降格して起動する。
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+    read_only: true
+    security_opt:
+      - "no-new-privileges:true"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - bot_runtime:/app/runtime
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=16m,mode=1777
+      - /run/urusaiyatsu:rw,nosuid,nodev,noexec,size=1m,mode=0755
+    secrets:
+      - bot_config
+
+secrets:
+  bot_config:
+    file: ./data/config.json
+
+volumes:
+  bot_runtime:
