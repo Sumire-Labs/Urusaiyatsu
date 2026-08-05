@@ -119,7 +119,7 @@ async def item_data(interaction: discord.Interaction, item: str):
     for place_id, place_data in PLACES.items():
         x = 0
         w = 0
-        for result in place_data['result']:
+        for result in place_data['table']:
             x += result['weight']
             if item == result['id']:
                 w = result['weight']
@@ -134,7 +134,7 @@ async def item_data(interaction: discord.Interaction, item: str):
     for place_id, place_data in FISHING_PLACES.items():
         x = 0
         w = 0
-        for result in place_data['result']:
+        for result in place_data['table']:
             if item == result['id']:
                 cnt += 1
                 w = result['weight']
@@ -144,7 +144,7 @@ async def item_data(interaction: discord.Interaction, item: str):
                     p = q
                 else:
                     p = math.ceil((q + r) / 2)
-                for k in place_data['result']:
+                for k in place_data['table']:
                     if k['power_max'] == -1:
                         if p >= k['power_min']:
                             x += k['weight']

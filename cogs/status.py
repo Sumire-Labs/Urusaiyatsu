@@ -26,7 +26,9 @@ class StatusCog(commands.Cog):
 
         if status_setting == 0:
             # 所持アイテム数が1ページに収まらなければ自動でshort表示
-            item_count = sum(1 for count in user_data['inventory'].values() if count != 0)
+            item_count = 0
+            for inv_item in user_data['inventory']:
+                item_count += inv_item['count']
             short = (item_count > STATUS_ITEMS_PER_PAGE)
         else:
             short = (status_setting == 1)

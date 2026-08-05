@@ -1,5 +1,8 @@
 # 依存関係を追加
 # Discord.pyしかなかった
 # かなしい
+# deepmergeも加わりました
+# うれしい
 
 discord.py>=2.6.4
+deepmerge>=2.1.0

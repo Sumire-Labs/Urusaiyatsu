@@ -103,10 +103,10 @@
     },
     "craft_steel_pickaxe": {
         "title": "鋼鉄のツルハシを作ろう",
-        "description": "鋼鉄の延べ棒を使って鋼鉄のハンマーをクラフトしよう",
+        "description": "鋼鉄の延べ棒を使って鋼鉄のツルハシをクラフトしよう",
         "complete_message": "鋼鉄のツルハシがあれば、深層の洞窟と、炭鉱での採集をすることができるようになります。\nまた、採集で使用したときに壊れる確率が5%と、銅のツルハシより低いです。",
         "clear_condition": {
-            "get_item": "steel_hammer"
+            "get_item": "steel_pickaxe"
         },
         "previous_advancement": ["craft_steel_hammer"]
     },
@@ -923,7 +923,7 @@
         "description": "魚を集めてフィッシュオイルをクラフトしよう",
         "complete_message": "フィッシュオイルは、あらゆる種類の魚から作れる素材です。\n釣りに関連する様々なクラフトに使用されるほか、餌を作るのにも必要です。",
         "clear_condition": {
-            "get_item": "fishing_rod"
+            "get_item": "fish_oil"
         },
         "previous_advancement": ["fishing_pond"]
     },

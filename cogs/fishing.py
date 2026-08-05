@@ -130,7 +130,7 @@ class FishingCog(commands.Cog):
         
         place_name = place_data['name']
         embed = discord.Embed(title=f'{place_name}での釣り({process_count}回)の結果')
-        for item_id, item_count in result:
+        for item_id, item_count in result.items():
             if item_count > 0:
                 add_item(user_id, item_id)
             embed.add_field(name=ITEMS[item_id]['name_e'] + ': ' + str(item_count), value='', inline=False)
@@ -179,7 +179,9 @@ def get_fishing_loot_table(place: str, power: int, bait: str | None = None) -> l
 
     # 釣りパワーを反映
     for entry in table:
-        if entry['min_power'] <= power <= entry['max_power']:
+        if entry['power_max'] == -1 and entry['power_min'] <= power:
+            result.append(entry)
+        elif entry['power_min'] <= power <= entry['power_max']:
             result.append(entry)
 
     return result

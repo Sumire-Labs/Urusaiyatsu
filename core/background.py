@@ -3,7 +3,6 @@
 時間ベースの更新処理を行う
 """
 import time
-import datetime
 import random
 
 from .state import USERS, shop_list
@@ -19,7 +18,7 @@ def start_background_loop():
     ticks = 0
     while True:
         # 時間更新検知
-        unix_time = datetime.time()
+        unix_time = time.time()
         for user_id_str, user_data in USERS.items():
 
             # ユーザーデータ取得
@@ -47,11 +46,11 @@ def start_background_loop():
                 elapsed = unix_time - timestamp['stamina']
 
                 # スタミナを(経過時間/回復時間)増やす
-                user_data['stamina'] += elapsed // duration
+                user_data['stamina'] += int(elapsed // duration)
 
                 # オーバーフロー処理
                 if user_data['stamina'] >= stats['stamina_max']:
-                    user_data['stamina'] = stats['stamina_max']
+                    user_data['stamina'] = int(stats['stamina_max'])
                     timestamp['stamina'] = -1
                 else:
                     timestamp['stamina'] += duration

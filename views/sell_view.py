@@ -6,7 +6,6 @@ import math
 
 from core.state import USERS, ITEMS
 from core.utils import new_user
-from modals.sell_modal import sell
 
 
 # sell関数への参照（循環import回避のため遅延設定）
@@ -27,24 +26,52 @@ class sell_select(discord.ui.View):
 
     @discord.ui.select()
     async def sell_page_1(self, interaction: discord.Interaction, select: discord.ui.Select):
+        data = str(self.next_page.custom_id).split('/')
+        page = int(data[1])
+
         item_index = int(select.values[0])
-        await sell(interaction, item_index)
+        if _sell_func:
+            await _sell_func(interaction, item_index, page)
+        else:
+            await interaction.response.send_message('エラーが発生しました。', ephemeral=True)
+            return
 
     @discord.ui.select()
     async def sell_page_2(self, interaction: discord.Interaction, select: discord.ui.Select):
+        data = str(self.next_page.custom_id).split('/')
+        page = int(data[1])
+
         item_index = int(select.values[0])
-        await sell(interaction, item_index)
+        if _sell_func:
+            await _sell_func(interaction, item_index, page)
+        else:
+            await interaction.response.send_message('エラーが発生しました。', ephemeral=True)
+            return
 
     @discord.ui.select()
     async def sell_page_3(self, interaction: discord.Interaction, select: discord.ui.Select):
+        data = str(self.next_page.custom_id).split('/')
+        page = int(data[1])
+
         item_index = int(select.values[0])
-        await sell(interaction, item_index)
+        if _sell_func:
+            await _sell_func(interaction, item_index, page)
+        else:
+            await interaction.response.send_message('エラーが発生しました。', ephemeral=True)
+            return
 
     @discord.ui.select()
     async def sell_page_4(self, interaction: discord.Interaction, select: discord.ui.Select):
-        item_index = int(select.values[0])
-        await sell(interaction, item_index)
+        data = str(self.next_page.custom_id).split('/')
+        page = int(data[1])
 
+        item_index = int(select.values[0])
+        if _sell_func:
+            await _sell_func(interaction, item_index, page)
+        else:
+            await interaction.response.send_message('エラーが発生しました。', ephemeral=True)
+            return
+        
     @discord.ui.button(label="<", style=discord.ButtonStyle.primary)
     async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         data = str(self.next_page.custom_id).split('/')
@@ -73,17 +100,18 @@ async def sell_selecting(interaction: discord.Interaction, page: int):
     operation_count = 0
 
     for item in user_data['inventory']:
-        in_page = page * 100 <= entry_count < (page + 1) * 100
-
-        if in_page:
-            item_name = ITEMS[item['id']]['name_e']
+        if page * 100 <= entry_count < (page + 1) * 100:
+            item_name = ITEMS[item['id']]['name']
             item_value = ITEMS[item['id']]['value']
             sell_choices.append(discord.SelectOption(label=f'{item_name}（売値: {item_value}）', value=str(operation_count)))
         entry_count += 1
         operation_count += 1
 
     if entry_count == 0:
-        await interaction.response.send_message('表示できるアイテムがありません。', ephemeral=True)
+        if interaction.message is None:
+            await interaction.response.send_message('表示できるアイテムがありません。', ephemeral=True)
+        else:
+            await interaction.edit_original_response(content=f'表示できるアイテムがありません。')
     else:
         page_max = math.ceil(entry_count / 100)
         view = sell_select()
@@ -125,4 +153,4 @@ async def sell_selecting(interaction: discord.Interaction, page: int):
         if interaction.message is None:
             await interaction.response.send_message(f'アイテムを選択: ({page}/{page_max})', view=view, ephemeral=True)
         else:
-            await interaction.response.edit_message(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+            await interaction.edit_original_response(content=f'アイテムを選択: ({page}/{page_max})', view=view)

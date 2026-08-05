@@ -1014,7 +1014,7 @@
         "default": true
     },
     {
-        "result": "drill_t0",
+        "result": "drill_t",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 5,
@@ -1075,7 +1075,7 @@
         "default": true
     },
     {
-        "result": "drill_m1",
+        "result": "drill_c1",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 10,
@@ -1088,65 +1088,65 @@
         "default": true
     },
     {
-        "result": "drill_m2",
+        "result": "drill_c2",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 12,
         "xp": 15,
         "ingredient": {
-            "drill_m1": 1,
+            "drill_c1": 1,
             "flawless_sapphire": 1,
             "compressed_cobalt": 3
         },
         "default": true
     },
     {
-        "result": "drill_m3",
+        "result": "drill_i1",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 15,
         "xp": 17,
         "ingredient": {
-            "drill_m2": 1,
+            "drill_engine": 1,
             "advanced_drill_engine": 1,
             "compressed_iridium": 2
         },
         "default": true
     },
     {
-        "result": "drill_m4",
+        "result": "drill_i2",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 20,
         "xp": 24,
         "ingredient": {
-            "drill_m3": 1,
+            "drill_i1": 1,
             "flawless_diamond": 1,
             "compressed_iridium": 3
         },
         "default": true
     },
     {
-        "result": "drill_m5",
+        "result": "drill_i3",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 25,
         "xp": 30,
         "ingredient": {
-            "drill_m4": 1,
+            "drill_i2": 1,
             "mixed_gemstone": 2,
             "compressed_iridium": 4
         },
         "default": true
     },
     {
-        "result": "drill_mx",
+        "result": "drill_x",
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 30,
         "xp": 50,
         "ingredient": {
-            "drill_m5": 1,
+            "drill_i4": 1,
             "mythical_drill_engine": 1
         },
         "default": true

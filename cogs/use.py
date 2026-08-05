@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
-from core.utils import new_user, complete_advancement, save_users, get_item, remove_item_stacked, table_roll, add_item
+from core.utils import new_user, complete_advancement, save_users, get_item, remove_item_stacked, table_roll, add_item, get_stats
 
 
 class UseCog(commands.Cog):
@@ -17,7 +17,7 @@ class UseCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="use", description="アイテムを使用します。")
-    @app_commands.choices(item=consumable_choices)
+    @app_commands.choices(item_id=consumable_choices)
     async def use_command(self, interaction: discord.Interaction, item_id: str, count: int = 1):
         # データ読み込み
         user_id = interaction.user.id
@@ -37,10 +37,12 @@ class UseCog(commands.Cog):
         item_tag = ITEMS[item_id]['tag']
         if 'con_stamina' in item_tag:
             # スタミナ回復
+            stats = get_stats(user_id)
+
             stamina = ITEMS[item_id]['stamina_restore'] * count
             user_data['stamina'] += stamina
-            if user_data['stamina'] > user_data['stamina_max']:
-                user_data['stamina'] = user_data['stamina_max']
+            if user_data['stamina'] > stats['stamina_max']:
+                user_data['stamina'] = stats['stamina_max']
 
             # 送信
             await interaction.response.send_message(f'スタミナが**{stamina}**{EMOJIS["stamina"]}回復しました！')
@@ -49,7 +51,7 @@ class UseCog(commands.Cog):
             # ランダムにアイテムを取得
             results = table_roll(LOOTS[ITEMS[item_id]['table']], count)
             embed = discord.Embed(title='手に入れたアイテム')
-            for result_id, result_count in results:
+            for result_id, result_count in results.items():
                 add_item(user_id, result_id, result_count)
                 embed.add_field(name=ITEMS[result_id]['name_e'] + ': ' + str(result_count), value='', inline=False)
 

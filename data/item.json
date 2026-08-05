@@ -1610,8 +1610,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 1.05,
-                "multiply": true
+                "amount": 1.0
             }
         ],
         "equip_slot": "accessory",
@@ -1623,7 +1622,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 1.1,
+                "amount": 1.5,
                 "multiply": true
             }
         ],
@@ -1636,7 +1635,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 1.15,
+                "amount": 2.0,
                 "multiply": true
             }
         ],

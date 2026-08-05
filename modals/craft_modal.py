@@ -100,7 +100,7 @@ async def craft_item(interaction: discord.Interaction, recipe: int, count: int =
         # スタミナチェック
         if user_data['stamina'] < stamina_uses:
             break
-        elif stats['crafting_stamina_saving_chance'] >= random.random():
+        elif stats['crafting_stamina_saving_chance'] < random.random():
             user_data['stamina'] -= stamina_uses
             
         process_count += 1
@@ -115,6 +115,8 @@ async def craft_item(interaction: discord.Interaction, recipe: int, count: int =
                 meta = tool_item['meta'].copy()
                 tool_damage = meta['damage']
                 tool_damage += 1
+                
+                tool_item['meta']['damage'] = tool_damage
 
                 if tool_damage < max_damage:
                     tool_index = modify_item(user_id, tool_index, meta)

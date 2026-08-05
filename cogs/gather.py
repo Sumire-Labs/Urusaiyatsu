@@ -28,10 +28,12 @@ class GatherCog(commands.Cog):
         stats = get_stats(user_id)
 
         # ツール装備
-        tool = user_data['equipment']['mining_tool']
-        if tool == {}:
-            await interaction.response.send_message(f'ツールを装備してください。')
-            return
+        required_gathering_power = place_data['required_gathering_power']
+        if required_gathering_power > 0:
+            tool = user_data['equipment']['gathering_tool']
+            if tool == {}:
+                await interaction.response.send_message(f'ツールを装備してください。')
+                return
 
         # レベル
         required_level = place_data['required_level']
@@ -41,7 +43,6 @@ class GatherCog(commands.Cog):
             return
 
         # 採集パワー
-        required_gathering_power = place_data['required_gathering_power']
         if stats['gathering_power'] < required_gathering_power:
             await interaction.response.send_message(
                 f'{place_data["name"]}での採集には採集パワーが**{required_gathering_power}**以上必要です。')
@@ -98,12 +99,14 @@ class GatherCog(commands.Cog):
 
             # ツール耐久
             if required_gathering_power > 0:
-                tool_id = user_data['equipment']['mining_tool']['id']
+                tool_id = user_data['equipment']['gathering_tool']['id']
                 max_damage = ITEMS[tool_id].get('max_damage')
                 if max_damage is not None:
-                    tool_damage = user_data['equipment']['mining_tool']['meta']['damage']
+                    tool_damage = user_data['equipment']['gathering_tool']['meta']['damage']
                     tool_damage += 1
 
+                    user_data['equipment']['gathering_tool']['meta']['damage'] = tool_damage
+                    
                     # 破損時
                     if tool_damage >= max_damage:
                         if tool_id in broken_tool:
@@ -114,7 +117,7 @@ class GatherCog(commands.Cog):
                         # ツール交換
                         replaced = False
                         if user_data['settings']['gathering_tool_replacement'] == 0 and get_item(user_id, tool_id):
-                            user_data['equipment']['mining_tool'] = remove_item(user_id, tool_id)
+                            user_data['equipment']['gathering_tool'] = remove_item(user_id, tool_id)
                             replaced = True
 
                         elif user_data['settings']['gathering_tool_replacement'] == 1:
@@ -123,7 +126,7 @@ class GatherCog(commands.Cog):
                                 if item_stats is not None:
                                     for stat in item_stats:
                                         if stat['id'] == 'gathering_power' and stat['amount'] >= required_gathering_power:
-                                            user_data['equipment']['mining_tool'] = remove_item_from_dict(user_id, item)
+                                            user_data['equipment']['gathering_tool'] = remove_item_from_dict(user_id, item)
                                             replaced = True
                                             break
                                 if replaced:
@@ -133,14 +136,14 @@ class GatherCog(commands.Cog):
                             # 統計を再計算
                             stats = get_stats(user_id)
                         else:
-                            user_data['equipment']['mining_tool'] = {}
+                            user_data['equipment']['gathering_tool'] = {}
                             break
 
         # 結果処理
         result = table_roll(place_data['table'], process_count + additional_roll) | broken_tool
         place_name = place_data['name']
         embed = discord.Embed(title=f'{place_name}での採集({process_count}回)の結果')
-        for item_id, item_count in result:
+        for item_id, item_count in result.items():
             if item_count > 0:
                 add_item(user_id, item_id, item_count)
             embed.add_field(name=ITEMS[item_id]['name_e'] + ': ' + str(item_count), value='', inline=False)

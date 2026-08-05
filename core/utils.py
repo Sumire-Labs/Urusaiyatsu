@@ -43,13 +43,13 @@ async def new_user(user_id: int):
             },
             'equipment': {
                 'accessory': [{}, {}],
+                'gathering_tool': {},
+                'gathering_equipment': {},
                 'fishing_rod': {},
                 'fishing_bait': {},
                 'weapon': {},
                 'armor': {},
                 'armor_secondary': {},
-                'gathering_tool': {},
-                'gathering_equipment': {}
             },
             'settings': {'news': True, 'status': 0, 'gathering_tool_replacement': 0, 'crafting_tool_replacement': 0, 'continue_fishing': True}
         })
@@ -339,6 +339,7 @@ def get_stats(user_id: int) -> dict:
         'additional_fishing_loot_chance': 0,
         'fishing_stamina_uses': 10,
         'fishing_miss_chance': 0,
+        'cold_decrease_rate': 3.0,
         
         'stamina_regeneration_rate': 20.0,
         'stamina_max': 100,
@@ -352,26 +353,24 @@ def get_stats(user_id: int) -> dict:
                 if accessory != {} and 'stats' in ITEMS[accessory['id']]:
                     for item_stat in ITEMS[accessory['id']]['stats']:
                         user_stat = user_stats[item_stat['id']]
-                        if item_stat['multiply']:
+                        if item_stat.get('multiply') == True:
                             if type(user_stat) is int:
                                 user_stat = int(user_stat * item_stat['amount'])
                             else:
                                 user_stat *= item_stat['amount']
                         else:
                             user_stat += item_stat['amount']
-        else:
+        elif equipment_item != {}:
             for item_stat in ITEMS[equipment_item['id']]['stats']:
-                user_stat = user_stats[item_stat['id']]
-                if item_stat['multiply']:
-                    if type(user_stat) is int:
-                        user_stat = int(user_stat * item_stat['amount'])
+                if item_stat.get('multiply') == True:
+                    if type(user_stats[item_stat['id']]) is int:
+                        user_stats[item_stat['id']] = int(user_stats[item_stat['id']] * item_stat['amount'])
                     else:
-                        user_stat *= item_stat['amount']
+                        user_stats[item_stat['id']] *= item_stat['amount']
                 else:
-                    user_stat += item_stat['amount']
+                    user_stats[item_stat['id']] += item_stat['amount']
 
     user_stats['stamina_max'] += user_data['level_global'] - 1
-
     return user_stats
 
 
@@ -401,6 +400,7 @@ def complete_advancement(user_id: int, advancement: str) -> str:
 def xp(user_id: int, type: str, count: int) -> str:
     """経験値付与とレベルアップ処理（レベルアップ進捗を達成した場合、クリア文を返す）"""
     user_data = USERS[str(user_id)]
+    stats = get_stats(user_id)
 
     if type == 'fishing':
         lv = 'level_fishing'
@@ -416,15 +416,12 @@ def xp(user_id: int, type: str, count: int) -> str:
         user_data[xp_key] = exp - level_next
         user_data[lv] += 1
         user_data['level_global'] += 1
-        user_data['stamina_max'] += 1
 
         # スタミナ回復
-        restore_stamina = math.ceil(user_data['stamina_max'] * 0.25)
+        restore_stamina = math.ceil((stats['stamina_max'] + 1) * 0.25)
         if restore_stamina > 50:
             restore_stamina = 50
-        user_data['stamina'] += restore_stamina
-        if user_data['stamina'] > user_data['stamina_max']:
-            user_data['stamina'] = user_data['stamina_max']
+        user_data['stamina'] += min(restore_stamina, (stats['stamina_max'] + 1 - user_data['stamina']))
 
         # ショップ生成（レベル7で解放）
         if user_data['level_global'] == 7:
@@ -433,7 +430,7 @@ def xp(user_id: int, type: str, count: int) -> str:
 
         # アクセサリスロット増加
         if user_data['level_global'] in [20, 100]:
-            user_data['equipment']['accessory'].append(None)
+            user_data['equipment']['accessory'].append({})
 
         # 進捗チェック
         for adv_id in user_data['advancement_now']:

@@ -7,8 +7,7 @@ from discord.ext import commands
 
 from core.state import USERS, ITEMS, equippable_choices
 from core.utils import new_user, save_users, get_item, remove_item, add_item_from_dict, remove_item_from_dict
-from views.equip_view import equip_select, set_equip_func
-from views.shop_view import remove_equip_choice
+from views.equip_view import equip_select, set_equip_func, remove_equip_choice
 
 
 async def equip(interaction: discord.Interaction, item_id: str):
@@ -23,12 +22,14 @@ async def equip(interaction: discord.Interaction, item_id: str):
         equip_choices = []
         for slot, value in equip_data.items():
             if slot == 'accessory':
+                acc_slot = 0
                 for acc in value:
                     if acc:
                         equip_choices.append(
-                            discord.SelectOption(label=ITEMS[acc['id']]['name'], value=str([acc['id'], 'accessory'])))
+                            discord.SelectOption(label=ITEMS[acc['id']]['name'], value=str(['accessory', acc_slot])))
+                    acc_slot += 1
             elif value != {}:
-                equip_choices.append(discord.SelectOption(label=ITEMS[value['id']]['name'], value=str([value['id'], slot])))
+                equip_choices.append(discord.SelectOption(label=ITEMS[value['id']]['name'], value=str([slot])))
 
         if len(equip_choices) > 0:
             view = remove_equip_choice()

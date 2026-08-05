@@ -46,10 +46,10 @@ class SettingsCog(commands.Cog):
             await status_setting_view(interaction)
 
         elif config == 3:
-            await tool_replacement_setting_view(interaction)
+            await crafting_tool_replacement_setting_view(interaction)
 
         elif config == 4:
-            await tool_replacement_setting_view(interaction)
+            await gathering_tool_replacement_setting_view(interaction)
 
         elif config == 5:
             if user_data['settings']['continue_fishing']:

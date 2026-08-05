@@ -1,7 +1,7 @@
 {
     "pond": {
         "name": "池",
-        "level": 1,
+        "required_level": 1,
         "xp": 7,
         "table": [
             {
@@ -38,7 +38,7 @@
     },
     "river": {
         "name": "川",
-        "level": 7,
+        "required_level": 7,
         "xp": 10,
         "table": [
             {
@@ -81,7 +81,7 @@
     },
     "beach": {
         "name": "海岸",
-        "level": 15,
+        "required_level": 15,
         "xp": 15,
         "table": [
             {
@@ -136,7 +136,7 @@
     },
     "ocean": {
         "name": "海",
-        "level": 24,
+        "required_level": 24,
         "xp": 20,
         "table": [
             {
@@ -203,7 +203,7 @@
     },
     "deep_ocean": {
         "name": "深海",
-        "level": 32,
+        "required_level": 32,
         "xp": 22,
         "table": [
             {
@@ -294,7 +294,7 @@
     },
     "subterranean_lake": {
         "name": "地底湖",
-        "level": 40,
+        "required_level": 40,
         "xp": 26,
         "table": [
             {
@@ -391,7 +391,7 @@
     },
     "abyss_fishing_pond": {
         "name": "深淵の釣り堀",
-        "level": 45,
+        "required_level": 45,
         "xp": 32,
         "table": [
             {

@@ -163,11 +163,11 @@ class Bot(commands.Bot):
 
         # ユーザー初期化（スタミナ回復、進捗リセット）
         for user_data in USERS.values():
-            # 初期ステータスを設定
-            user_data['equipment'].setdefault('drill_attachment', None)
+
+            stamina_max = 100 + user_data['level_global'] - 1
+            user_data['stamina'] = stamina_max
 
             # ステータス設定
-            user_data['stamina'] = user_data['stamina_max']
             user_data['advancement_now'] = []
             for adv_id, adv_data in ADVANCEMENTS.items():
                 if adv_id not in user_data['advancement_completed']:
