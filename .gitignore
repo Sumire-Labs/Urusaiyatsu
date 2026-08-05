@@ -228,3 +228,7 @@ config.json
 
 # vsc settings
 .vscode/
+
+# IDEs
+.idea
+.idea/*
