@@ -1,12 +1,14 @@
 # Urusaiyatsu
 
-## Run and local state
-- Install with `python -m pip install -r requirements.txt`; start the bot with `python main.py`.
-- `data/config.json` is required at import time and is ignored. It must provide `token` and an `admin` array whose entries have `id` fields.
-- No automated test, lint, typecheck, formatter, CI, or task-runner configuration exists. A live start requires valid Discord credentials.
+## Setup, run, and verification
+- Create the ignored, import-time-required config before running: `cp data/config.json.example data/config.json && chmod 600 data/config.json`. It needs `token` and `admin` entries with `id` fields.
+- Local: `python -m pip install -r requirements.txt && python main.py`. A live start needs valid Discord credentials.
+- Docker: `docker compose build && docker compose up -d`. Docker installs the pinned `requirements.lock`, while the local requirements file is not fully pinned.
+- After code changes, rebuild the image; there is no hot reload. After config changes, run `docker compose up -d --force-recreate`.
+- There are no automated tests, linters, type checks, formatters, CI, or task runners. The available non-live check is `docker compose run --rm --no-deps bot sh -c 'PYTHONPYCACHEPREFIX=/tmp/pycache python -m compileall -q /app'`.
 
 ## Architecture and runtime gotchas
-- `main.py` starts the Discord bot; `core/state.py` owns global game state and the bot lifecycle. Command modules live in `cogs/`; interaction UI lives in `views/` and `modals/`.
-- Importing `core.state` changes the process working directory to `data/` and eagerly loads the static JSON assets. Code using relative data paths therefore runs relative to `data/` after that import.
-- Add a cog to `cogs/EXTENSIONS` or it will not be loaded. Startup loads every listed extension, starts the daemon background loop, and syncs the global Discord command tree.
-- `data/user.json` is an ignored, runtime-created mutable store; do not treat it as static game data or commit it.
+- `main.py` runs the bot exported by `core`; `core/state.py` owns global game state and lifecycle. Commands live in `cogs/`; interaction UI lives in `views/` and `modals/`.
+- Importing `core.state` changes the working directory to `data/`, eagerly loads static JSON, and creates `user.json` when absent. Relative data paths therefore resolve under `data/` after that import.
+- Add a cog to `cogs/EXTENSIONS` or it will not load. Startup loads those extensions, starts the daemon background loop, and syncs the global Discord command tree.
+- `data/user.json` is ignored mutable state, saved every five seconds. In Docker it persists in `bot_runtime` (and is symlinked into `data/`); run only one replica to avoid concurrent-write corruption. `docker compose down -v` destroys this state.
