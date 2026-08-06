@@ -145,17 +145,17 @@ class Bot(commands.Bot):
                 item_data.setdefault('tag', [])
 
             t += 1
-        print('Item list generated:' + str(t))
+        print('アイテム登録: ' + str(t))
 
         # 釣り場所選択リスト
         for place_id, place_data in FISHING_PLACES.items():
             fishing_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('Fishing place list generated:' + str(len(fishing_choices)))
+        print('釣りエリア登録: ' + str(len(fishing_choices)))
 
         # 場所選択リスト
         for place_id, place_data in PLACES.items():
             place_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('Place list generated:' + str(len(place_choices)))
+        print('採集エリア登録: ' + str(len(place_choices)))
 
         # ユーザー初期化（スタミナ回復、進捗リセット）
         for user_data in USERS.values():

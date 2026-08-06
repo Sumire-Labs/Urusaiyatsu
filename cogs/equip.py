@@ -31,62 +31,65 @@ async def equip(interaction: discord.Interaction, item_id: str):
             elif value != {}:
                 equip_choices.append(discord.SelectOption(label=ITEMS[value['id']]['name'], value=str([slot])))
 
-        if len(equip_choices) > 0:
-            view = remove_equip_choice()
-            view.remove_equip_select.options = equip_choices
-            await interaction.response.send_message('アイテムを選択:', view=view, ephemeral=True)
-        else:
+        if len(equip_choices) < 0:
             await interaction.response.send_message('アイテムを装備していません。', ephemeral=True)
+            return
+        
+        view = remove_equip_choice()
+        view.remove_equip_select.options = equip_choices
+        await interaction.response.send_message('アイテムを選択:', view=view, ephemeral=True)
+
+        return
+    
+    item_name = ITEMS[item_id]['name_e']
+    if get_item(user_id, item_id) == {}:
+        await interaction.response.send_message(f'**{item_name}**は持っていません。')
+        return
+    
+    slot = ITEMS[item_id]['equip_slot']
+    if slot == 'accessory':
+        conflict = False
+        conflicting_item = ""
+        equip_type = ITEMS[item_id]['equip_type']
+        eq_c = False
+        t = 0
+        for acc in user_data['equipment']['accessory']:
+            if acc == {}:
+                eq_c = True
+                break
+            elif ITEMS[acc['id']]['equip_type'] == equip_type:
+                conflict = True
+                conflicting_item = acc['id']
+                break
+            t += 1
+
+        if not eq_c:
+            if conflict:
+                name_item = ITEMS[conflicting_item]['name_e']
+                await interaction.response.send_message(f'**{item_name}**は**{name_item}**と同時に装備できません。')
+            else:
+                await interaction.response.send_message('アクセサリースロットが足りません。')
+            return
+            
+        user_data['equipment']['accessory'][t] = remove_item(user_id, item_id)
+
     else:
-        item_name = ITEMS[item_id]['name_e']
-        slot = ITEMS[item_id]['equip_slot']
+        # 既に装備していれば交換
+        if user_data['equipment'][slot]:
+            slot_item = user_data['equipment'][slot]
+            add_item_from_dict(user_id, slot_item)
 
-        if get_item(user_id, item_id):
-            eq_c = True
-            type_err = False
-            conflicting_item = ""
-
-            if slot == 'accessory':
-                equip_type = ITEMS[item_id]['equip_type']
-                eq_c = False
-                t = 0
-                for acc in user_data['equipment']['accessory']:
-                    if not acc:
-                        eq_c = True
-                        break
-                    elif ITEMS[acc['id']]['equip_type'] == equip_type:
-                        type_err = True
-                        conflicting_item = acc['id']
-                        break
-                    t += 1
-
-                if eq_c:
-                    user_data['equipment']['accessory'][t] = remove_item(user_id, item_id)
-            else:
-                # 既に装備していれば交換
-                if user_data['equipment'][slot]:
-                    slot_item = user_data['equipment'][slot]
-                    add_item_from_dict(user_id, slot_item)
-
-                # インベントリ側のアイテム削除して装備データにコピー
-                if slot == 'fishing_bait':
-                    user_data['equipment']['fishing_bait'] = remove_item_from_dict(user_id, get_item(user_id, item_id))
-                else:
-                    user_data['equipment'][slot] = remove_item(user_id, item_id)
-            if not eq_c:
-                if type_err:
-                    name_item = ITEMS[conflicting_item]['name_e']
-                    await interaction.response.send_message(f'**{item_name}**は**{name_item}**と同時に装備できません。')
-                else:
-                    await interaction.response.send_message('アクセサリースロットが足りません。')
-            else:
-                # 送信
-                await interaction.response.send_message(f'**{item_name}**を装備しました！')
-
-                # ファイル更新
-                save_users()
+        # インベントリ側のアイテム削除して装備データにコピー
+        if slot == 'fishing_bait':
+            user_data['equipment']['fishing_bait'] = remove_item_from_dict(user_id, get_item(user_id, item_id))
         else:
-            await interaction.response.send_message(f'**{item_name}**は持っていません。')
+            user_data['equipment'][slot] = remove_item(user_id, item_id)
+        
+    # 送信
+    await interaction.response.send_message(f'**{item_name}**を装備しました！')
+
+    # ファイル更新
+    save_users()
 
 
 class EquipCog(commands.Cog):

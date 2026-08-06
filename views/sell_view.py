@@ -112,34 +112,35 @@ async def sell_selecting(interaction: discord.Interaction, page: int):
             await interaction.response.send_message('表示できるアイテムがありません。', ephemeral=True)
         else:
             await interaction.edit_original_response(content=f'表示できるアイテムがありません。')
+        return
+    
+    page_max = math.ceil(entry_count / 100)
+    view = sell_select()
+
+    length = len(sell_choices)
+    view.sell_page_1.options = sell_choices[:25]
+
+    if length > 25:
+        view.sell_page_2.options = sell_choices[25:50]
     else:
-        page_max = math.ceil(entry_count / 100)
-        view = sell_select()
+        view.sell_page_2.options = SELECT_OPTION_DISABLED
+        view.sell_page_2.disabled = True
 
-        length = len(sell_choices)
-        view.sell_page_1.options = sell_choices[:25]
+    if length > 50:
+        view.sell_page_3.options = sell_choices[50:75]
+    else:
+        view.sell_page_3.options = SELECT_OPTION_DISABLED
+        view.sell_page_3.disabled = True
+    
+    if length > 75:
+        view.sell_page_4.options = sell_choices[75:100]
+    else:
+        view.sell_page_4.options = SELECT_OPTION_DISABLED
+        view.sell_page_4.disabled = True
 
-        if length > 25:
-            view.sell_page_2.options = sell_choices[25:50]
-        else:
-            view.sell_page_2.options = SELECT_OPTION_DISABLED
-            view.sell_page_2.disabled = True
-
-        if length > 50:
-            view.sell_page_3.options = sell_choices[50:75]
-        else:
-            view.sell_page_3.options = SELECT_OPTION_DISABLED
-            view.sell_page_3.disabled = True
-        
-        if length > 75:
-            view.sell_page_4.options = sell_choices[75:100]
-        else:
-            view.sell_page_4.options = SELECT_OPTION_DISABLED
-            view.sell_page_4.disabled = True
-
-        page += 1
-        view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
-        if interaction.message is None:
-            await interaction.response.send_message(f'アイテムを選択: ({page}/{page_max})', view=view, ephemeral=True)
-        else:
-            await interaction.edit_original_response(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+    page += 1
+    view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
+    if interaction.message is None:
+        await interaction.response.send_message(f'アイテムを選択: ({page}/{page_max})', view=view, ephemeral=True)
+    else:
+        await interaction.edit_original_response(content=f'アイテムを選択: ({page}/{page_max})', view=view)

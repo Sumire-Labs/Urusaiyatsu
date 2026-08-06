@@ -9,6 +9,11 @@ from discord.ext import commands
 from core.state import ITEMS, RECIPES, PLACES, FISHING_PLACES, LOOTS, LOCALIZATIONS, EMOJIS
 from views.item_select_view import item_select_view, register_callback
 
+def localize(raw: str):
+    if raw in LOCALIZATIONS:
+        return LOCALIZATIONS[raw]
+    return raw
+
 
 async def item_data(interaction: discord.Interaction, item: str):
     """アイテム情報表示"""
@@ -18,54 +23,28 @@ async def item_data(interaction: discord.Interaction, item: str):
     msg = f'# {name} ( ID: {item} )\n'
 
     for key, value in data.items():
-        if key not in ['name', 'name_e', 'emoji']:
-            if key == 'tag':
-                n = 'アイテムタグ'
-                m = '[ '
-                for tag in value:
-                    if tag in LOCALIZATIONS:
-                        m += LOCALIZATIONS[tag] + ' '
-                    else:
-                        m += tag + ' '
-                m += ']'
-            elif key == 'drill_status':
-                n = 'ドリルの能力'
-                m = '{'
-                for stat_key, stat_val in value.items():
-                    m += '\n '
-                    if stat_key in LOCALIZATIONS:
-                        m += LOCALIZATIONS[stat_key] + ': ' + str(stat_val)
-                    else:
-                        m += stat_key + ': ' + str(stat_val)
-                m += '\n}'
-            elif key == 'fishing_status':
-                n = '釣り竿の能力'
-                m = '{'
-                for stat_key, stat_val in value.items():
-                    m += '\n '
-                    if stat_key in LOCALIZATIONS:
-                        m += LOCALIZATIONS[stat_key] + ': ' + str(stat_val)
-                    else:
-                        m += stat_key + ': ' + str(stat_val)
-                m += '\n}'
-            elif key == 'drill_attachment_status':
-                n = 'ドリル付属品の能力'
-                m = '{'
-                for stat_key, stat_val in value.items():
-                    m += '\n '
-                    if stat_key in LOCALIZATIONS:
-                        m += LOCALIZATIONS[stat_key] + ': ' + str(stat_val)
-                    else:
-                        m += stat_key + ': ' + str(stat_val)
-                m += '\n}'
-            elif key in LOCALIZATIONS:
-                n = LOCALIZATIONS[key]
-                m = str(value)
-            else:
-                n = key
-                m = str(value)
+        if key in ['name', 'name_e', 'emoji', 'meta']:
+            continue
 
-            msg += '\n' + n + ': ' + m
+        if key == 'tag':
+            key_str = 'アイテムタグ'
+            value_str = '[ '
+            for tag in value:
+                value_str += f'{localize(tag)} '
+            value_str += ']'
+        elif key == 'stats':
+            key_str = '統計への影響'
+            value_str = '{'
+            for stat in value:
+                value_str += f'\n|   {localize(stat["id"])}: {stat["amount"]}'
+                if stat.get('multiply'):
+                    value_str += 'x'
+            value_str += '\n}'
+        else:
+            key_str = localize(key)
+            value_str = str(value)
+
+        msg += '\n' + key_str + ': ' + value_str
 
     embed1.description = msg
 
@@ -78,30 +57,32 @@ async def item_data(interaction: discord.Interaction, item: str):
     cnt2 = 0
 
     for recipe in RECIPES:
-        if item in recipe['ingredient'] or item == recipe['result']:
-            material = '[ '
-            for mat_id, mat_amount in recipe['ingredient'].items():
-                if mat_amount == 1:
-                    material += f'{ITEMS[mat_id]["name_e"]}'
-                else:
-                    material += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
-            material += ' ]'
-            ingredient = '\n\n' + ITEMS[recipe['result']]['name_e'] + ' ⇐ ' + material
+        if item not in recipe['ingredient'] and item != recipe['result']:
+            continue
 
-            if recipe['tool_tag'] is not None:
-                tool = ''
-                for item_data in ITEMS.values():
-                    if recipe['tool_tag'] in item_data['tag']:
-                        tool += item_data['name_e'] + ' '
-                ingredient += '\nツール: ' + tool + '( アイテムタグ: ' + recipe['tool_tag'] + ' )'
-            ingredient += f'\n({EMOJIS["stamina"]}{recipe["stamina"]}) 経験値+{recipe["xp"]}'
+        material = '[ '
+        for mat_id, mat_amount in recipe['ingredient'].items():
+            if mat_amount == 1:
+                material += f'{ITEMS[mat_id]["name_e"]}'
+            else:
+                material += f'{ITEMS[mat_id]["name_e"]}×{mat_amount}'
+        material += ' ]'
+        ingredient = '\n\n' + ITEMS[recipe['result']]['name_e'] + ' ⇐ ' + material
 
-            if item == recipe['result']:
-                mesg += ingredient
-                cnt += 1
-            if item in recipe['ingredient']:
-                mesg2 += ingredient
-                cnt2 += 1
+        if recipe['tool_tag'] is not None:
+            tool = ''
+            for item_data in ITEMS.values():
+                if recipe['tool_tag'] in item_data['tag']:
+                    tool += item_data['name_e'] + ' '
+            ingredient += '\nツール: ' + tool + '( アイテムタグ: ' + recipe['tool_tag'] + ' )'
+        ingredient += f'\n({EMOJIS["stamina"]}{recipe["stamina"]}) 経験値+{recipe["xp"]}'
+
+        if item == recipe['result']:
+            mesg += ingredient
+            cnt += 1
+        if item in recipe['ingredient']:
+            mesg2 += ingredient
+            cnt2 += 1
 
     if cnt != 0:
         msg += f'\n# このアイテムを作るレシピ({cnt}件)' + mesg

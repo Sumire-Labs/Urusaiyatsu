@@ -20,22 +20,18 @@ class sell_amount(discord.ui.Modal):
 
 
     async def on_submit(self, interaction: discord.Interaction):
-        success = True
-
         try:
             int(self.children[0].value)
         except ValueError:
-            success = False
-
-        if success:
-            data = str(self.custom_id).split('/')
-            count = int(self.children[0].value)
-            if count > 0:
-                index = int(data[0])
-                page = int(data[1])
-                await sell_item(interaction, self.original_interaction, index, count, page)
-            else:
-                await interaction.response.send_message('有効な整数を入力してください。')
+            await interaction.response.send_message('有効な整数を入力してください。')
+            return
+        
+        data = str(self.custom_id).split('/')
+        count = int(self.children[0].value)
+        if count > 0:
+            index = int(data[0])
+            page = int(data[1])
+            await sell_item(interaction, self.original_interaction, index, count, page)
         else:
             await interaction.response.send_message('有効な整数を入力してください。')
 

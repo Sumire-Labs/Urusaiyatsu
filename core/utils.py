@@ -326,8 +326,13 @@ def get_stats(user_id: int) -> dict:
     """数値統計を取得"""
     user_data = USERS[str(user_id)]
     user_stats = {
-        'gathering_stamina_uses': 10,
+        'stamina_regeneration_rate': 20.0,
+        'stamina_max': 100,
+        'crafting_stamina_saving_chance': 0,
+        'money_bonus': 0,
+
         'gathering_power': 0,
+        'gathering_stamina_uses': 10,
         'additional_gathering_loot_chance': 0,
         'fuel_uses': 0,
         'radiation_protecting_chance': 0,
@@ -336,15 +341,10 @@ def get_stats(user_id: int) -> dict:
         'radiation_effect': 0.1,
 
         'fishing_power': 0,
-        'additional_fishing_loot_chance': 0,
         'fishing_stamina_uses': 10,
+        'additional_fishing_loot_chance': 0,
         'fishing_miss_chance': 0,
         'cold_decrease_rate': 3.0,
-        
-        'stamina_regeneration_rate': 20.0,
-        'stamina_max': 100,
-        'crafting_stamina_saving_chance': 0,
-        'money_bonus': 0,
     }
 
     for equipment_slot, equipment_item in user_data['equipment'].items():
@@ -403,18 +403,18 @@ def xp(user_id: int, type: str, count: int) -> str:
     stats = get_stats(user_id)
 
     if type == 'fishing':
-        lv = 'level_fishing'
+        level_key = 'level_fishing'
         xp_key = 'xp_fishing'
     else:
-        lv = 'level_gathering'
+        level_key = 'level_gathering'
         xp_key = 'xp_gathering'
 
     exp = user_data[xp_key] + count
-    level_next = int((user_data[lv] + 1) ** 1.5) * 5
+    level_next = int((user_data[level_key] + 1) ** 1.5) * 5
 
     if exp >= level_next:
         user_data[xp_key] = exp - level_next
-        user_data[lv] += 1
+        user_data[level_key] += 1
         user_data['level_global'] += 1
 
         # スタミナ回復

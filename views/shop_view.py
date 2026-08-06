@@ -29,27 +29,29 @@ async def shop_buy(interaction: discord.Interaction, item_id: str):
     price = ITEMS[item_id]['price']
 
     # 購入回数チェック
-    if bought_count <= ITEMS[item_id]['shop_amount']:
-        # お金チェック
-        if user_data['money'] >= price:
-            # お金を消費
-            user_data['money'] -= price
-
-            # データ作成
-            add_item(user_id, item_id)
-
-            # 購入回数を増加
-            user_data['shop_count'][shop_index] += 1
-            amount = ITEMS[item_id]['shop_amount'] - bought_count
-
-            # 送信
-            item_name = ITEMS[item_id]['name_e']
-            await interaction.response.send_message(
-                f'**{item_name}**を**{price}**{EMOJIS["money"]}で購入しました！( このアイテムの残り購入回数: {amount} )')
-
-            # ファイル更新
-            save_users()
-        else:
-            await interaction.response.send_message('お金が足りません。')
-    else:
+    if bought_count > ITEMS[item_id]['shop_amount']:
         await interaction.response.send_message('そのアイテムは売り切れています。')
+        return
+    
+    # お金チェック
+    if user_data['money'] < price:
+        await interaction.response.send_message('お金が足りません。')
+        return
+    
+    # お金を消費
+    user_data['money'] -= price
+
+    # アイテム増加
+    add_item(user_id, item_id)
+
+    # 購入回数を増加
+    user_data['shop_count'][shop_index] += 1
+    amount = ITEMS[item_id]['shop_amount'] - bought_count
+
+    # 送信
+    item_name = ITEMS[item_id]['name_e']
+    await interaction.response.send_message(
+        f'**{item_name}**を**{price}**{EMOJIS["money"]}で購入しました！( このアイテムの残り購入回数: {amount} )')
+
+    # ファイル更新
+    save_users()

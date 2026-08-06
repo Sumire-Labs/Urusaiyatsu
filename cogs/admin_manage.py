@@ -21,34 +21,34 @@ class AdminManageCog(commands.Cog):
     async def admin_manage_command(self, interaction: discord.Interaction, user: discord.User, data: str):
         user_id = user.id
         my_id = interaction.user.id
-        if my_id in ADMIN:
-            
-            try: 
-                data = ast.literal_eval(data)
-            except:
-                await interaction.response.send_message(f'データの変換に失敗しました。',ephemeral=True)
-                return
-            if type(data) != dict:
-                await interaction.response.send_message(f'データの変換に失敗しました。',ephemeral=True)
-                return
-
-            await new_user(user_id)
-            user_data = USERS[str(user_id)]
-            user_name = user_data['name']
-
-            try:
-                # データをマージ
-                user_data = always_merger.merge(user_data, data)
-
-                # 送信
-                await interaction.response.send_message(f'{user_name}のデータを変更しました。',ephemeral=True)
-
-                # ファイル更新
-                save_users()
-            except:
-                await interaction.response.send_message(f'{user_name}のデータの変更に失敗しました。',ephemeral=True)
-        else:
+        if my_id not in ADMIN:
             await interaction.response.send_message('このコマンドの使用にはBotの管理権限が必要です。',ephemeral=True)
+            return
+            
+        try: 
+            data = ast.literal_eval(data)
+        except:
+            await interaction.response.send_message(f'データの変換に失敗しました。',ephemeral=True)
+            return
+        if type(data) != dict:
+            await interaction.response.send_message(f'データの変換に失敗しました。',ephemeral=True)
+            return
+
+        await new_user(user_id)
+        user_data = USERS[str(user_id)]
+        user_name = user_data['name']
+
+        try:
+            # データをマージ
+            user_data = always_merger.merge(user_data, data)
+        except:
+            await interaction.response.send_message(f'{user_name}のデータの変更に失敗しました。',ephemeral=True)
+        else:
+            # 送信
+            await interaction.response.send_message(f'{user_name}のデータを変更しました。',ephemeral=True)
+
+            # ファイル更新
+            save_users()
 
 
 async def setup(bot: commands.Bot):

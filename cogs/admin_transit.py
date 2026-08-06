@@ -20,26 +20,26 @@ class AdminTransitCog(commands.Cog):
         user_id_from = str(user_datarom.id)
         user_id_to = str(user_to.id)
         my_id = interaction.user.id
-        if my_id in ADMIN:
-            if user_id_from in USERS:
-                user_name = USERS[user_id_from]["name"]
-
-                # 移行
-                if user_id_to in USERS:
-                    USERS[user_id_to] = USERS.pop(user_id_from)
-                else:
-                    USERS.setdefault(user_id_to,USERS.pop(user_id_from))
-
-                # 送信
-                await interaction.response.send_message(f'{user_name}のデータを移行しました。',ephemeral=True)
-
-                # ファイル更新
-                save_users()
-
-            else:
-                await interaction.response.send_message('存在しないユーザーです。',ephemeral=True)
-        else:
+        if my_id not in ADMIN:
             await interaction.response.send_message('このコマンドの使用にはBotの管理権限が必要です。',ephemeral=True)
+            return
+        if user_id_from not in USERS:
+            await interaction.response.send_message('存在しないユーザーです。',ephemeral=True)
+            return
+        
+        user_name = USERS[user_id_from]["name"]
+
+        # 移行
+        if user_id_to in USERS:
+            USERS[user_id_to] = USERS.pop(user_id_from)
+        else:
+            USERS.setdefault(user_id_to,USERS.pop(user_id_from))
+
+        # 送信
+        await interaction.response.send_message(f'{user_name}のデータを移行しました。',ephemeral=True)
+
+        # ファイル更新
+        save_users()
 
 
 async def setup(bot: commands.Bot):

@@ -19,36 +19,36 @@ class AdminGiveCog(commands.Cog):
     async def admin_give_command(self, interaction: discord.Interaction, user: discord.User, item_id: str, amount: int):
         user_id = user.id
         my_id = interaction.user.id
-        if my_id in ADMIN:
-            if item_id in ITEMS:
-                if amount != 0:
-                    await new_user(user_id)
-                    user_data = USERS[str(user_id)]
-                    item_name = ITEMS[item_id]['name_e']
-
-                    if amount > 0:
-                        # アイテム付与
-                        add_item(user_id, item_id, amount)
-
-                        # 送信
-                        await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
-
-                    else:
-                        # アイテム剥奪
-                        remove_item(user_id, item_id, amount)
-
-                        # 送信
-                        await interaction.response.send_message(f'{user_data["name"]}から{item_name}{amount}個を剥奪しました。',ephemeral=True)
-
-                    # ファイル更新
-                    save_users()
-
-                else:
-                    await interaction.response.send_message('有効な整数を入力してください。',ephemeral=True)
-            else:
-                await interaction.response.send_message('存在しないアイテムIDです。',ephemeral=True)
-        else:
+        if my_id not in ADMIN:
             await interaction.response.send_message('このコマンドの使用にはBotの管理権限が必要です。',ephemeral=True)
+            return
+        if item_id not in ITEMS:
+            await interaction.response.send_message('存在しないアイテムIDです。',ephemeral=True)
+            return
+        if amount == 0:
+            await interaction.response.send_message('有効な整数を入力してください。',ephemeral=True)
+            return
+        
+        await new_user(user_id)
+        user_data = USERS[str(user_id)]
+        item_name = ITEMS[item_id]['name_e']
+
+        if amount > 0:
+            # アイテム付与
+            add_item(user_id, item_id, amount)
+
+            # 送信
+            await interaction.response.send_message(f'{user_data["name"]}に{item_name}{amount}個を付与しました。',ephemeral=True)
+
+        else:
+            # アイテム剥奪
+            remove_item(user_id, item_id, amount)
+
+            # 送信
+            await interaction.response.send_message(f'{user_data["name"]}から{item_name}{amount}個を剥奪しました。',ephemeral=True)
+
+        # ファイル更新
+        save_users()
 
 
 async def setup(bot: commands.Bot):

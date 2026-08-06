@@ -22,21 +22,22 @@ class BuyCog(commands.Cog):
         await new_user(user_id)
         user_data = USERS[str(user_id)]
 
-        if user_data['level_global'] >= 7:
-            view = shop_choice()
-            shop_content = user_data['shop_content']
-            shop_choices = []
-            for item_id in shop_content:
-                shop_choices.append(
-                    discord.SelectOption(
-                        label=ITEMS[item_id]['name'] + ' ( 値段: ' + str(ITEMS[item_id]['price']) + ' )',
-                        value=item_id
-                    )
-                )
-            view.shop_buy_select.options = shop_choices
-            await interaction.response.send_message('商品を選択:', view=view, ephemeral=True)
-        else:
+        if user_data['level_global'] < 7:
             await interaction.response.send_message('ショップにアクセスするにはレベルが**7**以上でなければなりません。')
+            return
+        
+        view = shop_choice()
+        shop_content = user_data['shop_content']
+        shop_choices = []
+        for item_id in shop_content:
+            shop_choices.append(
+                discord.SelectOption(
+                    label=ITEMS[item_id]['name'] + ' ( 値段: ' + str(ITEMS[item_id]['price']) + ' )',
+                    value=item_id
+                )
+            )
+        view.shop_buy_select.options = shop_choices
+        await interaction.response.send_message('商品を選択:', view=view, ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

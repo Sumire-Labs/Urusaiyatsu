@@ -98,34 +98,34 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
 
     if e == 0:
         await interaction.response.send_message('表示できるレシピがありません。', ephemeral=True)
+        return
+    page_max = math.ceil(e / 100)
+    view = craft_select()
+
+    length = len(recipe_choices)
+    view.recipe_page_1.options = recipe_choices[:25]
+
+    if length > 25:
+        view.recipe_page_2.options = recipe_choices[25:50]
     else:
-        page_max = math.ceil(e / 100)
-        view = craft_select()
+        view.recipe_page_2.options = SELECT_OPTION_DISABLED
+        view.recipe_page_2.disabled = True
 
-        length = len(recipe_choices)
-        view.recipe_page_1.options = recipe_choices[:25]
+    if length > 50:
+        view.recipe_page_3.options = recipe_choices[50:75]
+    else:
+        view.recipe_page_3.options = SELECT_OPTION_DISABLED
+        view.recipe_page_3.disabled = True
+    
+    if length > 75:
+        view.recipe_page_4.options = recipe_choices[75:100]
+    else:
+        view.recipe_page_4.options = SELECT_OPTION_DISABLED
+        view.recipe_page_4.disabled = True
 
-        if length > 25:
-            view.recipe_page_2.options = recipe_choices[25:50]
-        else:
-            view.recipe_page_2.options = SELECT_OPTION_DISABLED
-            view.recipe_page_2.disabled = True
-
-        if length > 50:
-            view.recipe_page_3.options = recipe_choices[50:75]
-        else:
-            view.recipe_page_3.options = SELECT_OPTION_DISABLED
-            view.recipe_page_3.disabled = True
-        
-        if length > 75:
-            view.recipe_page_4.options = recipe_choices[75:100]
-        else:
-            view.recipe_page_4.options = SELECT_OPTION_DISABLED
-            view.recipe_page_4.disabled = True
-
-        page += 1
-        view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
-        if interaction.message is None:
-            await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
-        else:
-            await interaction.response.edit_message(content=f'レシピを選択: ({page}/{page_max})', view=view)
+    page += 1
+    view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
+    if interaction.message is None:
+        await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
+    else:
+        await interaction.response.edit_message(content=f'レシピを選択: ({page}/{page_max})', view=view)

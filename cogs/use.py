@@ -73,7 +73,7 @@ class UseCog(commands.Cog):
             # 送信
             await interaction.response.send_message(adv_message, embed=embed)
 
-        if 'con_fuel' in item_tag:
+        elif 'con_fuel' in item_tag:
             # 燃料回復
             fuel = ITEMS[item_id]['fuel_restore'] * count
             user_data['fuel'] += fuel
@@ -81,7 +81,7 @@ class UseCog(commands.Cog):
             # 送信
             await interaction.response.send_message(f'燃料が**{fuel}**{EMOJIS["fuel"]}回復しました！')
 
-        if 'con_radiation' in item_tag:
+        elif 'con_radiation' in item_tag:
             # 放射線除去
             rad = ITEMS[item_id]['radiation_remove'] * count
             user_data['radiation'] -= rad
