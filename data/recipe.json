@@ -41,7 +41,7 @@
         "stamina": 10,
         "xp": 5,
         "ingredient": {
-            "stone":2,
+            "stone": 3,
             "coal": 1,
             "copper": 1
         },
@@ -177,7 +177,6 @@
         "ingredient": {
             "rest_ring": 1,
             "crystal": 1,
-            "silk": 1,
             "black_bronze_ingot": 1
         },
         "default": true
@@ -245,43 +244,19 @@
         "xp": 9,
         "ingredient": {
             "money_charm": 1, 
-            "gold_plate": 1
+            "gold_plate": 2
         },
         "default": true
     },
     {
         "result": "money_artifact",
         "type": "gathering",
-        "tool_tag": "hammer",
+        "tool_tag": "anvil",
         "stamina": 7,
         "xp": 13,
         "ingredient": {
             "money_ring": 1,
-            "gold_plate": 2
-        },
-        "default": true
-    },
-    {
-        "result": "knife",
-        "type": "gathering",
-        "tool_tag": "saw",
-        "stamina": 5,
-        "xp": 3,
-        "ingredient": {
-            "planks": 1,
-            "stone": 1
-        },
-        "default": true
-    },
-    {
-        "result": "leather_boots",
-        "type": "gathering",
-        "tool_tag": null,
-        "stamina": 5,
-        "xp": 5,
-        "ingredient": {
-            "leather": 1,
-            "copper_ingot": 1
+            "gold_plate": 4
         },
         "default": true
     },
@@ -294,54 +269,6 @@
         "ingredient": {
             "planks": 1,
             "copper_ingot": 1
-        },
-        "default": true
-    },
-    {
-        "result": "hard_planks",
-        "type": "gathering",
-        "tool_tag": "saw_t2",
-        "stamina": 3,
-        "xp": 2,
-        "ingredient": {
-            "hard_wood": 1
-        },
-        "default": true
-    },
-    {
-        "result": "loom",
-        "type": "gathering",
-        "tool_tag": "saw_t2",
-        "stamina": 7,
-        "xp": 6,
-        "ingredient": {
-            "hard_planks": 1,
-            "leather": 1,
-            "iron_ingot": 1
-        },
-        "default": true
-    },
-    {
-        "result": "silk",
-        "type": "gathering",
-        "tool_tag": "loom",
-        "stamina": 3,
-        "xp": 3,
-        "ingredient": {
-            "string": 2
-        },
-        "default": true
-    },
-    {
-        "result": "sturdy_gloves",
-        "type": "gathering",
-        "tool_tag": "loom",
-        "stamina": 10,
-        "xp": 8,
-        "ingredient": {
-            "silk": 1,
-            "leather": 1,
-            "steel_ingot": 1
         },
         "default": true
     },
@@ -413,7 +340,7 @@
         "xp": 20,
         "ingredient": {
             "black_bronze_pickaxe": 1,
-            "crystal": 1,
+            "crystal": 3,
             "ruby": 1
         },
         "default": true
@@ -438,16 +365,6 @@
         "xp": 1,
         "ingredient": {
             "wood": 2
-        }
-    },
-    {
-        "result": "coal",
-        "type": "gathering",
-        "tool_tag": "charcoal_kiln",
-        "stamina": 4,
-        "xp": 1,
-        "ingredient": {
-            "hard_wood": 1
         }
     },
     {
@@ -501,41 +418,19 @@
         "type": "gathering",
         "tool_tag": "recycler",
         "stamina": 4,
-        "xp": 4,
+        "xp": 2,
         "ingredient": {
             "scrap": 4
         }
     },
     {
-        "result": "gold_shard",
-        "type": "gathering",
-        "tool_tag": "recycler",
-        "stamina": 2,
-        "xp": 2,
-        "ingredient": {
-            "scrap": 2
-        },
-        "default": true
-    },
-    {
         "result": "gold_ingot",
         "type": "gathering",
         "tool_tag": "recycler",
-        "stamina": 2,
+        "stamina": 4,
         "xp": 2,
         "ingredient": {
-            "gold_shard": 2
-        }
-    },
-    {
-        "result": "gold_ingot",
-        "type": "gathering",
-        "tool_tag": "recycler",
-        "stamina": 2,
-        "xp": 2,
-        "ingredient": {
-            "gold_shard": 1,
-            "gold": 1
+            "scrap": 4
         }
     },
     {
@@ -640,8 +535,8 @@
         "xp": 19,
         "ingredient": {
             "gathering_ring": 1,
-            "fine_sapphire": 1,
-            "refined_cobalt": 1
+            "flawless_sapphire": 1,
+            "compressed_cobalt": 2
         },
         "default": true
     },
@@ -654,7 +549,7 @@
         "ingredient": {
             "gathering_artifact": 1,
             "mixed_gemstone": 1,
-            "compressed_iridium": 1
+            "compressed_iridium": 4
         },
         "default": true
     },
@@ -666,7 +561,7 @@
         "xp": 13,
         "ingredient": {
             "crystal_pickaxe": 1,
-            "refined_titanium": 1,
+            "refined_titanium": 2,
             "silver_ingot": 1
         },
         "default": true
@@ -719,45 +614,6 @@
         "default": true
     },
     {
-        "result": "machine_loom",
-        "type": "gathering",
-        "tool_tag": "anvil",
-        "stamina": 11,
-        "xp": 14,
-        "ingredient": {
-            "loom": 1,
-            "titanium": 1,
-            "steel_ingot": 1
-        },
-        "default": true
-    },
-    {
-        "result": "reinforced_boots",
-        "type": "gathering",
-        "tool_tag": "loom_t2",
-        "stamina": 10,
-        "xp": 13,
-        "ingredient": {
-            "leather_boots": 1,
-            "titanium": 1,
-            "string": 1
-        },
-        "default": true
-    },
-    {
-        "result": "reinforced_gloves",
-        "type": "gathering",
-        "tool_tag": "loom_t2",
-        "stamina": 10,
-        "xp": 13,
-        "ingredient": {
-            "sturdy_gloves": 1,
-            "titanium": 1,
-            "string": 1
-        },
-        "default": true
-    },
-    {
         "result": "stone_chunk",
         "type": "gathering",
         "tool_tag": "furnace",
@@ -788,7 +644,7 @@
         "ingredient": {
             "refiner": 1,
             "black_bronze_anvil": 1,
-            "refined_tungsten": 1,
+            "compressed_tungsten": 1,
             "refined_titanium": 1
         },
         "default": true
@@ -998,7 +854,8 @@
         "ingredient": {
             "advanced_drill_engine": 1,
             "mythical_fragment": 2,
-            "precision_mechanism": 1
+            "advanced_engine_part": 1,
+            "precision_mechanism": 2
         },
         "default": true
     },
@@ -1045,7 +902,7 @@
         "xp": 12,
         "ingredient": {
             "drill_g1": 1,
-            "flawless_emerald": 1
+            "flawless_emerald": 2
         },
         "default": true
     },
@@ -1057,7 +914,7 @@
         "xp": 17,
         "ingredient": {
             "drill_g2": 1,
-            "flawless_sapphire": 1,
+            "flawless_sapphire": 2,
             "precision_mechanism": 1
         },
         "default": true
@@ -1070,7 +927,8 @@
         "xp": 24,
         "ingredient": {
             "drill_g3": 1,
-            "mixed_gemstone": 1
+            "flawless_diamond": 2,
+            "mixed_gemstone": 2
         },
         "default": true
     },
@@ -1082,8 +940,9 @@
         "xp": 12,
         "ingredient": {
             "drill_engine": 1,
-            "flawless_emerald": 1,
-            "compressed_cobalt": 2
+            "flawless_emerald": 2,
+            "flawless_sapphire": 1,
+            "compressed_cobalt": 4
         },
         "default": true
     },
@@ -1092,11 +951,28 @@
         "type": "gathering",
         "tool_tag": "forge",
         "stamina": 12,
-        "xp": 15,
+        "xp": 18,
         "ingredient": {
             "drill_c1": 1,
-            "flawless_sapphire": 1,
-            "compressed_cobalt": 3
+            "advanced_drill_engine": 1,
+            "mixed_gemstone": 2,
+            "compressed_cobalt": 12
+        },
+        "default": true
+    },
+    {
+        "result": "drill_c3",
+        "type": "gathering",
+        "tool_tag": "forge",
+        "stamina": 20,
+        "xp": 30,
+        "ingredient": {
+            "drill_c2": 1,
+            "mythical_fragment": 1,
+            "perfect_garnet": 3,
+            "perfect_topaz": 3,
+            "dense_uranium": 6,
+            "compressed_cobalt": 24
         },
         "default": true
     },
@@ -1104,12 +980,12 @@
         "result": "drill_i1",
         "type": "gathering",
         "tool_tag": "forge",
-        "stamina": 15,
-        "xp": 17,
+        "stamina": 10,
+        "xp": 15,
         "ingredient": {
             "drill_engine": 1,
-            "advanced_drill_engine": 1,
-            "compressed_iridium": 2
+            "flawless_emerald": 2,
+            "compressed_iridium": 4
         },
         "default": true
     },
@@ -1117,12 +993,14 @@
         "result": "drill_i2",
         "type": "gathering",
         "tool_tag": "forge",
-        "stamina": 20,
-        "xp": 24,
+        "stamina": 15,
+        "xp": 17,
         "ingredient": {
             "drill_i1": 1,
-            "flawless_diamond": 1,
-            "compressed_iridium": 3
+            "precision_mechanism": 1,
+            "flawless_emerald": 4,
+            "flawless_sapphire": 2,
+            "compressed_iridium": 6
         },
         "default": true
     },
@@ -1130,12 +1008,29 @@
         "result": "drill_i3",
         "type": "gathering",
         "tool_tag": "forge",
+        "stamina": 20,
+        "xp": 24,
+        "ingredient": {
+            "drill_i2": 1,
+            "advanced_drill_engine": 1,
+            "flawless_sapphire": 4,
+            "flawless_diamond": 2,
+            "compressed_iridium": 8
+        },
+        "default": true
+    },
+    {
+        "result": "drill_i4",
+        "type": "gathering",
+        "tool_tag": "forge",
         "stamina": 25,
         "xp": 30,
         "ingredient": {
-            "drill_i2": 1,
-            "mixed_gemstone": 2,
-            "compressed_iridium": 4
+            "drill_i3": 1,
+            "flawless_diamond": 4,
+            "mixed_gemstone": 4,
+            "compressed_iridium": 12,
+            "compressed_cobalt": 8
         },
         "default": true
     },
@@ -1384,7 +1279,7 @@
         "ingredient": {
             "apprentice_rod": 1,
             "aquamarine": 1,
-            "tin_ingot": 1,
+            "tin_ingot": 2,
             "rich_fish_oil": 1
         },
         "default": true
@@ -1398,7 +1293,7 @@
         "ingredient": {
             "expert_rod": 1,
             "ruby": 1,
-            "chrome_ingot": 1,
+            "chrome_ingot": 2,
             "extra_rich_fish_oil": 1
         },
         "default": true
@@ -1412,8 +1307,8 @@
         "ingredient": {
             "master_rod": 1,
             "opal": 1,
-            "chrome_ingot": 1,
-            "extra_rich_fish_oil": 1
+            "chrome_ingot": 3,
+            "supreme_fish_oil": 1
         },
         "default": true
     },
@@ -1538,7 +1433,7 @@
         "xp": 6,
         "ingredient": {
             "fishing_charm": 1,
-            "tin_ingot": 1,
+            "tin_ingot": 2,
             "rich_fish_oil": 1
         },
         "default": true
@@ -1551,8 +1446,9 @@
         "xp": 10,
         "ingredient": {
             "fishing_ring": 1,
-            "aquamarine": 1,
-            "chrome_ingot": 1
+            "aquamarine": 3,
+            "chrome_ingot": 2,
+            "supreme_fish_oil": 1
         },
         "default": true
     },
@@ -1577,7 +1473,7 @@
         "stamina": 6,
         "xp": 4,
         "ingredient": {
-            "aquamarine": 1,
+            "aquamarine": 2,
             "tin_ingot": 1
         },
         "default": true
@@ -1732,7 +1628,7 @@
         "xp": 15,
         "ingredient": {
             "shiny_rod": 1,
-            "lead_ingot": 1,
+            "lead_ingot": 2,
             "citrine": 1,
             "supreme_fish_oil": 1
         },
@@ -1747,7 +1643,7 @@
         "ingredient": {
             "crystal_rod": 1,
             "platinum_ingot": 1,
-            "mercury": 1,
+            "mercury": 4,
             "supreme_fish_oil": 1
         },
         "default": true
@@ -1776,7 +1672,7 @@
             "advanced_dwarven_rod": 1,
             "abyssal_ingot": 1,
             "dwarven_alloy": 1,
-            "ultimate_fish_oil": 1
+            "ultimate_fish_oil": 2
         },
         "default": true
     },
@@ -1800,7 +1696,7 @@
         "xp": 7,
         "ingredient": {
             "crafting_charm": 1,
-            "hard_planks": 1,
+            "stone": 3,
             "iron_ingot": 1
         },
         "default": true

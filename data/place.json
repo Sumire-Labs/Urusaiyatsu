@@ -59,9 +59,37 @@
             }
         ]
     },
+    "cavity": {
+        "name": "晶洞",
+        "required_level": 5,
+        "required_gathering_power": 3,
+        "xp": 12,
+        "table": [
+            {
+                "id": "stone",
+                "weight": 5
+            },
+            {
+                "id": "copper",
+                "weight": 5
+            },
+            {
+                "id": "coal",
+                "weight": 4
+            },
+            {
+                "id": "iron",
+                "weight": 4
+            },
+            {
+                "id": "silver",
+                "weight": 2
+            }
+        ]
+    },
     "deep_caverns": {
         "name": "深層の洞窟",
-        "required_level": 5,
+        "required_level": 7,
         "required_gathering_power": 3,
         "xp": 15,
         "table": [
@@ -82,12 +110,8 @@
                 "weight": 5
             },
             {
-                "id": "silver",
-                "weight": 3
-            },
-            {
                 "id": "gold",
-                "weight": 2
+                "weight": 3
             },
             {
                 "id": "crystal",

@@ -790,7 +790,7 @@
             },
             {
                 "id": "additional_gathering_loot_chance",
-                "amount": 0.16
+                "amount": 0.18
             }
         ]
     },
@@ -1553,7 +1553,7 @@
     },
     "steel_hammer": {
         "name": "鋼鉄のハンマー",
-        "max_damage": 15,
+        "max_damage": 10,
         "meta": {
             "damage": 0
         },
