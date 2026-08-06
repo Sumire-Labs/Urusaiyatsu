@@ -229,7 +229,7 @@
     ],
     "golden_crate": [
         {
-            "id": "hard_planks",
+            "id": "planks",
             "weight": 1
         },
         {
@@ -255,7 +255,7 @@
     ],
     "abyssal_treasure_chest": [
         {
-            "id": "hard_planks",
+            "id": "planks",
             "weight": 1
         },
         {

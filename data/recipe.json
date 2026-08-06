@@ -578,42 +578,6 @@
         "default": true
     },
     {
-        "result": "copper_knife",
-        "type": "gathering",
-        "tool_tag": "saw",
-        "stamina": 5,
-        "xp": 5,
-        "ingredient": {
-            "copper_ingot": 1,
-            "planks": 1
-        },
-        "default": true
-    },
-    {
-        "result": "steel_knife",
-        "type": "gathering",
-        "tool_tag": "hammer",
-        "stamina": 10,
-        "xp": 8,
-        "ingredient": {
-            "steel_ingot": 1,
-            "copper_ingot": 1
-        },
-        "default": true
-    },
-    {
-        "result": "black_bronze_knife",
-        "type": "gathering",
-        "tool_tag": "hammer",
-        "stamina": 12,
-        "xp": 15,
-        "ingredient": {
-            "black_bronze_ingot": 1,
-            "steel_ingot": 1
-        },
-        "default": true
-    },
-    {
         "result": "stone_chunk",
         "type": "gathering",
         "tool_tag": "furnace",

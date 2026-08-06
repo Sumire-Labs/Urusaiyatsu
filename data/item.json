@@ -65,34 +65,6 @@
     "rose_gold_ingot": {
         "name": "ローズゴールドの延べ棒"
     },
-    "leather": {
-        "name": "革",
-        "value": 15,
-        "shop_amount": 3,
-        "tag": ["spawnable_in_shop"]
-    },
-    "string": {
-        "name": "絹糸",
-        "value": 20,
-        "shop_amount": 2,
-        "tag": ["spawnable_in_shop"]
-    },
-    "hard_wood": {
-        "name": "堅い丸太",
-        "value": 10,
-        "shop_amount": 4,
-        "tag": ["spawnable_in_shop"]
-    },
-    "hard_planks": {
-        "name": "堅い木材",
-        "shop_amount": 2,
-        "tag": ["spawnable_in_shop"]
-    },
-    "silk": {
-        "name": "シルク",
-        "shop_amount": 1,
-        "tag": ["spawnable_in_shop"]
-    },
     "silver": {
         "name": "銀",
         "value": 30,
@@ -208,9 +180,6 @@
     },
     "gold_plate": {
         "name": "金の板"
-    },
-    "gold_shard": {
-        "name": "金の欠片"
     },
     "stone_chunk": {
         "name": "石の塊"
@@ -1032,62 +1001,6 @@
         ]
     },
 
-    "knife": {
-        "name": "ナイフ",
-        "max_damage": 15,
-        "meta": {
-            "damage": 0
-        },
-        "shop_amount": 1,
-        "tag": ["knife", "spawnable_in_shop"]
-    },
-    "copper_knife": {
-        "name": "銅のナイフ",
-        "max_damage": 25,
-        "meta": {
-            "damage": 0
-        },
-        "tag": ["knife"]
-    },
-    "steel_knife": {
-        "name": "鋼鉄のナイフ",
-        "max_damage": 50,
-        "meta": {
-            "damage": 0
-        },
-        "tag": ["knife"]
-    },
-    "black_bronze_knife": {
-        "name": "ブラックブロンズのナイフ",
-        "tag": ["knife"]
-    },
-
-    "leather_boots": {
-        "name": "革のブーツ",
-        "max_damage": 25,
-        "meta": {
-            "damage": 0
-        },
-        "tag": ["boots"]
-    },
-    "reinforced_boots": {
-        "name": "補強されたブーツ",
-        "tag": ["boots"]
-    },
-
-    "sturdy_gloves": {
-        "name": "丈夫な手袋",
-        "max_damage": 50,
-        "meta": {
-            "damage": 0
-        },
-        "tag": ["gloves"]
-    },
-    "reinforced_gloves": {
-        "name": "補強された手袋",
-        "tag": ["gloves"]
-    },
-
 
     "fishing_rod": {
         "name": "釣り竿",
@@ -1520,7 +1433,7 @@
 
     "black_bronze_saw": {
         "name": "ブラックブロンズのノコギリ",
-        "tag": ["saw", "saw_t2", "saw_t3"]
+        "tag": ["saw"]
     },
     "saw": {
         "name": "ノコギリ",
@@ -1537,7 +1450,7 @@
         "meta": {
             "damage": 0
         },
-        "tag": ["saw", "saw_t2"]
+        "tag": ["saw"]
     },
     "steel_saw": {
         "name": "鋼鉄のノコギリ",
@@ -1545,7 +1458,7 @@
         "meta": {
             "damage": 0
         },
-        "tag": ["saw", "saw_t2", "saw_t3"]
+        "tag": ["saw"]
     },
     "furnace": {
         "name": "炉",
@@ -1583,14 +1496,6 @@
         "name": "鍛造機",
         "tag": ["furnace", "hammer", "anvil", "charcoal_kiln", "refiner", "forge"]
     },
-    "loom": {
-        "name": "織機",
-        "tag": ["loom"]
-    },
-    "machine_loom": {
-        "name": "電動織機",
-        "tag": ["loom", "loom_t2"]
-    },
     "fisherman_station": {
         "name": "釣り人の作業場",
         "tag": ["fisherman_station"]
@@ -1610,7 +1515,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 1.0
+                "amount": 1
             }
         ],
         "equip_slot": "accessory",
@@ -1622,7 +1527,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 1.5
+                "amount": 1.75
             }
         ],
         "equip_slot": "accessory",
@@ -1634,7 +1539,7 @@
         "stats": [
             {
                 "id": "stamina_regeneration_rate",
-                "amount": 2.0
+                "amount": 2.5
             }
         ],
         "equip_slot": "accessory",

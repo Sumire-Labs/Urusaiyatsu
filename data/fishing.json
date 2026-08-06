@@ -219,7 +219,7 @@
                 "power_max": 17
             },
             {
-                "id": "hard_wood",
+                "id": "wood",
                 "weight": 1,
                 "power_min": 1,
                 "power_max": 25
@@ -310,7 +310,7 @@
                 "power_max": 35
             },
             {
-                "id": "hard_wood",
+                "id": "wood",
                 "weight": 1,
                 "power_min": 1,
                 "power_max": 37
@@ -407,7 +407,7 @@
                 "power_max": 20
             },
             {
-                "id": "hard_wood",
+                "id": "wood",
                 "weight": 2,
                 "power_min": 1,
                 "power_max": 30
