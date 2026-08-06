@@ -2003,12 +2003,12 @@
 
     "solid_fuel": {
         "name": "固形燃料",
-        "fuel_restore": 25,
+        "fuel_restore": 50,
         "tag": ["consumable", "con_fuel"]
     },
     "sulfide_fuel": {
         "name": "硫化燃料",
-        "fuel_restore": 125,
+        "fuel_restore": 150,
         "tag": ["consumable", "con_fuel"]
     },
     "bio_fuel": {
