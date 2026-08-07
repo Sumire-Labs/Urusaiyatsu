@@ -52,8 +52,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 根拠 | `core/config.py:18-20`（`ADMIN = [admin['id'] for admin in CONFIG['admin']]`）、`cogs/admin_give.py:22-24` / `cogs/admin_transit.py:23-25` / `cogs/admin_manage.py:24-26` |
-| 仕様 | - 管理者は `data/config.json` の `admin[].id`（Discord ユーザー ID の配列）で定義。構造は `data/config.json.example`（`token` + `admin[].id`）を根拠とする<br>- `admin_give` / `admin_transit` / `admin_manage` はハンドラ冒頭で `interaction.user.id not in ADMIN` を判定し、非許可なら **ephemeral** `このコマンドの使用にはBotの管理権限が必要です。` を返して中断<br>- Discord のロール・サーバー権限・`has_permissions` は判定に**使用しない**。許可リストは Discord ユーザー ID ベース<br>- 判定タイミングはコマンド実行時（遅延なし）。`config.json` は起動時読込（`core/config.py:12-13`）のため、変更反映には再起動が必要 |
+| 根拠 | `core/config.py:18-20`（`ADMIN = [admin['id'] for admin in CONFIG['admin']]`）、`cogs/admin_give.py:22-24` / `cogs/admin_transit.py:23-25` / `cogs/admin_manage.py:24-26`、`cogs/_helpers.py:admin_check` |
+| 仕様 | - 管理者は `data/config.json` の `admin[].id`（Discord ユーザー ID の配列）で定義。構造は `data/config.json.example`（`token` + `admin[].id`）を根拠とする<br>- `admin_give` / `admin_transit` / `admin_manage` はハンドラ冒頭で `interaction.user.id not in ADMIN` を判定し、非許可なら **ephemeral** `このコマンドの使用にはBotの管理権限が必要です。` を返して中断。**2026-08-07 追加**: 3 コマンドに `@app_commands.check(admin_check)`（`cogs/_helpers.py`、ADMIN リストを裏付け）を付与（**C-19 解決**）<br>- Discord のロール・サーバー権限・`has_permissions` は判定に**使用しない**。許可リストは Discord ユーザー ID ベース<br>- 判定タイミングはコマンド実行時（遅延なし）。`config.json` は起動時読込（`core/config.py:12-13`）のため、変更反映には再起動が必要 |
 | アクター | Bot 管理者（許可リスト該当者） |
 | 受入基準 | ① 非許可ユーザーは 3 コマンドすべてで ephemeral 拒否応答を受ける。② 許可ユーザーは処理を継続できる。③ 拒否時に状態変更・保存が行われない |
 
@@ -70,8 +70,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 根拠 | `core/state.py:Bot.__init__`、`core/state.py:192`、`cogs/*.py`（権限系デコレータ 0 件、grep 確認） |
-| 仕様 | - コード上、コマンド実行に必要なサーバー権限チェック（`@commands.has_permissions` 等）は**一切存在しない**（grep 0 件確認）<br>- `@app_commands.checks`（cooldown 等）・`max_concurrency`・共通 `interaction_check` も**一切存在しない**（**C-19**、導入要否・値は U-15）<br>- Bot が機能するために最低限必要な権限（コード使用箇所からの導出）:<br>  - **Use Slash Commands**（コマンド発火）<br>  - **Send Messages**（全公開応答）<br>  - **Embed Links**（`/gather` `/fishing` `/use`(loot) `/status` `/item_data` `/leaderboard` `/craft`(失敗) の Embed 応答）<br>  - **Use External Emojis**（`<:name:id>` 形式のアプリ絵文字の表示。`core/state.py:97-102` で取得した絵文字を全表示に使用）<br>  - **Add Reactions**（リクエスト時の反応。ゲームフローでの使用は未確認）<br>- これらはコード上の使用箇所からの導出であり、実稼働での挙動確認は Discord 認証を要するため未実施 |
+| 根拠 | `core/state.py:Bot.__init__`、`core/state.py:192`、`cogs/*.py`（権限系デコレータ）、`cogs/_helpers.py` |
+| 仕様 | - コード上、コマンド実行に必要なサーバー権限チェック（`@commands.has_permissions` 等）は**一切存在しない**（grep 0 件確認）<br>- **2026-08-07 追加**: `@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)`（`/use` `/gather` `/fishing`、ユーザー毎 3 秒）・`@app_commands.check(admin_check)`（admin 3 コマンド）・全 View の `interaction_check`（所有者制御）を導入（**C-19 解決**）。`max_concurrency` と他コマンドへの cooldown は未導入（U-15 として延期）<br>- Bot が機能するために最低限必要な権限（コード使用箇所からの導出）:<br>  - **Use Slash Commands**（コマンド発火）<br>  - **Send Messages**（全公開応答）<br>  - **Embed Links**（`/gather` `/fishing` `/use`(loot) `/status` `/item_data` `/leaderboard` `/craft`(失敗) の Embed 応答）<br>  - **Use External Emojis**（`<:name:id>` 形式のアプリ絵文字の表示。`core/state.py:97-102` で取得した絵文字を全表示に使用）<br>  - **Add Reactions**（リクエスト時の反応。ゲームフローでの使用は未確認）<br>- これらはコード上の使用箇所からの導出であり、実稼働での挙動確認は Discord 認証を要するため未実施 |
 | 未確定事項 | - サーバー管理者が Discord 統合設定でコマンド権限を制限した場合の挙動（コードに制御なし）<br>- アプリ絵文字が未設定の場合、`ITEMS[item_id]['emoji']` は `:{item_id}:` 文字列にフォールバックする（`core/state.py:109-110`、U-08 表示確認未実施）<br>- `members` Privileged Intent の申請状況（実稼働前提） |
 
 ---
@@ -93,11 +93,11 @@
 
 ## 6. 未確定事項（00-feature-catalog §5.2 からの引き継ぎ）
 
-| ID | 内容 |
-|---|---|
-| U-01 | `deepmerge` 欠落による `admin_manage` の Docker ロード可否（C-01 の実行時影響） |
-| U-08 | アプリ絵文字未設定時の `:{item_id}:` フォールバック表示 |
-| U-09 | 複数インスタンス同時実行時の挙動（単一レプリカ前提の無ロック保存、C-07） |
-| U-13 | バックグラウンドスレッドの `USERS.items()` 反復と top-level mutation の race 頻度（C-17） |
-| U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` の導入要否・値（C-19） |
-| 実稼働 | Discord 認証を要するため、コマンド権限・Intents・実通信での検証は未実施 |
+| ID | 内容 | 状態 |
+|---|---|---|
+| U-01 | `deepmerge` 欠落による `admin_manage` の Docker ロード可否（C-01 の実行時影響） | コード解決済（lock 追加）。Docker ビルド実起動は**延期** |
+| U-08 | アプリ絵文字未設定時の `:{item_id}:` フォールバック表示 | 未解決（延期） |
+| U-09 | 複数インスタンス同時実行時の挙動（単一レプリカ前提の無ロック保存、C-07） | コード解決済（`acquire_state_lock`）。実機確認は**延期** |
+| U-13 | バックグラウンドの `USERS.items()` 反復と top-level mutation の race 頻度（C-17） | コード解決済（スナップショット反復 + `_users_lock`）。実機観察は**延期** |
+| U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` の導入要否・値（C-19） | 一部解決済（use/gather/fishing 3 秒・admin check・View interaction_check）。残りは**延期** |
+| 実稼働 | Discord 認証を要するため、コマンド権限・Intents・実通信での検証は未実施 | 未解決（延期） |

@@ -45,7 +45,7 @@
 ### 2.1 timeout
 
 - **View 全 10 クラス**：`__init__(self, timeout=180)` で **180 秒を明示宣言**（`views/*.py` 各 `__init__`）。`super().__init__(timeout=timeout)` でフレームワークに引き渡される。
-- **Modal 全 3 クラス**：`__init__` に `timeout=` 指定なし（**コードで未宣言**）。フレームワーク既定値に依存（U-03、View の 180 秒と同じとは断定しない）。
+- **Modal 全 3 クラス**：**2026-08-07 修正**: `__init__` で `timeout=180` を明示宣言（`modals/craft_modal.py` / `modals/sell_modal.py` / `modals/settings_modal.py`。**U-03 解決**）。View と同じ 180 秒に統一。
 
 ### 2.2 custom_id 規約
 
@@ -57,9 +57,9 @@
 
 ### 2.3 所有者制御
 
-- **INT-002 `status_paging` のみ**、`interaction.user.id == int(data[0])` で所有者チェックを実装。不一致時は **ephemeral** `他のユーザーのステータスです。` を返し処理しない（`views/status_view.py:24,30,35,41`）。
-- その他の View / Modal は所有者チェックを**実装していない**。発火者のみが見られる ephemeral 表示に依存するが、コード上の所有者保証はない。
-- `status_paging` 以外のボタン/セレクトは `data[0]`（user_id）を custom_id に含むが、**判定には使用しない**。
+- **2026-08-07 修正**: 全 View に `interaction_check`（所有者制御）を実装（**C-19 / S-01 解決**）。`owner_id` 未設定時は最初の操作者を所有者とし、不一致時は ephemeral で拒否（例: `他のユーザーの装備は操作できません。` / `他のユーザーの売却は操作できません。` / `他のユーザーの設定は変更できません。` / `他のユーザーのステータスです。`）。
+- `status_paging`（INT-002）は従来どおり `interaction.user.id == int(data[0])` で所有者チェックを実装。
+- 各 View は `owner_id` を custom_id の `data[0]`（user_id）から復元する（`item_select` / `equip_select` / `craft_select` / `sell_select` 等）。
 
 ### 2.4 表示・再描画方式の差異
 
@@ -70,14 +70,15 @@
 | `equip_select`（INT-003） | `send_message(..., ephemeral=True)` | `response.edit_message`（ページボタン） |
 | `remove_equip_choice`（INT-004） | `send_message(..., ephemeral=True)` | なし（選択で終了） |
 | `craft_select`（INT-005） | `send_message(..., ephemeral=True)` | `response.edit_message`（`craft_selecting` 内で `interaction.message` 判定、`views/craft_view.py:128-131`） |
-| `sell_select`（INT-006） | `send_message(..., ephemeral=True)` | `edit_original_response`（`views/sell_view.py:114,146`、U-04） |
+| `sell_select`（INT-006） | `send_message(..., ephemeral=True)` | **2026-08-07 修正**: `_send_or_edit`（未応答なら初期応答、応答済みならフォローアップ/編集）で安全に再描画（**U-05 コード解決**） |
 | `shop_choice`（INT-007） | `send_message(..., ephemeral=True)` | なし（選択で終了） |
 | 設定 View（INT-008〜010） | `send_message(view=view, ephemeral=True)` | なし（選択で終了） |
 
 ### 2.5 期限切れ（timeout）・Discord 側失敗
 
-- タイムアウト後・破棄後のコンポーネント操作は discord.py の既定挙動に従い「interaction failed」となる。コード上 `stop()`・`disable_all_items()` による明示的な無効化・クリーンアップは**未実装**（各 View に `on_timeout` 定義なし）。
-- 応答済み Interaction への再編集（U-04/U-05）を含め、期限切れ後の実挙動は未検証（00-feature-catalog §5.2 に引き継ぎ）。
+- **2026-08-07 修正**: 全 View に `on_timeout`（子要素を無効化し元メッセージをベストエフォートで更新）・`on_error`（内部情報を漏らさず安全応答）を実装（**C-12 / U-04 コード解決**）。Modal は `modals/_common.py:respond`（未応答なら初期応答、応答済みならフォローアップ）と `safe_on_error` を共通化。
+- **2026-08-07・後続（実際のタイムアウトメッセージ保持）**: 各 View は表示中メッセージの参照（`_message_ref`、`interaction.original_response()` / `edit_message` の返り値）を保持し、`on_timeout` が保持メッセージを**実際に編集・無効化**する（`_disable_on_timeout`）。メッセージが保持されていない通常のタイムアウトは例外・ログ対象にしない（正常系）。`tests/test_sell.py` の `TestTimeoutMessageRetention` が非ライブでカバー。
+- 応答済み Interaction への再編集（U-04/U-05）を含め、期限切れ後の実挙動は実機確認として延期。
 
 ---
 
@@ -94,9 +95,9 @@
 | ページ送り | `previous_page`：page-1、`page < 0` で `page_max-1` へ循環。`next_page`：page+1、`page >= page_max` で 0 へ循環（0 始点）。`pages = page * 4` で `item_choices` の 4 ページ分を割当、不足分は `SELECT_OPTION_DISABLED` + `disabled=True`。再描画は `response.edit_message` |
 | UI 遷移 | セレクト選択 → `_get_callback(data[3])` を解決 → `callback(interaction, item_id)` を実行（現状は `item_data` → CMD-011 の ephemeral Embed 3 枚で終了） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし（ephemeral に依存） |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。`stop()` 等の無効化なし |
-| 既知問題 | **C-11**: `_get_callback` は `_callbacks` に未登録名を `eval(name)` で解決する fallback（`views/item_select_view.py:140-145`）。現状渡されるのは `register_callback('item_data', item_data)`（`cogs/item_data.py:180`）に登録済みの内部定数 `'item_data'` のみ。`AGENTS.md` のとおりコールバック名はユーザー入力から導出せず内部保持すること |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を custom_id から復元） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
+| 既知問題 | **C-11（解決済）**: `_get_callback` は `eval` を廃止し、`_callbacks.get(name)` で登録済み名のみ解決。未登録名は `None` を返し「この操作は現在利用できません。」と安全に拒否（`views/item_select_view.py:_get_callback`）。`AGENTS.md` のとおりコールバック名はユーザー入力から導出せず内部保持する |
 
 ### 3.2 INT-002 `status_paging`（VIEW-STATUSPAGING）
 
@@ -109,8 +110,8 @@
 | ページ送り | `previous_page`：page-1、`page < 1` で `page_max` へ循環。`next_page`：page+1、`page > page_max` で 1 へ循環。再描画は `view_status` → `interaction.message` 非 None のため `response.edit_message` |
 | UI 遷移 | ボタン → `view_status(interaction, page, short)` → Embed（短縮/非短縮）+ `settings.news` ならニュース Embed を再構成 → `edit_message`。末尾で `save_users()`（`views/status_view.py:234`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | **あり**。`interaction.user.id != int(data[0])` で **ephemeral** `他のユーザーのステータスです。` |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を custom_id から復元） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
 | 備考 | 公開メッセージに View が付くため他ユーザーが操作可能な状況だが、所有者チェックで拒否される |
 
 ### 3.3 INT-003 `equip_select`（VIEW-EQUIPSELECT）
@@ -124,8 +125,8 @@
 | ページ送り | `previous_page`：page-1、`page < 0` で `page_max-1` へ循環。`next_page`：page+1、`page >= page_max` で 0 へ循環。再描画は `response.edit_message` |
 | UI 遷移 | セレクト選択 → `_equip_func`（`set_equip_func` で `cogs/equip.py:equip` を登録）を実行。値 `'remove_item'` なら VIEW-EQUIPREMOVE（INT-004）へ遷移、それ以外は装備処理（成功/失敗応答は CMD-003 §3.1） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を**事前バインド**：`equip_select(owner_id=user_id)` で作成時に設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
 
 ### 3.4 INT-004 `remove_equip_choice`（VIEW-EQUIPREMOVE）
 
@@ -137,9 +138,9 @@
 | custom_id | なし（自動生成） |
 | UI 遷移 | セレクト選択 → `ast.literal_eval(value)` で `[slot]` / `['accessory', acc_slot]` に復元 → 該当装備を `add_item_from_dict` でインベントリへ戻しスロットを空に → **公開** `**{item_name}**を外しました。` を送信 → `save_users()`（`views/equip_view.py:92-95`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
-| 既知問題 | **C-14**: 呼出側の `if len(equip_choices) < 0:`（`cogs/equip.py:34`）は常に false のデッドコード。未装備時も空セレクト付き View を送信する（「アイテムを装備していません。」応答は到達不能） |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を**事前バインド**：`remove_equip_choice(owner_id=user_id)` で作成時に設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
+| 既知問題 | **C-14（解決済）**: 呼出側の `if len(equip_choices) < 0:` は `if not equip_choices:` へ修正され、未装備時に「アイテムを装備していません。」が正しく表示される（`cogs/equip.py:34`） |
 
 ### 3.5 INT-005 `craft_select`（VIEW-CRAFTSELECT）
 
@@ -153,9 +154,9 @@
 | UI 遷移 | セレクト選択 → `craft(interaction, recipe_id)`（`recipe_id` = `RECIPES` の list index、選択値 `o`）→ MODAL-CRAFTQTY（INT-011）を `send_modal` で表示 |
 | 表示条件 | レシピ 0 件時（`e == 0`）は **ephemeral** `表示できるレシピがありません。` |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
-| 既知問題 | **C-22**: `views/craft_view.py:12-19` の `set_craft_func` / `_craft_func` は定義のみで、登録元（`set_craft_func` の呼び出し）が存在しないデッドコード（クラフトは `modals/craft_modal.py:craft` を直接 import、`views/craft_view.py:9`） |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を custom_id から復元） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
+| 既知問題 | **C-22（解決済）**: `views/craft_view.py` の `set_craft_func` / `_craft_func` は削除済み（クラフトは `modals/craft_modal.py:craft` を直接 import） |
 
 ### 3.6 INT-006 `sell_select`（VIEW-SELLSELECT）
 
@@ -165,12 +166,12 @@
 | UI 構成 | セレクト 4 個（`sell_page_1`〜`sell_page_4`、各 25 択）+ ボタン 2 個（`<` / `>`）。1 View で最大 100 エントリ、`page_max = math.ceil(entry_count / 100)`（`entry_count` = インベントリのエントリ数）。ラベルは `{name}（売値: {value}）`、値はインベントリ index |
 | 表示 | `/sell`（CMD-008）が `sell_selecting(interaction, 1)` を呼び、**ephemeral** `アイテムを選択: ({page}/{page_max})` を送信。`next_page.custom_id = {user_id}/{page}/{page_max}` |
 | custom_id | `next_page` = `{user_id}/{page}/{page_max}`（page は 1 始点）。セレクト選択時の `page` は `data[1]` から取得 |
-| ページ送り | `previous_page`：page-1、`page < 1` で `page_max` へ循環。`next_page`：page+1、`page > page_max` で 1 へ循環。再描画は `edit_original_response`（`views/sell_view.py:146`、U-04） |
+| ページ送り | `previous_page`：page-1、`page < 1` で `page_max` へ循環。`next_page`：page+1、`page > page_max` で 1 へ循環。再描画は `_send_or_edit`（未応答なら初期応答、応答済みならフォローアップ/編集。**2026-08-07 修正・U-05 コード解決**） |
 | UI 遷移 | セレクト選択 → `_sell_func`（`set_sell_func` で `modals/sell_modal.py:sell` を登録）→ `sell(interaction, index, page)` → MODAL-SELLQTY（INT-012）を `send_modal` で表示 |
-| 表示条件 | エントリ 0 件時：初回は **ephemeral** `表示できるアイテムがありません。`、ページング後は `edit_original_response` で表示（`views/sell_view.py:110-115`） |
+| 表示条件 | エントリ 0 件時：初回は **ephemeral** `表示できるアイテムがありません。`、ページング後は `_send_or_edit` で表示（`views/sell_view.py`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし。`edit_original_response` の応答済み Interaction への再編集挙動は U-04 未検証 |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を custom_id から復元） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装。応答済み Interaction への再編集の実挙動は U-04 として実機確認を延期 |
 
 ### 3.7 INT-007 `shop_choice`（VIEW-SHOP）
 
@@ -180,11 +181,11 @@
 | UI 構成 | セレクト 1 個（`shop_buy_select`、placeholder `購入するアイテムを選択`、`options=[]` をコマンド側で動的設定）。`user_data['shop_content']`（10 件）からラベル `{name} ( 値段: {price} )`、値 `item_id` を構築 |
 | 表示 | `/buy`（CMD-009）がレベルゲート通過後に **ephemeral** `商品を選択:` を送信 |
 | custom_id | なし（自動生成） |
-| UI 遷移 | セレクト選択 → `shop_buy(interaction, item_id)`：売り切れ/お金チェック → `money -= price`、`add_item`、`shop_count[index] += 1` → **公開** `**{item}**を**{price}**{money}で購入しました！( このアイテムの残り購入回数: {amount} )` → `save_users()`（`views/shop_view.py:53-57`） |
+| UI 遷移 | セレクト選択 → `shop_buy(interaction, item_id)`：**2026-08-07 修正**: `item_id not in shop_content` を先に判定（**C-21 解決**）→ 売り切れ/お金チェック → `money -= price`、`add_item`、`shop_count[index] += 1` → **公開** `**{item}**を**{price}**{money}で購入しました！( このアイテムの残り購入回数: {amount} )` → `save_users()`（`views/shop_view.py:53-57`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
-| 既知問題 | **C-21**: `user_data['shop_content'].index(item_id)`（`views/shop_view.py:27`）は表示後にショップ再抽選が走ると `ValueError` になり得る（`core/background.py:29-35`）。詳細は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を**事前バインド**：`shop_choice(owner_id=user_id)` で作成時に設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
+| 既知問題 | **C-21（解決済）**: `shop_buy` が `item_id not in shop_content` を先に判定し「その商品は現在販売されていません。ショップを更新してください。」と安全に応答（`views/shop_view.py`）。詳細は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) |
 
 ### 3.8 INT-008 `status_setting_select`（VIEW-SETTINGS-STATUS）
 
@@ -196,8 +197,8 @@
 | custom_id | なし（自動生成） |
 | UI 遷移 | セレクト選択 → `settings.status` を 0/1/2 に設定 → **ephemeral** `ステータスの短縮表示を「**自動/短縮/非短縮**」に変更しました。` → `save_users()`（`views/settings_view.py:15-31`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
 
 ### 3.9 INT-009 `crafting_tool_replacement_setting_select`（VIEW-SETTINGS-CRAFTREPL）
 
@@ -209,8 +210,8 @@
 | custom_id | なし（自動生成） |
 | UI 遷移 | セレクト選択 → `settings.crafting_tool_replacement` を 0/1/2 に設定 → **ephemeral** `ツール破損時のクラフトを「...」に変更しました。` → `save_users()`（`views/settings_view.py:51-67`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
 
 ### 3.10 INT-010 `gathering_tool_replacement_setting_select`（VIEW-SETTINGS-GATHERREPL）
 
@@ -222,8 +223,8 @@
 | custom_id | なし（自動生成） |
 | UI 遷移 | セレクト選択 → `settings.gathering_tool_replacement` を 0/1/2 に設定 → **ephemeral** `ツール破損時の採集を「...」に変更しました。` → `save_users()`（`views/settings_view.py:87-103`） |
 | timeout | 180 秒（明示宣言） |
-| 所有者制御 | なし |
-| 期限/Discord 失敗 | timeout 後の操作は「interaction failed」。無効化なし |
+| 所有者制御 | **あり**（`interaction_check`、`owner_id` を設定） |
+| 期限/Discord 失敗 | `on_timeout`（無効化 + 更新）・`on_error`（安全応答）を実装 |
 
 ---
 
@@ -237,27 +238,27 @@
 | 表示経路 | INT-005（`craft_select`）のセレクト選択 → `craft(interaction, recipe_id)` → `craft_amount(custom_id=str(recipe_id), title="クラフトする個数を設定:")` を `send_modal` |
 | 入力項目 | TextInput「クラフトする個数」（placeholder `整数を入力`、`max_length=8`）。1 個のみ |
 | custom_id | `str(recipe_id)`（`RECIPES` の list index） |
-| timeout | コードで未宣言（フレームワーク既定値に依存、U-03） |
+| timeout | **180 秒を明示宣言**（**U-03 解決**） |
 | 所有者制御 | なし（Modal は発火者にのみ表示される Discord 仕様に依存） |
-| on_submit | ① `int(self.children[0].value)` を検証（`ValueError` で不正扱い）→ ② `count > 0` なら `craft_item(interaction, recipe_id, count)`、それ以外は **公開** `有効な整数を入力してください。` |
+| on_submit | ① `int(self.children[0].value)` を検証（`ValueError` で不正扱い）→ ② `count > 0` なら `craft_item(interaction, recipe_id, count)`、それ以外は `respond`（**公開** `有効な整数を入力してください。`） |
 | UI 遷移 | 送信 → `craft_item`：ツール/スタミナ/素材チェック → クラフト実行 → **公開** `**{result}×{n}**をクラフトしました！...` + `save_users()`（`modals/craft_modal.py:182-186`）。失敗時は公開 Embed/テキスト（CMD-007 §3.5 参照） |
-| 期限/Discord 失敗 | timeout 後の送信は「interaction failed」。無効化なし |
-| 既知問題 | **C-03 / U-02**: ツール破損時 `remove_item_from_index`（`modals/craft_modal.py:126`）→ `core/utils.py:212` の `list.pop(inv_item)`（dict を index に渡す）で `TypeError`。発火条件（耐久が `max_damage` に達するクラフト）は U-02 未検証 |
+| 期限/Discord 失敗 | `on_error`（`safe_on_error`）で安全応答。timeout 後の送信は「interaction failed」 |
+| 既知問題 | **C-03 / U-02（解決済）**: ツール破損時 `remove_item_from_index` は `pop(index)` へ修正済み（**C-03 解決**）。発火条件（耐久が `max_damage` に達するクラフト）の実機確認は U-02 として延期 |
 
 ### 4.2 INT-012 `sell_amount`（MODAL-SELLQTY）
 
 | 項目 | 内容 |
 |---|---|
 | 根拠 | `modals/sell_modal.py:sell_amount` / `sell` / `sell_item` |
-| 表示経路 | INT-006（`sell_select`）のセレクト選択 → `sell(interaction, index, page)` → `sell_amount(custom_id=f"{index}/{page}", title="売却する個数を設定:", original_interaction=interaction)` を `send_modal` |
+| 表示経路 | INT-006（`sell_select`）のセレクト選択 → `sell(interaction, index, page)` → `sell_amount(custom_id=f"{index}/{page}", title="売却する個数を設定:", index=index, page=page, expected_item=...)` を `send_modal` |
 | 入力項目 | TextInput「売却する個数」（placeholder `整数を入力`、`max_length=8`）。1 個のみ |
 | custom_id | `{index}/{page}`（index = インベントリ index、page = 売却 View の表示ページ） |
-| timeout | コードで未宣言（フレームワーク既定値に依存、U-03） |
-| 所有者制御 | なし |
-| on_submit | ① `int(self.children[0].value)` を検証（`ValueError` で **公開** `有効な整数を入力してください。` を返す）→ ② `count > 0` なら `sell_item(interaction, self.original_interaction, index, count, page)`、それ以外は公開不正メッセージ |
-| UI 遷移 | 送信 → `sell_item`：`inventory[index]` をコピーし `count = min(count, 所持数)`、`remove_item_from_dict`、`money += value * count` → `sell_selecting(original_interaction, page)` で売却 View を再描画 → **公開** `**{name}×{count}**を**{result}**{money}で売却しました！` + `save_users()`（`modals/sell_modal.py:60-64`） |
-| 期限/Discord 失敗 | timeout 後の送信は「interaction failed」。無効化なし |
-| 既知問題 | **U-05**: `original_interaction` は Modal 表示済みの選択 Interaction（`send_modal` で応答済み）。これに対し `sell_selecting` → `edit_original_response` を実行する際の挙動は未検証。**U-04** も併せて実機確認が必要 |
+| timeout | **180 秒を明示宣言**（**U-03 解決**） |
+| 所有者制御 | なし（Modal は発火者にのみ表示される Discord 仕様に依存） |
+| on_submit | ① `int(self.children[0].value)` を検証（`ValueError` / `count <= 0` で `respond`（**公開** `有効な整数を入力してください。`））→ ② `count > 0` なら `sell_item(interaction, self.index, count, self.page, self.expected_item)` |
+| UI 遷移 | 送信 → `sell_item`：**stale 同一性検証**（`expected_item` と現在の `inventory[index]` の `id`/`meta`/`count` を照合。不一致・範囲外・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**）→ `inventory[index]` をコピーし `count = min(count, 所持数)`、`remove_item_from_dict`、`money += value * count` → **永続化先行**: `save_users()` を再描画**前**に実行 → Modal 送信 interaction（未応答）で `sell_selecting` を再描画し、確認は `respond`（フォローアップ）で送る（**U-05 コード解決**）→ **公開** `**{name}×{count}**を**{result}**{money}で売却しました！`（`modals/sell_modal.py`） |
+| 期限/Discord 失敗 | `on_error`（`safe_on_error`）で安全応答。timeout 後の送信は「interaction failed」 |
+| 既知問題 | **U-05（コード解決済）**: `original_interaction` への再編集をやめ、Modal 送信 interaction で再描画する方式へ変更。**stale 同一性検証**（観測-3 の誤売却対策）・**ページクランプ**・**永続化先行**を実装。`tests/test_sell.py` が非ライブでカバー。実挙動の実機確認は**延期**。**U-04** も併せて実機確認が必要 |
 
 ### 4.3 INT-013 `set_name`（MODAL-NAME）
 
@@ -267,28 +268,28 @@
 | 表示経路 | `/settings` config=0（CMD-013）→ `set_name(title="ニックネームの変更")` を `send_modal` |
 | 入力項目 | TextInput「新しいニックネーム」（placeholder `最大32文字の名前を入力`、`max_length=32`）。1 個のみ |
 | custom_id | なし（自動生成） |
-| timeout | コードで未宣言（フレームワーク既定値に依存、U-03） |
+| timeout | **180 秒を明示宣言**（**U-03 解決**） |
 | 所有者制御 | なし |
-| on_submit | `USERS[str(user_id)]['name'] = self.children[0].value` → **公開** `名前を**{name}**に変更しました。` → `save_users()`（`modals/settings_modal.py:17-24`） |
-| 期限/Discord 失敗 | timeout 後の送信は「interaction failed」。無効化なし |
-| 既知問題 | 呼出元 `/settings` は `new_user` を呼ばないため（C-05）、未登録ユーザーでは Modal 表示前に `KeyError` →「interaction failed」 |
+| on_submit | `USERS[str(user_id)]['name'] = self.children[0].value` → `respond`（**公開** `名前を**{name}**に変更しました。`）→ `save_users()`（`modals/settings_modal.py:17-24`） |
+| 期限/Discord 失敗 | `on_error`（`safe_on_error`）で安全応答。timeout 後の送信は「interaction failed」 |
+| 既知問題 | 呼出元 `/settings` は `new_user` を呼ぶ（**C-05 解決**）ため、未登録ユーザーでも Modal 表示前に `KeyError` を起こさない |
 
 ---
 
 ## 5. 未確定・既知問題の引き継ぎ
 
-| ID | 内容 | 対応 |
-|---|---|---|
-| U-03 | Modal timeout はコードで未宣言。フレームワーク既定値（View の 180 秒と同じとは断定しない） | 実機確認または明示化 |
-| U-04 | View 破棄後・応答済み Interaction への再編集（`sell_view.py:114,146` の `edit_original_response`） | 実機確認 |
-| U-05 | `sell_modal.py:60` の `sell_selecting(original_interaction, ...)` | 実機確認 |
-| C-03 | `remove_item_from_index` の `pop(dict)` | 耐久 0 到達クラフトの再現で確定 |
-| C-11 | `item_select` の eval fallback | コールバック名の内部保持を継続 |
-| C-14 | `equip` の空判定デッドコード | 未装備時応答の到達不能 |
-| C-16 | `/use` の `count` 非正数（負数で在庫増加・効果反転） | `commands-gameplay.md` §3.2 参照 |
-| C-17 / U-13 | バックグラウンドスレッドの `USERS.items()` 反復と top-level mutation race（`new_user` / `admin_transit`） | `core/background.py:22`、`commands-gameplay.md` §3.2 ほか参照 |
-| C-18 / U-14 | `new_user` の `fetch_user` 失敗が未捕捉 | `core/utils.py:18`（例外型・UI は U-14） |
-| C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在 | `permissions-and-contexts.md` §3、導入要否・値は U-15 |
+| ID | 内容 | 対応 | 状態 |
+|---|---|---|---|
+| U-03 | Modal timeout はコードで未宣言 | 明示化 | **解決済**（`timeout=180` を明示） |
+| U-04 | View 破棄後・応答済み Interaction への再編集 | 実機確認 | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期** |
+| U-05 | `sell_modal.py` の `sell_selecting(original_interaction, ...)` | 実機確認 | コード解決済（Modal 側で再描画）。実機確認は**延期** |
+| C-03 | `remove_item_from_index` の `pop(dict)` | 耐久 0 到達クラフトの再現で確定 | **解決済**（`pop(index)`） |
+| C-11 | `item_select` の eval fallback | コールバック名の内部保持を継続 | **解決済**（`_get_callback` が `None` を返す） |
+| C-14 | `equip` の空判定デッドコード | 未装備時応答の到達不能 | **解決済**（`if not equip_choices:`） |
+| C-16 | `/use` の `count` 非正数（負数で在庫増加・効果反転） | `commands-gameplay.md` §3.2 参照 | **解決済**（`valid_count` で 1〜100 に制限） |
+| C-17 / U-13 | バックグラウンドの `USERS.items()` 反復と top-level mutation race（`new_user` / `admin_transit`） | `core/background.py:update_tick`、`commands-gameplay.md` §3.2 ほか参照 | **解決済**（スナップショット反復 + `_users_lock`） |
+| C-18 / U-14 | `new_user` の `fetch_user` 失敗が未捕捉 | `core/utils.py:new_user`（例外型・UI は U-14） | **解決済**（フォールバック名で登録継続） |
+| C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在 | `permissions-and-contexts.md` §3、導入要否・値は U-15 | 一部解決（use/gather/fishing 3 秒・admin check・View interaction_check。残りは延期） |
 | C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `commands-gameplay.md` §3.2-3.4 |
 | C-21 | stale shop choice の `shop_content.index` `ValueError` | §3.7 参照 |
 | C-22 | `craft_view` の未使用 `set_craft_func` / `_craft_func` デッドコード | §3.5 参照 |

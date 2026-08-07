@@ -1,24 +1,49 @@
 """
 ユーティリティ関数モジュール
 """
-from copy import copy
+from copy import copy, deepcopy
 import json
+import logging
 import math
+import os
 import random
+import threading
+import time
 
 from .state import (
     USERS, ITEMS, ADVANCEMENTS,
-    shop_list, bot
+    shop_list, bot, _STATE_PATH, _STATE_TMP_PATH
 )
+
+logger = logging.getLogger(__name__)
+
+# トップレベル USERS の構造ミューテーション（追加/削除）を直列化するロック
+_users_lock = threading.Lock()
+# 永続化（save_users）をプロセス内で直列化するロック
+_save_lock = threading.Lock()
 
 
 async def new_user(user_id: int):
     """新規ユーザー登録"""
-    if str(user_id) not in USERS:
+    user_id_str = str(user_id)
+    if user_id_str in USERS:
+        return
+
+    # 安全な決定論的フォールバック名。fetch_user が失敗してもクラッシュしない。
+    name = f'user_{user_id}'
+    try:
         user = await bot.fetch_user(user_id)
-        USERS.setdefault(str(user_id), {
+        name = user.name
+    except Exception:
+        # 生のユーザーIDはログに含めない
+        logger.warning('fetch_user failed; using fallback name', exc_info=True)
+
+    with _users_lock:
+        if user_id_str in USERS:
+            return
+        USERS[user_id_str] = {
             'inventory': [],
-            'name': user.name,
+            'name': name,
             'stamina': 100,
             'money': 0,
             'level_global': 1,
@@ -52,11 +77,14 @@ async def new_user(user_id: int):
                 'armor_secondary': {},
             },
             'settings': {'news': True, 'status': 0, 'gathering_tool_replacement': 0, 'crafting_tool_replacement': 0, 'continue_fishing': True}
-        })
+        }
 
 
 def add_item(user_id: int, id: str, count: int = 1, meta: dict = {}, index: int | None = None) -> int:
     """アイテム増加（インデックスを返す）"""
+    if count <= 0:
+        # 非正数はミューテーションせず拒否
+        return -1
     user_data = USERS[str(user_id)]
 
     # メタデータをアイテムのデフォルトと結合
@@ -115,6 +143,9 @@ def modify_item(user_id: int, index: int, meta: dict, count: int = 1) -> int:
 
 def remove_item(user_id: int, id: str, count: int = 1, required: bool = False) -> dict:
     """アイテム減少"""
+    if count <= 0:
+        # 非正数はミューテーションせず拒否
+        return {}
     user_data = USERS[str(user_id)]
 
     i = 0
@@ -146,13 +177,17 @@ def remove_item(user_id: int, id: str, count: int = 1, required: bool = False) -
     
 def remove_item_stacked(user_id: int, id: str, count: int = 1, required: bool = False) -> list:
     """アイテム減少（同じアイテムをスタック）"""
+    if count <= 0:
+        # 非正数はミューテーションせず拒否
+        return []
     user_data = USERS[str(user_id)]
 
     removed = 0
-    i = 0
     result = []
     if required:
-        inv = copy(user_data['inventory'])
+        # トランザクション的: 十分な在庫がある場合のみ実インベントリへ反映する。
+        # 要素辞書をコピーして作業し、共有参照を直接ミューテーションしない。
+        inv = [dict(inv_item) for inv_item in user_data['inventory']]
         for inv_item in inv:
             if inv_item['id'] == id:
                 remove_count = min(count - removed, inv_item['count'])
@@ -160,17 +195,14 @@ def remove_item_stacked(user_id: int, id: str, count: int = 1, required: bool = 
                 result.append(copy(inv_item))
                 result[-1]['count'] = remove_count
                 removed += remove_count
-                if inv_item['count'] == 0:
-                    inv.pop(i)
-
-                # 足りた場合のみインベントリを更新
                 if removed == count:
-                    user_data['inventory'] = inv
+                    # 反映: 残数が 0 の要素を除いてコミット
+                    user_data['inventory'] = [item for item in inv if item['count'] > 0]
                     return result
-            i += 1
         return []
-    else:                    
-        for inv_item in user_data['inventory']:
+    else:
+        # リストのスナップショットで反復し、実リストから削除しても隣接スタックを飛ばさない
+        for inv_item in list(user_data['inventory']):
             if inv_item['id'] == id:
                 remove_count = min(count - removed, inv_item['count'])
                 inv_item['count'] -= remove_count
@@ -178,10 +210,9 @@ def remove_item_stacked(user_id: int, id: str, count: int = 1, required: bool = 
                 result[-1]['count'] = remove_count
                 removed += remove_count
                 if inv_item['count'] == 0:
-                    user_data['inventory'].pop(i)
+                    user_data['inventory'].remove(inv_item)
                 if removed == count:
                     return result
-            i += 1
         return result
 
 
@@ -202,6 +233,9 @@ def remove_item_from_dict(user_id: int, item: dict, required: bool = False) -> d
 
 def remove_item_from_index(user_id: int, index: int, count: int = 1) -> dict:
     """アイテム減少（インデックス指定）"""
+    if count <= 0:
+        # 非正数はミューテーションせず拒否
+        return {}
     user_data = USERS[str(user_id)]
 
     inv_item = user_data['inventory'][index]
@@ -209,7 +243,7 @@ def remove_item_from_index(user_id: int, index: int, count: int = 1) -> dict:
     count = min(count, inv_item['count'])
     inv_item['count'] -= count
     if inv_item['count'] == 0:
-        user_data['inventory'].pop(inv_item)
+        user_data['inventory'].pop(index)
     result = copy(inv_item)
     result['count'] = count
     return result
@@ -217,6 +251,9 @@ def remove_item_from_index(user_id: int, index: int, count: int = 1) -> dict:
 
 def remove_item_match_meta(user_id: int, id: str, count: int = 1, meta: dict = {}, required: bool = False) -> dict:
     """アイテム減少（メタデータ一致）"""
+    if count <= 0:
+        # 非正数はミューテーションせず拒否
+        return {}
     user_data = USERS[str(user_id)]
 
     # メタデータをアイテムのデフォルトと結合
@@ -352,14 +389,13 @@ def get_stats(user_id: int) -> dict:
             for accessory in equipment_item:
                 if accessory != {} and 'stats' in ITEMS[accessory['id']]:
                     for item_stat in ITEMS[accessory['id']]['stats']:
-                        user_stat = user_stats[item_stat['id']]
                         if item_stat.get('multiply') == True:
-                            if type(user_stat) is int:
-                                user_stat = int(user_stat * item_stat['amount'])
+                            if type(user_stats[item_stat['id']]) is int:
+                                user_stats[item_stat['id']] = int(user_stats[item_stat['id']] * item_stat['amount'])
                             else:
-                                user_stat *= item_stat['amount']
+                                user_stats[item_stat['id']] *= item_stat['amount']
                         else:
-                            user_stat += item_stat['amount']
+                            user_stats[item_stat['id']] += item_stat['amount']
         elif equipment_item != {}:
             for item_stat in ITEMS[equipment_item['id']]['stats']:
                 if item_stat.get('multiply') == True:
@@ -383,6 +419,8 @@ def complete_advancement(user_id: int, advancement: str) -> str:
         user_data['advancement_now'].remove(advancement)
 
         # 新しい進捗をアンロック
+        # 方針: previous_advancement に null を含む進捗は「初期付与専用」であり、
+        # ここではアンロックしない（None は completed に含まれないため常に false）。
         for adv_id, adv_data in ADVANCEMENTS.items():
             if adv_id not in user_data['advancement_completed'] + user_data['advancement_now']:
                 can_unlock = True
@@ -423,10 +461,10 @@ def xp(user_id: int, type: str, count: int) -> str:
             restore_stamina = 50
         user_data['stamina'] += min(restore_stamina, (stats['stamina_max'] + 1 - user_data['stamina']))
 
-        # ショップ生成（レベル7で解放）
+        # ショップ生成（レベル7で解放）。rotate_shop が初期化と
+        # 同一時間内の再抽選防止（last_rotation_hour）を担う。
         if user_data['level_global'] == 7:
-            user_data['shop_content'] = random.sample(shop_list.copy(), 10)
-            user_data['shop_count'] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            rotate_shop(user_data)
 
         # アクセサリスロット増加
         if user_data['level_global'] in [20, 100]:
@@ -451,7 +489,52 @@ def find(lst: list, x):
         return None
 
 
+def rotate_shop(user_data: dict, now: float | None = None) -> None:
+    """ショップを壁時計の1時間境界で初期化/再抽選する。
+
+    - レベル7未満は何もしない。
+    - ユーザーごとの last_rotation_hour（`.get` で移行安全）を基準に、
+      同一の壁時計時間内では再抽選しない（べき等）。
+    - 未初期化（shop_content が空）のレベル7+ユーザーは初期化する。
+    - 再抽選は、候補が十分ある場合は前回内容と重複しないように選び、
+      候補が10未満でも安全に処理する。
+    """
+    if user_data['level_global'] < 7:
+        return
+    if now is None:
+        now = time.time()
+    current_hour = int(now // 3600)
+    last_hour = user_data.get('last_rotation_hour')
+    if last_hour == current_hour:
+        return
+
+    previous = user_data.get('shop_content') or []
+    if previous:
+        candidates = [item_id for item_id in shop_list if item_id not in previous]
+        if len(candidates) >= 10:
+            new_content = random.sample(candidates, 10)
+        else:
+            # 重複回避できる候補が足りない場合は全リストから選ぶ
+            new_content = random.sample(shop_list, min(10, len(shop_list)))
+    else:
+        new_content = random.sample(shop_list, min(10, len(shop_list)))
+
+    user_data['shop_content'] = new_content
+    user_data['shop_count'] = [0] * len(new_content)
+    user_data['last_rotation_hour'] = current_hour
+
+
 def save_users():
-    """ユーザーデータを保存"""
-    with open('user.json', 'w', encoding='UTF-8') as f:
-        json.dump(USERS, f, indent=2, ensure_ascii=False)
+    """ユーザーデータを原子的に保存（深いスナップショット + 一時ファイル + fsync + os.replace）。
+
+    ロック下で USERS の深いコピーを取得して直列化するため、保存中に状態が
+    変更されても一貫したスナップショットを書き出す。対象パスは状態ファイルの
+    実体ディレクトリ（Docker では書き込み可能なランタイムボリューム）に解決される。
+    """
+    with _save_lock:
+        snapshot = deepcopy(USERS)
+        with open(_STATE_TMP_PATH, 'w', encoding='UTF-8') as f:
+            json.dump(snapshot, f, indent=2, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(_STATE_TMP_PATH, _STATE_PATH)

@@ -15,6 +15,46 @@ def localize(raw: str):
     return raw
 
 
+def _fishing_probability_range(place_data: dict, item_id: str):
+    """釣り場所テーブルにおける item の出現確率の範囲（釣りパワー条件付き）を返す
+
+    同一 item の重複エントリをすべて集計し、実際のテーブルフィルタリング（釣りパワー条件）と
+    重み付けに一致する確率を計算する。
+    """
+    entries = [e for e in place_data['table'] if e['id'] == item_id]
+    if not entries:
+        return None
+
+    # 有効な釣りパワー範囲を走査（上限なしは十分な範囲でサンプリング）
+    q = min(e['power_min'] for e in entries)
+    r = max(e['power_max'] for e in entries)
+    if r == -1:
+        powers = range(q, q + 200)
+    else:
+        powers = range(q, r + 1)
+
+    probs = []
+    for p in powers:
+        total = 0
+        item_weight = 0
+        for k in place_data['table']:
+            if k['power_max'] == -1:
+                if p >= k['power_min']:
+                    total += k['weight']
+                    if k['id'] == item_id:
+                        item_weight += k['weight']
+            elif k['power_max'] >= p >= k['power_min']:
+                total += k['weight']
+                if k['id'] == item_id:
+                    item_weight += k['weight']
+        if total > 0:
+            probs.append(item_weight / total)
+
+    if not probs:
+        return None
+    return min(probs), max(probs)
+
+
 async def item_data(interaction: discord.Interaction, item: str):
     """アイテム情報表示"""
     data = ITEMS[item]
@@ -113,28 +153,20 @@ async def item_data(interaction: discord.Interaction, item: str):
     mesg = ''
     cnt = 0
     for place_id, place_data in FISHING_PLACES.items():
-        x = 0
-        w = 0
         for result in place_data['table']:
             if item == result['id']:
                 cnt += 1
-                w = result['weight']
                 q = result['power_min']
                 r = result['power_max']
+                prob_range = _fishing_probability_range(place_data, item)
+                if prob_range is None:
+                    continue
+                p_min_pct = math.floor(prob_range[0] * 10000) / 100
+                p_max_pct = math.floor(prob_range[1] * 10000) / 100
                 if r == -1:
-                    p = q
+                    mesg += f'\n{place_data["name"]}｜釣りパワー{q}以上 ( 出現確率 {p_min_pct}%〜{p_max_pct}% )'
                 else:
-                    p = math.ceil((q + r) / 2)
-                for k in place_data['table']:
-                    if k['power_max'] == -1:
-                        if p >= k['power_min']:
-                            x += k['weight']
-                    elif k['power_max'] >= p >= k['power_min']:
-                        x += k['weight']
-                if r == -1:
-                    mesg += f'\n{place_data["name"]}｜釣りパワー{q}以上 ( {w}/{x} = {math.floor((w / x) * 10000) / 100}% ※釣りパワー{p}の場合 )'
-                else:
-                    mesg += f'\n{place_data["name"]}｜釣りパワー{q}以上{r}以下 ( {w}/{x} = {math.floor((w / x) * 10000) / 100}% ※釣りパワー{p}の場合 )'
+                    mesg += f'\n{place_data["name"]}｜釣りパワー{q}以上{r}以下 ( 出現確率 {p_min_pct}%〜{p_max_pct}% )'
                 break
     if cnt != 0:
         msg += f'\n# このアイテムが手に入る釣り場所({cnt}件)' + mesg

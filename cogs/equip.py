@@ -31,13 +31,14 @@ async def equip(interaction: discord.Interaction, item_id: str):
             elif value != {}:
                 equip_choices.append(discord.SelectOption(label=ITEMS[value['id']]['name'], value=str([slot])))
 
-        if len(equip_choices) < 0:
+        if not equip_choices:
             await interaction.response.send_message('アイテムを装備していません。', ephemeral=True)
             return
         
-        view = remove_equip_choice()
+        view = remove_equip_choice(owner_id=user_id)
         view.remove_equip_select.options = equip_choices
         await interaction.response.send_message('アイテムを選択:', view=view, ephemeral=True)
+        view._message_ref = await interaction.original_response()
 
         return
     
@@ -104,11 +105,12 @@ class EquipCog(commands.Cog):
     async def equip_command(self, interaction: discord.Interaction):
         user_id = interaction.user.id
         await new_user(user_id)
-        view = equip_select()
+        view = equip_select(owner_id=user_id)
         page_max = len(equippable_choices)
         view.item.options = equippable_choices[0]
         view.next_page.custom_id = str(user_id) + '/0/' + str(page_max)
         await interaction.response.send_message(f'アイテムを選択: (1/{page_max})', view=view, ephemeral=True)
+        view._message_ref = await interaction.original_response()
 
 
 async def setup(bot: commands.Bot):

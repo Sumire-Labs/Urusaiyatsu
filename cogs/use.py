@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
 from core.utils import new_user, complete_advancement, save_users, get_item, remove_item_stacked, table_roll, add_item, get_stats
+from cogs._helpers import valid_count, user_cooldown_key
 
 
 class UseCog(commands.Cog):
@@ -18,7 +19,13 @@ class UseCog(commands.Cog):
 
     @app_commands.command(name="use", description="アイテムを使用します。")
     @app_commands.choices(item_id=consumable_choices)
+    @app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)
     async def use_command(self, interaction: discord.Interaction, item_id: str, count: int = 1):
+        # 入力検証（状態変更前に拒否）
+        if not valid_count(count):
+            await interaction.response.send_message('使用回数は1〜100の範囲で指定してください。', ephemeral=True)
+            return
+
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)

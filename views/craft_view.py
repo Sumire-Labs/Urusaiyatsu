@@ -1,6 +1,8 @@
 """
 クラフト選択View
 """
+import logging
+
 import discord
 import math
 
@@ -8,15 +10,7 @@ from core.state import USERS, ITEMS, RECIPES
 from core.utils import new_user, get_item
 from modals.craft_modal import craft
 
-
-# craft関数への参照（循環import回避のため遅延設定）
-_craft_func = None
-
-
-def set_craft_func(func):
-    """craft関数を設定"""
-    global _craft_func
-    _craft_func = func
+logger = logging.getLogger(__name__)
 
 SELECT_OPTION_DISABLED = [discord.SelectOption(label='選択肢がありません', value='None')]
 
@@ -25,6 +19,43 @@ class craft_select(discord.ui.View):
 
     def __init__(self, timeout=180):
         super().__init__(timeout=timeout)
+        self.owner_id = None
+        # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
+        self._message_ref = None
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # 実行したユーザーのみ操作可能（未設定時は最初の操作者を所有者とする）
+        if self.owner_id is None:
+            self.owner_id = interaction.user.id
+            return True
+        if interaction.user.id != self.owner_id:
+            await interaction.response.send_message('この操作は実行したユーザーのみが行えます。', ephemeral=True)
+            return False
+        return True
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item):
+        # 元の例外を内部ログに記録し、内部情報を漏らさず安全なメッセージのみ返す
+        logger.error('クラフトView処理中にエラーが発生しました: %s', error, exc_info=error)
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send('エラーが発生しました。', ephemeral=True)
+            else:
+                await interaction.response.send_message('エラーが発生しました。', ephemeral=True)
+        except Exception:
+            logger.exception('エラー応答の送信に失敗しました')
+
+    async def on_timeout(self):
+        # タイムアウト時は全子要素を無効化し、元のメッセージを更新（ベストエフォート）
+        for child in self.children:
+            child.disabled = True
+        message = self._message_ref or self.message
+        if message is None:
+            # メッセージが無い通常のタイムアウトは例外・ログ対象にしない
+            return
+        try:
+            await message.edit(view=self)
+        except Exception:
+            logger.exception('タイムアウト時のメッセージ更新に失敗しました')
 
     @discord.ui.select()
     async def recipe_page_1(self, interaction: discord.Interaction, select: discord.ui.Select):
@@ -101,6 +132,7 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
         return
     page_max = math.ceil(e / 100)
     view = craft_select()
+    view.owner_id = user_id
 
     length = len(recipe_choices)
     view.recipe_page_1.options = recipe_choices[:25]
@@ -126,6 +158,6 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
     page += 1
     view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max)
     if interaction.message is None:
-        await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
+        view._message_ref = await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
     else:
-        await interaction.response.edit_message(content=f'レシピを選択: ({page}/{page_max})', view=view)
+        view._message_ref = await interaction.response.edit_message(content=f'レシピを選択: ({page}/{page_max})', view=view)

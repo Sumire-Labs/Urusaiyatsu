@@ -2,17 +2,98 @@
 グローバル状態管理モジュール
 Botクラスとすべてのゲームデータを管理
 """
+import asyncio
 import discord
-from discord.app_commands import Choice
+import discord.app_commands as app_commands
+from discord.app_commands import Choice, CommandTree
 from discord.ext import commands
+import fcntl
 import json
+import logging
 import os
-from threading import Thread
+import shutil
+import sys
+import time
 
 from .config import DATA_DIR
 
+# 構造化ログの初期設定（標準ライブラリ logging）
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+)
+logger = logging.getLogger(__name__)
+
 # データディレクトリに移動（JSONファイル読み込みのため）
 os.chdir(DATA_DIR)
+
+# 状態ファイルの実体パスを解決する。
+# Docker では data/user.json は書き込み可能なランタイムボリュームへのシンボリックリンクであり、
+# /app/data 自体は read_only のため、ロック・一時ファイル・バックアップは解決後の実体ディレクトリに置く。
+_STATE_PATH = os.path.realpath('user.json')
+_STATE_DIR = os.path.dirname(_STATE_PATH)
+_STATE_TMP_PATH = os.path.join(_STATE_DIR, 'user.json.tmp')
+_STATE_LOCK_PATH = os.path.join(_STATE_DIR, '.state.lock')
+_state_lock_fd = None
+
+
+def acquire_state_lock():
+    """状態ストアに対するプロセス生存期間の非ブロッキング POSIX ロックを取得。
+
+    ロックファイルは状態ファイルの実体ディレクトリ（共有ランタイムボリューム）に置くため、
+    同じ状態ボリュームを使う複数コンテナ間で排他が効く。既に別インスタンスがロックを
+    保持している場合は明確に終了する。fd はモジュールレベルの参照に保持し、生存中は解放しない。
+    """
+    global _state_lock_fd
+    _state_lock_fd = open(_STATE_LOCK_PATH, 'w')
+    try:
+        fcntl.flock(_state_lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        logger.error('別のBotインスタンスが既に起動しています（状態ロック保持中）。終了します。')
+        sys.exit(1)
+    logger.info('状態ロックを取得しました: %s', _STATE_LOCK_PATH)
+
+
+def _write_empty_user_file():
+    with open(_STATE_PATH, 'w', encoding='UTF-8') as f:
+        json.dump({}, f, indent=2, ensure_ascii=False)
+
+
+def _quarantine_user_file() -> str:
+    """既存の状態ファイルをタイムスタンプ付きバックアップとして隔離する。"""
+    ts = time.strftime('%Y%m%d-%H%M%S')
+    backup = os.path.join(_STATE_DIR, f'user.json.bak.{ts}')
+    try:
+        shutil.copy(_STATE_PATH, backup)
+    except OSError:
+        logger.exception('状態ファイルの隔離に失敗しました: %s', backup)
+    return backup
+
+
+def _load_users() -> dict:
+    """状態ファイルを読み込む。
+
+    - 存在しない場合のみ空の {} を作成する。
+    - 既存状態が破損（JSONDecodeError）または読み取り不能（OSError）の場合は
+      隔離/保存した上で起動を非ゼロで失敗させる（fail-closed）。
+    """
+    if not os.path.exists(_STATE_PATH):
+        logger.info('状態ファイルが存在しないため空の状態ファイルを作成します: %s', _STATE_PATH)
+        _write_empty_user_file()
+        return {}
+    try:
+        with open(_STATE_PATH, 'r', encoding='UTF-8') as f:
+            users = json.load(f)
+        logger.info('状態ファイルから %d ユーザーを読み込みました', len(users))
+        return users
+    except json.JSONDecodeError as e:
+        backup = _quarantine_user_file()
+        logger.error('状態ファイルが破損しています（%s）。%s に隔離しました。起動を中止します', e, backup)
+        sys.exit(1)
+    except OSError as e:
+        logger.error('状態ファイルを読み込めません（%s）。起動を中止します', e)
+        sys.exit(1)
+
 
 # Choice lists（setup_hookで初期化）
 place_choices: list[Choice] = []
@@ -39,14 +120,11 @@ with open('localization.json', 'r', encoding='UTF-8') as f:
 with open('advancement.json', 'r', encoding='UTF-8') as f:
     ADVANCEMENTS: dict = json.load(f)
 
-# 存在しない場合は自動生成
-try: 
-    with open('user.json', 'r', encoding='UTF-8') as f:
-        USERS: dict = json.load(f)
-except:
-    with open('user.json', 'w', encoding='UTF-8') as f:
-        USERS: dict = {}
-        json.dump(USERS, f, indent=2, ensure_ascii=False)
+# 状態ストアのロックを取得（複数インスタンス起動の防止）
+acquire_state_lock()
+
+# ユーザーデータ読み込み（破損時はバックアップして復旧）
+USERS: dict = _load_users()
 
 # 絵文字マッピング（setup_hookで更新）
 EMOJIS: dict[str, str] = {
@@ -74,8 +152,43 @@ def set_item_value(item: str) -> int:
             break
     ITEMS[item].setdefault('value', value)
     if value == 0:
-        print(f'警告: {item}の売却価格が設定されていません。')
+        logger.warning('%sの売却価格が設定されていません。', item)
     return value
+
+
+class BotTree(CommandTree):
+    """グローバルなアプリコマンドエラー処理を提供する CommandTree。
+
+    予期しないエラーをログに記録し、ユーザーには内部情報を漏らさない
+    安全な一時応答（ephemeral）を返す。
+    """
+
+    async def _send_safe_response(self, interaction: discord.Interaction, message: str):
+        """内部情報を漏らさず、正確に一度だけ応答する。"""
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(message, ephemeral=True)
+            else:
+                await interaction.followup.send(message, ephemeral=True)
+        except Exception:
+            logger.exception('エラー応答の送信に失敗しました')
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        command_name = getattr(getattr(interaction, 'command', None), 'name', None)
+
+        # 期待される制御フロー：クールダウンと権限チェック失敗は簡潔な応答のみ（ERRORログなし）
+        if isinstance(error, app_commands.CommandOnCooldown):
+            retry_after = getattr(error, 'retry_after', 0)
+            await self._send_safe_response(
+                interaction, f'コマンドの使用が制限されています。{retry_after:.1f}秒後にもう一度お試しください。')
+            return
+        if isinstance(error, app_commands.CheckFailure):
+            await self._send_safe_response(interaction, 'このコマンドを実行する権限がありません。')
+            return
+
+        # 予期しないエラー：ログ記録と安全な汎用応答
+        logger.error('未処理のアプリコマンドエラー (command=%s): %s', command_name, error, exc_info=error)
+        await self._send_safe_response(interaction, 'エラーが発生しました。')
 
 
 class Bot(commands.Bot):
@@ -87,11 +200,32 @@ class Bot(commands.Bot):
         intents.messages = True
         intents.members = True
         intents.reactions = True
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(command_prefix="!", intents=intents, tree_cls=BotTree)
+        self.background_task = None
+
+    async def _background_loop(self):
+        """Bot イベントループ上で 1 秒周期の時間更新を実行する asyncio タスク。"""
+        from .background import update_tick, save_users, SAVE_INTERVAL, TICK_RATE
+        ticks = 0
+        while True:
+            try:
+                update_tick()
+            except Exception:
+                # 1ティックの例外でループを停止させない
+                logger.exception('バックグラウンドティックの処理中にエラーが発生しました')
+
+            ticks += 1
+            if ticks % SAVE_INTERVAL == 0:
+                try:
+                    save_users()
+                except Exception:
+                    logger.exception('ユーザーデータの保存に失敗しました')
+
+            await asyncio.sleep(TICK_RATE)
 
     async def setup_hook(self):
         """Bot起動前の初期化処理"""
-        print("setup_hookを実行中")
+        logger.info('setup_hookを実行中')
 
         # 絵文字を取得
         emojis = await self.fetch_application_emojis()
@@ -145,17 +279,17 @@ class Bot(commands.Bot):
                 item_data.setdefault('tag', [])
 
             t += 1
-        print('アイテム登録: ' + str(t))
+        logger.info('アイテム登録: %d', t)
 
         # 釣り場所選択リスト
         for place_id, place_data in FISHING_PLACES.items():
             fishing_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('釣りエリア登録: ' + str(len(fishing_choices)))
+        logger.info('釣りエリア登録: %d', len(fishing_choices))
 
         # 場所選択リスト
         for place_id, place_data in PLACES.items():
             place_choices.append(Choice(name=place_data['name'], value=place_id))
-        print('採集エリア登録: ' + str(len(place_choices)))
+        logger.info('採集エリア登録: %d', len(place_choices))
 
         # ユーザー初期化（スタミナ回復、進捗リセット）
         for user_data in USERS.values():
@@ -180,25 +314,43 @@ class Bot(commands.Bot):
         for ext in EXTENSIONS:
             try:
                 await self.load_extension(ext)
-                print(f'Loaded extension: {ext}')
+                logger.info('Loaded extension: %s', ext)
             except Exception as e:
-                print(f'Failed to load extension {ext}: {e}')
+                logger.exception('Failed to load extension %s', ext)
 
-        # バックグラウンドループ開始（デーモンスレッドで実行）
-        from .background import start_background_loop
-        Thread(target=start_background_loop, daemon=True).start()
+        # バックグラウンドループ開始（Bot イベントループ上の asyncio タスク）
+        self.background_task = self.loop.create_task(self._background_loop())
 
         # コマンドツリー同期
         await self.tree.sync()
-        print("コマンドツリーを同期しました")
+        logger.info('コマンドツリーを同期しました')
 
     async def on_ready(self):
         """Bot起動完了時"""
-        print('Botが起動しました')
+        logger.info('Botが起動しました')
         try:
             await self.change_presence(activity=discord.Game(name="うおおおお～～～～～～～～～～～～～～～"))
         except Exception:
             pass  # 終了中の場合は無視
+
+    async def on_error(self, event_method, *args, **kwargs):
+        """イベントリスナーで未処理の例外が発生した場合の安全な境界。
+
+        生のユーザーID等の内部情報をログに含めず、例外のみを記録する。
+        View/Modal のエラー処理は各所で所有されているため、ここでは応答せず記録のみ行う。
+        """
+        logger.exception('イベント処理中に未処理のエラーが発生しました (event=%s)', event_method)
+
+    async def close(self):
+        """バックグラウンドタスクを安全にキャンセルしてから閉じる。"""
+        if self.background_task is not None:
+            self.background_task.cancel()
+            try:
+                await self.background_task
+            except asyncio.CancelledError:
+                pass
+            self.background_task = None
+        await super().close()
 
 
 # Botインスタンス作成

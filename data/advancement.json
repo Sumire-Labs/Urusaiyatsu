@@ -384,7 +384,7 @@
         "clear_condition": {
             "get_item": "drill_c1"
         },
-        "previous_advancement": ["craft_drill_engine"]
+        "previous_advancement": ["gather_mythical_mines"]
     },
     "craft_drill_c2": {
         "title": "C2ドリルを作ろう",
@@ -411,7 +411,7 @@
         "clear_condition": {
             "get_item": "drill_i1"
         },
-        "previous_advancement": ["craft_drill_engine"]
+        "previous_advancement": ["gather_mythical_mines"]
     },
     "craft_drill_i2": {
         "title": "I2ドリルを作ろう",
@@ -456,7 +456,7 @@
         "clear_condition": {
             "gather": "ore_hallow"
         },
-        "previous_advancement": ["craft_drill_engine"]
+        "previous_advancement": ["gather_mythical_mines"]
     },
     "gather_dream_vein": {
         "title": "幻の鉱床で採集しよう",

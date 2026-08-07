@@ -1,11 +1,18 @@
 """
 ステータス表示View
 """
+import logging
+
 import discord
 import math
 
 from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
 from core.utils import new_user, save_users, get_stats
+
+logger = logging.getLogger(__name__)
+
+# 未捕捉例外時のユーザー向け汎用文案（内部情報を漏らさない）
+GENERIC_ERROR_MESSAGE = 'エラーが発生しました。しばらくしてからお試しください。'
 
 # 1ページあたりの表示アイテム数 (これを超えたらshortになる)
 STATUS_ITEMS_PER_PAGE = 25
@@ -15,30 +22,60 @@ SHORT_STATUS_ITEMS_PER_PAGE = 25
 class status_paging(discord.ui.View):
     """ステータスページング用View"""
 
-    def __init__(self, timeout=180):
+    def __init__(self, timeout=180, owner_id=None):
         super().__init__(timeout=timeout)
+        self.owner_id = owner_id
+        # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
+        self._message_ref = None
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # 所有者が未確定なら最初の操作者を所有者として扱う
+        if self.owner_id is None:
+            self.owner_id = interaction.user.id
+            return True
+        if interaction.user.id == self.owner_id:
+            return True
+        if not interaction.response.is_done():
+            await interaction.response.send_message('他のユーザーのステータスです。', ephemeral=True)
+        return False
+
+    async def on_error(self, interaction: discord.Interaction, error, item):
+        logger.error('ステータスView処理中にエラーが発生しました: %s', error, exc_info=error)
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(GENERIC_ERROR_MESSAGE, ephemeral=True)
+            else:
+                await interaction.response.send_message(GENERIC_ERROR_MESSAGE, ephemeral=True)
+        except Exception:
+            logger.exception('エラー応答の送信に失敗しました')
+
+    async def on_timeout(self):
+        for child in self.children:
+            child.disabled = True
+        message = self._message_ref or self.message
+        if message is None:
+            # メッセージが無い通常のタイムアウトは例外・ログ対象にしない
+            return
+        try:
+            await message.edit(view=self)
+        except Exception:
+            logger.exception('タイムアウト時のメッセージ更新に失敗しました')
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.primary)
     async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         data = str(self.next_page.custom_id).split('/')
-        if interaction.user.id == int(data[0]):
-            page = int(data[1]) - 1
-            if page < 1:
-                page = int(data[2])
-            await view_status(interaction, page, bool(int(data[3])))
-        else:
-            await interaction.response.send_message('他のユーザーのステータスです。', ephemeral=True)
+        page = int(data[1]) - 1
+        if page < 1:
+            page = int(data[2])
+        await view_status(interaction, page, bool(int(data[3])))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.primary)
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         data = str(self.next_page.custom_id).split('/')
-        if interaction.user.id == int(data[0]):
-            page = int(data[1]) + 1
-            if page > int(data[2]):
-                page = 1
-            await view_status(interaction, page, bool(int(data[3])))
-        else:
-            await interaction.response.send_message('他のユーザーのステータスです。', ephemeral=True)
+        page = int(data[1]) + 1
+        if page > int(data[2]):
+            page = 1
+        await view_status(interaction, page, bool(int(data[3])))
 
 
 async def view_status(interaction: discord.Interaction, page: int, short: bool):
@@ -223,12 +260,18 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
         embeds.append(advancement)
 
     # 送信
-    view = status_paging()
+    view = status_paging(owner_id=user_id)
     view.next_page.custom_id = str(user_id) + '/' + str(page) + '/' + str(page_max) + '/' + str(int(short))
     if interaction.message is None:
-        await interaction.response.send_message(embeds=embeds, view=view)
+        if interaction.response.is_done():
+            view._message_ref = await interaction.followup.send(embeds=embeds, view=view)
+        else:
+            view._message_ref = await interaction.response.send_message(embeds=embeds, view=view)
     else:
-        await interaction.response.edit_message(embeds=embeds, view=view)
+        if interaction.response.is_done():
+            view._message_ref = await interaction.followup.edit_message(interaction.message.id, embeds=embeds, view=view)
+        else:
+            view._message_ref = await interaction.response.edit_message(embeds=embeds, view=view)
 
     # ファイル更新
     save_users()

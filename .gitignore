@@ -232,3 +232,6 @@ config.json
 # IDEs
 .idea
 .idea/*
+
+# Local deepwork progress
+.slim/deepwork/

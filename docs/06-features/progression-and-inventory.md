@@ -39,7 +39,7 @@
 - 起動時に `core/state.py` が静的 JSON（`item.json` 等）を読込み、`user.json` が無ければ `{}` を作成する（LIFE-IMPORT）。
 - 各コマンド・View は冒頭で `await new_user(user_id)` を実行するため、**未登録ユーザーは自動登録される**（CTX-USER-INIT）。
 - 実行時状態は単一プロセスのメモリ上に保持され、`save_users()` で `user.json` へ書込む（JOB-PERSIST とコマンド末尾の随時保存）。
-- `bot.fetch_user(user_id)` は Discord API への実通信を伴う。失敗は try/except が無いため未捕捉のまま呼び出し元ハンドラへ伝播する（**C-18**、例外型・ユーザーへの UI は U-14 で未検証）。
+- `bot.fetch_user(user_id)` は Discord API への実通信を伴う。**2026-08-07 修正**: 失敗時はフォールバック名 `user_{user_id}` で登録継続（**C-18 解決**。例外型・ユーザーへの UI は U-14 で実機確認を延期）。
 
 ## 4. 入口・入力
 
@@ -54,7 +54,7 @@
 
 1. 呼び出し元が `user_id` を渡して `await new_user(user_id)` を実行する。
 2. `str(user_id)` が `USERS` に既に存在すれば**何もせず終了**（既存ユーザー状態は不変）。
-3. 未登録の場合、`await bot.fetch_user(user_id)` で Discord ユーザーを取得し、`user.name` を初期ニックネームとする。
+3. 未登録の場合、`await bot.fetch_user(user_id)` で Discord ユーザーを取得し、`user.name` を初期ニックネームとする。**2026-08-07 修正**: `fetch_user` 失敗時はフォールバック名 `user_{user_id}` を使用（**C-18 解決**）。`_users_lock` 下で二重登録を防ぐ。
 4. `USERS[str(user_id)]` に下記デフォルト状態を設定する。
 
 デフォルト状態（再実装の契約）：
@@ -101,9 +101,9 @@
 | `add_item_from_dict(user_id, item, index=None) -> int` | `item` から `id` / `count`（default 1）/ `meta`（default `{}`）を取り出し `add_item` へ委譲。 |
 | `modify_item(user_id, index, meta, count=1) -> int` | `index` のエントリをコピー→ `remove_item_from_dict` で削除→ `count`/`meta` を書き換え→同じ `index` に `add_item_from_dict`。クラフトのツール耐久更新で使用。 |
 | `remove_item(user_id, id, count=1, required=False) -> dict` | 最初の一致スタック（`required=True` 時は `count` 以上所持分のみ）から削除し、`{'id', 'meta', 'count': 実際に削除した数}` のコピーを返す。0 になったエントリは pop。未発見時 `{}`。 |
-| `remove_item_stacked(user_id, id, count=1, required=False) -> list` | 同一 `id` の複数スタックを跨いで合計 `count` を削除。各削除量を持つエントリコピーのリストを返す。`required=True` で不足時は `[]`（**ただし現行実装は部分消費を残すバグ有り、§13 参照**）。 |
+| `remove_item_stacked(user_id, id, count=1, required=False) -> list` | 同一 `id` の複数スタックを跨いで合計 `count` を削除。各削除量を持つエントリコピーのリストを返す。`required=True` で不足時は `[]`（**2026-08-07 修正**: 要素辞書をコピーして作業し、十分な在庫がある場合のみ実インベントリへ反映するトランザクション的実装。部分消費を残さない。**C-03 解決**）。 |
 | `remove_item_from_dict(user_id, item, required=False) -> dict` | `item` の `id`/`count`/`meta` を取り出し `remove_item_match_meta` へ委譲。 |
-| `remove_item_from_index(user_id, index, count=1) -> dict` | `index` のエントリから削除。0 になった時 pop するが、**現行実装は pop の引数が誤っておりバグ**（§13 参照）。 |
+| `remove_item_from_index(user_id, index, count=1) -> dict` | `index` のエントリから削除。0 になった時 `pop(index)` する（**2026-08-07 修正**: `pop(辞書)` を `pop(index)` へ修正。**C-03 解決**）。 |
 | `remove_item_match_meta(user_id, id, count=1, meta={}, required=False) -> dict` | `remove_item` と同型だが一致条件に `meta` を含む。 |
 | `get_item(user_id, id, count=1) -> dict` | 最初の一致スタック（`id` 一致 かつ `count` 以上所持）の**実体参照**を返す。未発見時 `{}`。※`meta` は不問。 |
 | `get_item_stacked(user_id, id, count=1) -> list` | 同一 `id` のスタックを合計 `count` に達するまで集めて**実体参照リスト**を返す。不足時 `[]`。 |
@@ -139,7 +139,7 @@
 | `cold_decrease_rate` | `3.0` | 冷気減少/時間 |
 
 2. `equipment` の各スロットについて、非空アイテムの `ITEMS[id]['stats']` を適用する。各 stat は `{'id': str, 'amount': float|int, 'multiply': bool?}`。`multiply=True` なら乗算（int 値は `int(値*amount)` に丸め）、無しなら加算。
-3. **アクセサリー分岐**: `accessory` スロットの各装備に対し、現行実装はローカル変数に計算して `user_stats` へ**書き戻していない**ため反映されない（**現行バグ C-04**、§13）。
+3. **アクセサリー分岐**: `accessory` スロットの各装備に対し、**2026-08-07 修正**: `user_stats[item_stat['id']]` へ直接加算・乗算するよう書戻しを追加（**C-04 解決**）。
 4. **非アクセサリー分岐**: `user_stats[id]` へ書き戻して適用する。
 5. `stamina_max += level_global - 1` を加算して返す。
 
@@ -148,7 +148,7 @@
 1. `new_user(user_id)` 実行、`user_data = USERS[str(user_id)]` を取得。
 2. `remove_item_stacked(user_id, item_id, count)`（`required=False`）でインベントリから消費。
    - 結果が `[]` なら `**{name_e}**は持っていません。` を応答して終了（保存はしない）。
-   - **`count <= 0` の経路**: 引数検証は存在しない（`count: int = 1`、`cogs/use.py:21`）。負数を渡すと `remove_item_stacked` の `remove_count = min(count - removed, ...)` が負数になり**在庫が増える**方向に作用し、効果（スタミナ/燃料回復・放射線除去）も負数倍で**反転**する（**現行バグ C-16**）。`con_loot` は `table_roll` の `random.choices(..., k=負数)` が空 list を返す（CPython 3.10/3.12）ため結果 `{}` となり、loot なしで処理が継続する。`count=0` は 0 効果の応答になる。上限チェックの不在は **C-20**（gather/fishing も同様、挙動は推測しない）。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md)。
+   - **`count` の検証（2026-08-07 修正）**: 冒頭で `valid_count(count)`（`cogs/_helpers.py`、1〜100）を判定し、範囲外なら「使用回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否（**C-16 / C-20 解決**）。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**）。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md)。
 3. 実際の消費数 `count` を結果リストの合計で再計算する。
 4. `ITEMS[item_id]['tag']` の種別で分岐：
 
@@ -172,7 +172,7 @@
 3. `exp >= level_next` なら:
    - `xp = exp - level_next`（繰り越し）、対象レベル `+1`、`level_global += 1`。
    - **スタミナ回復**: `restore = ceil((stamina_max + 1) * 0.25)`（上限 50）。`stamina += min(restore, stamina_max + 1 - stamina)`。
-   - **ショップ解放**: `level_global == 7` になった時、`shop_content = random.sample(shop_list.copy(), 10)`、`shop_count = [0]*10`。
+   - **ショップ解放**: `level_global == 7` になった時、`rotate_shop(user_data)` で `shop_content` を初期化（**2026-08-07 修正・C-10 解決**。壁時計 1 時間毎・`last_rotation_hour` でべき等）。
    - **アクセサリ枠**: `level_global` が `20` と `100` に到達した時、`equipment['accessory'].append({})`。
    - **レベル進捗チェック**: `advancement_now` の各目標で `clear_condition` に `level` があり `level_global >= level` なら `complete_advancement` を実行。
    - 達成メッセージがあれば返す。
@@ -182,18 +182,18 @@
 1. `advancement` が `advancement_completed` に無く、かつ `advancement_now` にある場合のみ実行。
 2. `advancement_completed` へ追加し、`advancement_now` から削除。
 3. **アンロック走査**: 全 `ADVANCEMENTS` のうち `completed + now` に無いものについて、`previous_advancement` が全て `advancement_completed` に含まれるなら `advancement_now` へ追加。
-   - ※現行実装は `previous_advancement` の `null` を「未達成」扱いにするため、null 前提の目標は解放されない（**現行バグ C-06**、§13）。
+   - **2026-08-07 決定**: `previous_advancement` の `null` は**初期付与専用**であり、`complete_advancement` ではアンロックしない（`None` は `completed` に含まれないため常に false。**C-06 解決**）。
 4. 達成メッセージ `\n## 目標を達成しました！\n**{title}**\n-# {description}\n\n{complete_message}` を返す。条件不一致なら空文字。
 
 **進捗データ契約（`data/advancement.json`、116 件）**
 - フィールド: `title` / `description` / `complete_message` / `clear_condition` / `previous_advancement`。
 - `clear_condition` は各 1 キーのみ。分布: `get_item` 92 件、`gather` 13 件、`fishing` 7 件、`level` 4 件。
   - `{'gather': place_id}` / `{'fishing': place_id}` / `{'get_item': item_id}` / `{'get_items': {item_id: 個数}}` / `{'level': n}`。
-- `previous_advancement` は文字列リスト（`[null]` を含む場合がある。`gather_forest` が null 前提で、新規ユーザーに初期付与される）。
+- `previous_advancement` は文字列リスト（`[null]` を含む場合がある。`gather_forest` が null 前提で、新規ユーザーに初期付与される）。**2026-08-07 修正**: `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` の欠落参照（`craft_drill_engine`）は `gather_mythical_mines` へ修正済み（**C-06 解決**）。
 
 **起動時再構築（`core/state.py:Bot.setup_hook`）**
 - 起動時、全ユーザーの `stamina` を `stamina_max`（= `100 + level_global - 1`）に強制設定する（**期待仕様**）。
-- `advancement_now` を再構築: `completed` に無い各目標について、`previous_advancement` が全て `completed` に含まれるか `null` なら `advancement_now` へ追加（**complete_advancement の null 扱いと判定が食い違う: 現行バグ C-06**）。
+- `advancement_now` を再構築: `completed` に無い各目標について、`previous_advancement` が全て `completed` に含まれるか `null` なら `advancement_now` へ追加（**2026-08-07 決定**: null 前提は初期付与専用。**C-06 解決**）。
 
 ## 6. 状態・永続化
 
@@ -203,9 +203,9 @@
 | `timestamp.stamina/radiation/cold` | USERS | 背景ループ（JOB-TIMESTATE、1 秒 tick） |
 | 静的定義（item/advancement/loot） | `core.state.ITEMS` / `ADVANCEMENTS` / `LOOTS` | 起動時 import（変更不可） |
 
-- `save_users()` は `user.json` へ `json.dump(..., indent=2, ensure_ascii=False)` で**直接書込**する（**現行バグ C-07**: 非 atomic・lock なし）。
+- `save_users()` は **2026-08-07 修正**: `_save_lock` 下で深いスナップショット + 一時ファイル + `fsync` + `os.replace` の **atomic 書込**（**C-07 解決**）。
 - スタミナ回復の時間進行: `duration = 3600 / stamina_regeneration_rate` 秒毎に 1 ポイント。`timestamp['stamina'] == -1` は「満タン」を意味し、未満なら現在時刻を起点に記録、`stamina_max` 到達で `-1` に戻す。
-- `user.json` 読込は裸の `except:` で破損を握りつぶし `{}` で初期化する（**現行バグ C-08**、§13）。
+- `user.json` 読込は **2026-08-07 修正**: `_load_users` が fail-closed（破損時は `user.json.bak.<ts>` へ隔離 + exit 1。**C-08 解決**）。
 
 ## 7. Discord UX
 
@@ -230,10 +230,10 @@
 
 ## 10. 並行性・制約
 
-- USERS はグローバル共有状態。コマンドは async イベントループ上で、背景ループは別デーモンスレッドで動作し、同時に USERS を参照・変更し得る。
-- 単一レプリカ運用を前提（`AGENTS.md`）。多重起動は保存破損の危険がある。
-- `save_users()` に lock は無いため、5 秒毎保存とコマンド随時保存が並走し得る（**C-07**、ファイル書込の race）。
-- 背景ループの `USERS.items()` 反復（`core/background.py:22`）中に `new_user` の `USERS.setdefault`（`core/utils.py:17`）や `admin_transit` の `USERS.pop` / `setdefault`（`cogs/admin_transit.py:33-36`）がトップレベルキーを追加/削除すると `RuntimeError`（dictionary changed size during iteration）になり得る（**C-17**、メモリミューテーションの race。C-07 とは別問題）。ループに try/except がないため発生時はデーモンスレッドが終了する。頻度は **U-13**。
+- USERS はグローバル共有状態。コマンドは async イベントループ上で、背景ループは asyncio タスクで動作し、同時に USERS を参照・変更し得る。
+- 単一レプリカ運用を前提（`AGENTS.md`）。**2026-08-07 追加**: `acquire_state_lock` が起動時に多重起動を拒否（**U-09 解決**）。
+- `save_users()` は `_save_lock` で直列化（**C-07 解決**）。
+- 背景ループの `USERS` 反復（`core/background.py:update_tick`）は **2026-08-07 修正**: `list(USERS.keys())` のスナップショットで反復し、`_users_lock` でトップレベル `USERS` の構造ミューテーションを直列化（**C-17 解決**）。ユーザー単位の例外は捕捉して `logger.exception` で記録しループを継続。頻度は **U-13**（実機観察は延期）。
 - インベントリのミューテーションは非 atomic（先に消費判定、後で保存）。例外で中断した場合、メモリと `user.json` が乖離し得る。
 
 ## 11. 関連
@@ -282,20 +282,20 @@
 
 > 現行仕様（§5）と区別するため、現行実装の欠陥・未確定事項をここに集約する。解決方針・追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) を参照（C-ID / U-ID 対応）。
 
-| ID | 内容 | 種別 |
-|---|---|---|
-| C-04 | アクセサリー装備の stats が `get_stats` に反映されない（ローカル変数への計算で書き戻しなし） | 現行バグ |
-| C-06 | `complete_advancement` は `previous_advancement` の `null` を未達成扱い（アンロックされない）。setup_hook は `null` を達成扱いするため判定が食い違う | 現行バグ |
-| C-07 | `save_users` が直接 `json.dump`（一時ファイル+rename 無し・lock 無し）。5 秒毎保存とコマンド随時保存が並走 | 現行バグ |
-| C-08 | `user.json` 読込が裸 `except:` で破損を握りつぶし `{}` で初期化 | 現行バグ |
-| C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` を投げる（クラフトのツール破損経路）。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ |
-| C-16 | `/use` の `count` 非正数ガードなし。負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | 現行バグ |
-| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation の race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） |
-| C-18 / U-14 | `new_user` の `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） |
-| C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在（導入要否・値は U-15） | 現行バグ（制御不在） |
-| C-12 | エラーハンドラ未登録。例外時は「interaction failed」のみ | 現行バグ |
-| 観測-2 | チュートリアル文（`gather_forest` の complete_message）は「スタミナは1時間ごとに10回復」と記すが、実装の `stamina_regeneration_rate` は 20/時（1 ポイント 180 秒） | 仕様不整合 |
-| U-12 | スタミナ回復 20/時、`level_next = int((lv+1)^1.5)*5`、スタミナ回復量等の数値はコード既定であり、意図されたバランスか未確定 | 未確定 |
-| U-04 | View/Modal のタイムアウト超過後・二重応答の実挙動は未検証 | 未検証 |
-| 未確定 | `level_combat`/`xp_combat`、`weapon`/`armor`/`armor_secondary` スロットは定義のみで現在不使用。将来仕様の扱い未確定 | 未確定 |
+| ID | 内容 | 種別 | 状態 |
+|---|---|---|---|
+| C-04 | アクセサリー装備の stats が `get_stats` に反映されない（ローカル変数への計算で書き戻しなし） | 現行バグ | **解決済**（`user_stats` へ書戻し） |
+| C-06 | `complete_advancement` は `previous_advancement` の `null` を未達成扱い（アンロックされない）。setup_hook は `null` を達成扱いするため判定が食い違う | 現行バグ | **解決済**（null 前提は初期付与専用と決定） |
+| C-07 | `save_users` が直接 `json.dump`（一時ファイル+rename 無し・lock 無し）。5 秒毎保存とコマンド随時保存が並走 | 現行バグ | **解決済**（atomic 化 + `_save_lock`） |
+| C-08 | `user.json` 読込が裸 `except:` で破損を握りつぶし `{}` で初期化 | 現行バグ | **解決済**（fail-closed: 隔離 + exit 1） |
+| C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` を投げる（クラフトのツール破損経路）。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ | **解決済**（`pop(index)` + トランザクション化） |
+| C-16 | `/use` の `count` 非正数ガードなし。負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | 現行バグ | **解決済**（`valid_count` で 1〜100 に制限） |
+| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation の race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） | **解決済**（スナップショット反復 + `_users_lock`。実機観察は延期） |
+| C-18 / U-14 | `new_user` の `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） | **解決済**（フォールバック名で登録継続。実機確認は延期） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（1〜100 に制限） |
+| C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在（導入要否・値は U-15） | 現行バグ（制御不在） | 一部解決（use/gather/fishing 3 秒・admin check・View interaction_check。残りは延期） |
+| C-12 | エラーハンドラ未登録。例外時は「interaction failed」のみ | 現行バグ | **解決済**（`BotTree.on_error` / Modal `safe_on_error` / View `on_error`） |
+| 観測-2 | チュートリアル文（`gather_forest` の complete_message）は「スタミナは1時間ごとに10回復」と記すが、実装の `stamina_regeneration_rate` は 20/時（1 ポイント 180 秒） | 仕様不整合 | 未解決（変更なし） |
+| U-12 | スタミナ回復 20/時、`level_next = int((lv+1)^1.5)*5`、スタミナ回復量等の数値はコード既定であり、意図されたバランスか未確定 | 未確定 | **解決済（決定）**（文書化された契約として維持） |
+| U-04 | View/Modal のタイムアウト超過後・二重応答の実挙動は未検証 | 未検証 | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期** |
+| 未確定 | `level_combat`/`xp_combat`、`weapon`/`armor`/`armor_secondary` スロットは定義のみで現在不使用。将来仕様の扱い未確定 | 未確定 | 未解決（変更なし） |

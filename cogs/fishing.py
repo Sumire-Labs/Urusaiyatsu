@@ -4,12 +4,13 @@ Fishing Cog
 import discord
 import random
 import datetime
-from copy import copy
+from copy import deepcopy
 from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices
 from core.utils import new_user, xp, complete_advancement, save_users, get_stats, get_item, add_item, table_roll
+from cogs._helpers import valid_count, user_cooldown_key
 
 
 class FishingCog(commands.Cog):
@@ -20,9 +21,14 @@ class FishingCog(commands.Cog):
 
     @app_commands.command(name="fishing", description="釣りによってアイテムを手に入れます。スタミナを消費し、任意の餌を消費します。")
     @app_commands.choices(place=fishing_choices)
+    @app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)
     async def fishing_command(self, interaction: discord.Interaction, place: str, count: int = 1):
 
-        
+        # 入力検証（状態変更前に拒否）
+        if not valid_count(count):
+            await interaction.response.send_message('釣り回数は1〜100の範囲で指定してください。', ephemeral=True)
+            return
+
         # データ読み込み
         user_id = interaction.user.id
         await new_user(user_id)
@@ -163,13 +169,14 @@ class FishingCog(commands.Cog):
 
 def get_fishing_loot_table(place: str, power: int, bait: str | None = None) -> list:
     """釣りのルートテーブルを取得"""
-    table = FISHING_PLACES[place]['table']
+    # グローバルな釣りテーブルを変更しないよう、必ずコピー上で操作する
+    table = deepcopy(FISHING_PLACES[place]['table'])
     result = []
 
     # 時刻による釣りパワーボーナス
     power += int((20 - abs(datetime.datetime.now().hour - 6)) / 3)
 
-    # 餌の追加アイテムを反映
+    # 餌の追加アイテムを反映（コピー上で行うためグローバルテーブルは不変）
     if bait is not None:
         addition = ITEMS[bait].get('table_addition')
         if addition is not None:

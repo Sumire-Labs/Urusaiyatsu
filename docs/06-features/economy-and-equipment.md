@@ -39,7 +39,7 @@
 
 - 起動時（`setup_hook`）に、`spawnable_in_shop` アイテムで `price` が未定義なら `value * 4` を設定し、`shop_list` を構築する。`value` が未定義のアイテムは `set_item_value` で再帰導出する。
 - 装備のための選択リスト・スロット一覧は起動時に固定生成される（実行中に増減しない）。
-- ショップは**プロセス起動からの tick 基準**（3600 tick ≈ 1 時間）で再抽選される（壁時計ではない。**現行バグ C-10**、§13）。
+- ショップは**壁時計の 1 時間毎**（`core/utils.py:rotate_shop`、`last_rotation_hour` でべき等）に再抽選される（**2026-08-07 決定・C-10 解決**）。
 - `money` は整数、`fuel` は整数。取引は単一スレッドの async ハンドラ内で完結する。
 
 ## 4. 入口・入力
@@ -83,8 +83,8 @@
 **装備処理 `equip(interaction, item_id)`**
 1. `item_id == 'remove_item'` の場合（解除モード）:
    1. 装備中アイテムを走査し、`discord.SelectOption` を構築。アクセサリーは `value=str(['accessory', スロット番号])`、他スロットは `value=str([slot])`。
-   2. `remove_equip_choice()` View のセレクトにオプションを設定し、`アイテムを選択:` を ephemeral 送信。
-      - ※現行実装は `if len(equip_choices) < 0:`（常に偽）というデッドコードのみで空判定をしているため、**未装備時も空セレクト付き View を送る（現行バグ C-14**、§13）。
+    2. `remove_equip_choice()` View のセレクトにオプションを設定し、`アイテムを選択:` を ephemeral 送信。
+       - ※**2026-08-07 修正**: `if len(equip_choices) < 0:` を `if not equip_choices:` へ修正し、未装備時に「アイテムを装備していません。」が正しく表示される（**C-14 解決**）。
 2. それ以外:
    1. `get_item(user_id, item_id) == {}` なら `**{name_e}**は持っていません。` を応答して終了。
    2. `slot = ITEMS[item_id]['equip_slot']`。
@@ -134,16 +134,17 @@
 2. `count > 0` なら `custom_id` から `index`/`page` を取り出し `sell_item(interaction, original_interaction, index, count, page)` へ。
 
 **売却実行 `sell_item`**
-1. `sell_item = copy(user_data['inventory'][index])`。`count = min(count, 所持数)`。
-2. `remove_item_from_dict(user_id, sell_item)`（id + meta 一致で所定数を消費）。
-3. `money += ITEMS[id]['value'] * count`。
-4. `sell_selecting(original_interaction, page)` で売却一覧を再描画（**応答済み Interaction への編集、実挙動は未検証: U-05**、§13）。
-5. `**{name_e}×{count}**を**{result}**{EMOJIS.money}で売却しました！` を応答。
-6. `save_users()`。
+1. **2026-08-07・後続（stale 同一性検証）**: `expected_item`（開封時点の `id`/`meta`/`count`）と現在の `inventory[index]` を照合。index 範囲外・`id`/`meta` 不一致・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**（観測-3 の誤売却対策）。
+2. `sell_item = copy(user_data['inventory'][index])`。`count = min(count, 所持数)`。
+3. `remove_item_from_dict(user_id, sell_item)`（id + meta 一致で所定数を消費）。
+4. `money += ITEMS[id]['value'] * count`。
+5. **永続化先行**: `save_users()` を再描画**前**に実行（再描画失敗でも売却を永続化）。
+6. `sell_selecting(interaction, page)` で売却一覧を再描画（**ページクランプ**: `page_max` を再計算し要求ページを 1..`page_max` へクランプ。空ページでゼロ個セレクトを生成しない）。
+7. `**{name_e}×{count}**を**{result}**{EMOJIS.money}で売却しました！` を `respond` で応答。
 
 **現行仕様の観測**：
 - 売却は XP・進捗を発生させない。
-- `index` は View 表示時点のインベントリ順番のため、表示後にインベントリが変化すると誤売却 or `IndexError` し得る（§13 観測事項）。
+- `index` は View 表示時点のインベントリ順番のため、表示後にインベントリが変化すると index ズレし得るが、**stale 同一性検証**（`expected_item` 照合）で誤売却を拒否する（観測-3 対策）。
 - 応答は **公開**（非 ephemeral）。
 
 ### 5.4 購入・ショップ（CMD-BUY / VIEW-SHOP）— `cogs/buy.py` + `views/shop_view.py`
@@ -155,19 +156,18 @@
 4. `商品を選択:` を **ephemeral** で送信。
 
 **購入処理 `shop_buy(interaction, item_id)`**
-1. `shop_index = shop_content.index(item_id)`（`views/shop_view.py:27`）、`bought_count = shop_count[shop_index] + 1`、`price = ITEMS[item_id]['price']`。
-   - ※View 表示後にショップ再抽選（`core/background.py:29-35`）で `shop_content` が更新されると、stale な `item_id` に対して `ValueError` になり得る（**C-21**）。
-2. `bought_count > ITEMS[item_id]['shop_amount']` なら `そのアイテムは売り切れています。` を応答。
-3. `money < price` なら `お金が足りません。` を応答。
-4. `money -= price`、`add_item(user_id, item_id)`（1 個）。
-5. `shop_count[shop_index] += 1`。
-6. `**{name_e}**を**{price}**{EMOJIS.money}で購入しました！( このアイテムの残り購入回数: {残数} )` を応答。
-7. `save_users()`。
+1. **2026-08-07 修正**: `item_id not in shop_content` を先に判定し、「その商品は現在販売されていません。ショップを更新してください。」と安全に応答（**C-21 解決**）。
+2. `shop_index = shop_content.index(item_id)`（`views/shop_view.py:27`）、`bought_count = shop_count[shop_index] + 1`、`price = ITEMS[item_id]['price']`。
+3. `bought_count > ITEMS[item_id]['shop_amount']` なら `そのアイテムは売り切れています。` を応答。
+4. `money < price` なら `お金が足りません。` を応答。
+5. `money -= price`、`add_item(user_id, item_id)`（1 個）。
+6. `shop_count[shop_index] += 1`。
+7. `**{name_e}**を**{price}**{EMOJIS.money}で購入しました！( このアイテムの残り購入回数: {残数} )` を応答。
+8. `save_users()`。
 
-**ショップ回転（`core/background.py` と `core/utils.py:xp`）**
-- 初回生成: `level_global` が 7 に達したレベルアップ時に `random.sample(shop_list.copy(), 10)`（§5.4 の前提）。
-- 定期回転: 背景ループが `ticks % 3600 == 0`（プロセス起動基準）かつ `level_global >= 7` のユーザーについて、現 `shop_content` を除外した `shop_list`（31 − 10 = 21 件）から `random.sample(..., 10)` で**非復元**再抽選し、`shop_count` を `[0]*10` に戻す。
-  - ※tick 基準のため再起動で周期がずれる（**現行バグ C-10**）。再抽選の重複・偏りは未検証（**U-06**、§13）。
+**ショップ回転（`core/utils.py:rotate_shop` と `core/utils.py:xp`）**
+- 初回生成: `level_global` が 7 に達したレベルアップ時に `rotate_shop(user_data)` を呼ぶ（§5.4 の前提）。
+- 定期回転: **壁時計の 1 時間毎**（`int(now // 3600)`）に、`last_rotation_hour` で同一時間内の再抽選を防ぎつつ、前回内容と重複しない候補（`candidates >= 10` 時）から `random.sample(candidates, 10)` で**非復元**再抽選し、`shop_count` を `[0] * len(new_content)` に戻す。候補不足時は全 `shop_list` から `min(10, len(shop_list))` で安全に処理（**C-10 / U-06 解決**）。
 
 ### 5.5 燃料補給（CMD-REFUEL）— `cogs/refuel.py:RefuelCog.refuel_command`
 
@@ -229,10 +229,10 @@
 ## 10. 並行性・制約
 
 - **取引の atomicity**: sell / buy / refuel は各 1 ハンドラ内で判定 → 変更 → 保存まで完結するため単独では整合する。ただし View 操作（Modal 送信・ボタン）の間にインベントリ・所持金が変化し得るため、**再検証されない**（売却の index、購入の在庫はその場での判定のみ）。
-- **ショップ回転と購入の競合**: 背景ループ（別スレッド）が `shop_content`/`shop_count` を再抽選する最中に購入が走り得る（tick 境界）。単一プロセス前提で競合の深刻度は未検証。表示済み View からの購入が stale index で `ValueError` になる経路もある（**C-21**）。
-- **USERS 反復との race**: 本節コマンド冒頭の `new_user` による `USERS.setdefault` が、背景ループの `USERS.items()` 反復（`core/background.py:22`）と重なると `RuntimeError` になり得る（**C-17**、頻度は U-13。C-07 のファイル書込 race とは別）。
+- **ショップ回転と購入の競合**: 背景タスクが `shop_content`/`shop_count` を再抽選する最中に購入が走り得る（壁時計境界）。単一プロセス前提で競合の深刻度は未検証。表示済み View からの購入は `item_id not in shop_content` ガードで安全に応答（**C-21 解決**）。
+- **USERS 反復との race**: 本節コマンド冒頭の `new_user` による `USERS.setdefault` は、背景タスクの `list(USERS.keys())` スナップショット反復 + `_users_lock` で安全（**C-17 解決**。頻度は U-13、実機観察は延期）。
 - **静的データの共有**: `set_item_value` は `ITEMS` を起動時のみ変更。実行中は変更されない。
-- 単一レプリカ運用（`AGENTS.md`）。`save_users` は lock なし直接書込（C-07）。
+- 単一レプリカ運用（`AGENTS.md`）。`save_users` は atomic 書込 + `_save_lock`（**C-07 解決**）。`acquire_state_lock` が起動時に多重起動を拒否（**U-09 解決**）。
 
 ## 11. 関連
 
@@ -276,18 +276,18 @@
 
 > 現行仕様（§5）と区別するため、現行実装の欠陥・未確定事項をここに集約する。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) を参照（C-ID / U-ID 対応）。
 
-| ID | 内容 | 種別 |
-|---|---|---|
-| C-10 | ショップ回転が tick 基準（`ticks % 3600 == 0`、起動からの経過秒）であり壁時計（1 時間毎）でない。再起動で周期がずれる | 現行バグ |
-| C-14 | `equip` の空判定 `if len(equip_choices) < 0:` は常に偽で、未装備時に空セレクト付き View を送る | 現行バグ |
-| C-02 | `admin_give` の負数（剥奪）が `remove_item` の計算上加算になる。経済契約の整合性に影響 | 現行バグ |
-| C-21 | 表示済み購入 View の選択時、ショップ再抽選後は `shop_content.index` が `ValueError`（stale choice） | 現行バグ |
-| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） |
-| C-18 / U-14 | 本節コマンド冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） |
-| U-06 | ショップ再抽選は現ショップ品を除外して `random.sample(shop_list, 10)`。31 件中 10 件枠の整合はコード上は成立するが、実行時の重複・偏りは未検証 | 未検証 |
-| U-05 | `sell_item` が応答済み `original_interaction` へ `sell_selecting`（編集）を実行する際の実挙動は未検証 | 未検証 |
-| U-03 | Modal（sell_amount）のタイムアウトは未宣言（フレームワーク既定値依存） | 未確定 |
-| U-12 | `value*4` の価格倍率、`shop_amount`、`fuel 1 = money 2` 等の数値はコード既定であり意図されたバランスか未確定 | 未確定 |
-| 観測-3 | 売却 View 表示後にインベントリが変化すると、Modal 送信時の `inventory[index]` がずれ、誤売却または `IndexError`（interaction failed）になり得る。再検証が無い | 現行バグ（要検証） |
-| 観測-4 | `get_item` は meta 不問のため、`fishing_bait` 装備時に別 meta スタックが混在していると誤ったスタックを装備し得る | 現行バグ（要検証） |
-| 未確定 | `weapon` / `armor` / `armor_secondary` スロットは定義のみで現行データに該当アイテムが無い（`equip_slot` 5 種のみ）。将来仕様の扱い未確定 | 未確定 |
+| ID | 内容 | 種別 | 状態 |
+|---|---|---|---|
+| C-10 | ショップ回転が tick 基準（`ticks % 3600 == 0`、起動からの経過秒）であり壁時計（1 時間毎）でない。再起動で周期がずれる | 現行バグ | **解決済**（壁時計 1 時間毎・`rotate_shop`） |
+| C-14 | `equip` の空判定 `if len(equip_choices) < 0:` は常に偽で、未装備時に空セレクト付き View を送る | 現行バグ | **解決済**（`if not equip_choices:`） |
+| C-02 | `admin_give` の負数（剥奪）が `remove_item` の計算上加算になる。経済契約の整合性に影響 | 現行バグ | **解決済**（`abs(amount)` で剥奪） |
+| C-21 | 表示済み購入 View の選択時、ショップ再抽選後は `shop_content.index` が `ValueError`（stale choice） | 現行バグ | **解決済**（`item_id not in shop_content` ガード） |
+| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） | **解決済**（スナップショット反復 + `_users_lock`。実機観察は延期） |
+| C-18 / U-14 | 本節コマンド冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） | **解決済**（フォールバック名で登録継続。実機確認は延期） |
+| U-06 | ショップ再抽選は現ショップ品を除外して `random.sample(shop_list, 10)`。31 件中 10 件枠の整合はコード上は成立するが、実行時の重複・偏りは未検証 | 未検証 | コード解決済（`rotate_shop` で候補不足も安全処理）。実機確認は**延期** |
+| U-05 | `sell_item` が応答済み `original_interaction` へ `sell_selecting`（編集）を実行する際の実挙動は未検証 | 未検証 | コード解決済（Modal 側で再描画）。実機確認は**延期** |
+| U-03 | Modal（sell_amount）のタイムアウトは未宣言（フレームワーク既定値依存） | 未確定 | **解決済**（`timeout=180` を明示） |
+| U-12 | `value*4` の価格倍率、`shop_amount`、`fuel 1 = money 2` 等の数値はコード既定であり意図されたバランスか未確定 | 未確定 | **解決済（決定）**（文書化された契約として維持） |
+| 観測-3 | 売却 View 表示後にインベントリが変化すると、Modal 送信時の `inventory[index]` がずれ、誤売却または `IndexError`（interaction failed）になり得る。再検証が無い | 現行バグ（要検証） | **解決済**（stale 同一性検証: `expected_item` 照合で誤売却を拒否。`tests/test_sell.py` が非ライブでカバー） |
+| 観測-4 | `get_item` は meta 不問のため、`fishing_bait` 装備時に別 meta スタックが混在していると誤ったスタックを装備し得る | 現行バグ（要検証） | 未解決（変更なし） |
+| 未確定 | `weapon` / `armor` / `armor_secondary` スロットは定義のみで現行データに該当アイテムが無い（`equip_slot` 5 種のみ）。将来仕様の扱い未確定 | 未確定 | 未解決（変更なし） |

@@ -65,11 +65,12 @@ sequenceDiagram
 5. `core.config` が `DATA_DIR` を `Path(os.path.dirname(os.path.dirname(__file__))) / 'data'` で計算（`core/config.py:9`。実行時 cwd に依存しないリポジトリルート基準の絶対パス）し、`data/config.json` を読み込む（`core/config.py:12-13`）。`TOKEN = CONFIG['token']`（`:15`）、`ADMIN = [a['id'] for a in CONFIG['admin']]`（`:18-20`）。
 6. `core.state` が `os.chdir(DATA_DIR)`（`core/state.py:15`）でプロセス cwd を `data/` へ変更。以降、相対パスのデータ読込が `data/` 基準になる（`AGENTS.md` 記載の実行時挙動と一致）。
 7. 静的 JSON を 7 ファイル読み込み（`core/state.py:26-40`）: `recipe.json`（:27-28, encoding 指定なし）→ `item.json`（:29-30, UTF-8）→ `place.json`（:31-32）→ `fishing.json`（:33-34）→ `loot.json`（:35-36）→ `localization.json`（:37-38）→ `advancement.json`（:39-40）。
-8. `user.json` を読み込み、存在しない場合は `{}` を生成して書き出す（`core/state.py:42-49`）。読込失敗は**裸の `except:`** で捕捉（:46）。
-9. `EMOJIS` を 8 キー（stamina / money / fuel / level / level_gathering / level_fishing / empty / radiation）で初期化（`core/state.py:51-61`）。※ `recipe.json` のみ encoding 指定なし（他は UTF-8）である点は現行実装の不統一。
-10. モジュール末尾で `bot = Bot()` を生成（`core/state.py:204-205`）。`Bot.__init__` は Intents = default + `message_content` / `messages` / `members` / `reactions`、`command_prefix="!"`（`core/state.py:84-90`）。
-11. `core/__init__.py` が `from .config import TOKEN`（`core/__init__.py:5`）を続行し、`bot` / `TOKEN` を re-export。
-12. `main.py` が `if __name__ == "__main__":` で `bot.run(TOKEN)`（`main.py:6-7`）を実行。Login・Gateway 接続・自動再接続は discord.py ライブラリの責務に委譲（詳細は `08-external-integrations/discord.md`）。
+8. **状態ロック取得**（`core/state.py:acquire_state_lock`）: 状態ファイル実体ディレクトリの `.state.lock` に POSIX `flock`（`LOCK_EX | LOCK_NB`）を取得。既に別インスタンスがロック保持中なら ERROR ログ + `sys.exit(1)`（**単一プロセスロック・U-09 解決**）。
+9. `user.json` を読み込む（`core/state.py:_load_users`）。**存在しない場合のみ**空 `{}` を作成。破損（`JSONDecodeError`）・読取不能（`OSError`）時は `user.json.bak.<ts>` へ隔離し**起動を非ゼロで失敗**（fail-closed。**C-08 解決**。自動 `{}` 上書きはしない）。
+10. `EMOJIS` を 8 キー（stamina / money / fuel / level / level_gathering / level_fishing / empty / radiation）で初期化（`core/state.py:51-61`）。※ `recipe.json` のみ encoding 指定なし（他は UTF-8）である点は現行実装の不統一。
+11. モジュール末尾で `bot = Bot()` を生成（`core/state.py`）。`Bot.__init__` は Intents = default + `message_content` / `messages` / `members` / `reactions`、`command_prefix="!"`（`core/state.py:84-90`）。`tree_cls=BotTree`（未処理アプリコマンドエラーをログ + 安全応答、**C-12 解決**）。
+12. `core/__init__.py` が `from .config import TOKEN`（`core/__init__.py:5`）を続行し、`bot` / `TOKEN` を re-export。
+13. `main.py` が `if __name__ == "__main__":` で `bot.run(TOKEN)`（`main.py:6-7`）を実行。Login・Gateway 接続・自動再接続は discord.py ライブラリの責務に委譲（詳細は `08-external-integrations/discord.md`）。
 
 ### 2.2 失敗時（現行実装）
 
@@ -78,16 +79,19 @@ sequenceDiagram
 | `data/config.json` 未作成 | `FileNotFoundError` が import 時に送出され、`main.py` の import 自体が失敗してトレースバック表示でプロセス終了。親切な案内なし | `core/config.py:12` |
 | 静的 JSON の欠落 | `FileNotFoundError` で import 失敗 → プロセス終了 | `core/state.py:27-40` |
 | 静的 JSON の破損 | `JSONDecodeError` で import 失敗 → プロセス終了 | `core/state.py:27-40` |
-| `user.json` の破損 | 裸の `except:` が例外を握りつぶし、**`{}` で上書き**して起動続行（既存ユーザーデータ消失の恐れ） | `core/state.py:43-49`（カタログ C-08） |
+| `user.json` の破損 | `_load_users` が破損ファイルを `user.json.bak.<ts>` へ隔離し **ERROR ログ + exit 1**（fail-closed。**C-08 解決**。自動 `{}` 上書きはしない） | `core/state.py:_load_users` |
+| 多重起動（状態ロック競合） | `acquire_state_lock` が「別のBotインスタンスが既に起動しています」を ERROR ログ + `sys.exit(1)`（**U-09 解決**） | `core/state.py:acquire_state_lock` |
 | `data/` ディレクトリ不在 | 最初の `open()` で `FileNotFoundError` | `core/state.py:27` |
 
 ### 2.3 再実装契約（to-be）
 
-- **config.json 欠落時**: 起動を即中断し、対処手順（例: `cp data/config.json.example data/config.json`）を含む明確なログを出力して失敗させる。
-- **静的 JSON の欠落/破損**: 起動時に全 7 ファイルの存在とパースをバリデーションし、欠落・破損は起動失敗として扱う。対象ファイル名をログに含める。
-- **user.json の破損**: 裸の `except:` を廃止し、捕捉する例外型（`json.JSONDecodeError` / `OSError`）を限定する。破損検知時は破損ファイルを `user.json.<日時>.corrupt` 等へ退避したうえで復旧し、復旧経緯をログに残す（C-08 解決）。
-- **import 副作用の除去**: chdir・データ読込・Bot インスタンス生成といった import 時副作用を「明示的な起動関数（例: `run_bot()`）」へ移し、import を副作用なしにする。起動手順をユニットテスト可能にする（OPS-OWNERSHIP / C-13 と整合）。
-- **観測性**: import 中の処理を `print` ではなく `logging` で記録する（C-12 解決）。
+> **2026-08-07 更新**: 下記のうち多くは実装済み（解決）。
+
+- **config.json 欠落時**: 起動を即中断し、対処手順を含む明確なログを出力して失敗させる。**未実装**（現状はトレースバックのみ）。
+- **静的 JSON の欠落/破損**: 起動時に全 7 ファイルの存在とパースをバリデーションし、欠落・破損は起動失敗として扱う。**未実装**（現状は例外で失敗）。
+- **user.json の破損**: 裸の `except:` を廃止し、捕捉する例外型（`json.JSONDecodeError` / `OSError`）を限定する。破損検知時は破損ファイルを退避したうえで復旧し、復旧経緯をログに残す。**実装済み**（`_load_users` が fail-closed: 隔離 + exit 1。**C-08 解決**）。
+- **import 副作用の除去**: chdir・データ読込・Bot インスタンス生成といった import 時副作用を「明示的な起動関数」へ移す。**未実装**（OPS-OWNERSHIP / C-13 と整合）。
+- **観測性**: import 中の処理を `print` ではなく `logging` で記録する。**実装済み**（`core/state.py` の print を `logger` へ移行。**C-12 解決**）。
 
 ---
 
@@ -97,7 +101,7 @@ sequenceDiagram
 
 ### 3.1 時間順の処理
 
-1. `print("setup_hookを実行中")`（`core/state.py:94`）。
+1. `logger.info('setup_hookを実行中')`（`core/state.py`、旧 print）。
 2. **アプリ絵文字取得**（`core/state.py:97-102`）: `await self.fetch_application_emojis()` を実行し、絵文字名が `ITEMS` に一致 → `ITEMS[name]['emoji']` を設定、`EMOJIS` のキーに一致 → `EMOJIS[name]` を設定。**失敗時の try/except はない**。詳細は `08-external-integrations/discord.md` の EXT-001-D。
 3. **アイテムループ**（`core/state.py:104-148`）: 各 ITEMS エントリについて
    - emoji 未設定なら `:item_id:` を既定設定（:109-110）、`name_e = emoji + name`（:111）。
@@ -109,9 +113,9 @@ sequenceDiagram
 5. **place_choices 生成**（`core/state.py:155-158`）: PLACES の全エントリを Choice 化。
 6. **ユーザー状態リフレッシュ**（`core/state.py:160-176`）: 全 USERS について
    - `stamina = stamina_max`（= `100 + level_global - 1`）に**強制セット**（:163-164、**期待仕様**）。
-   - `advancement_now` を再構築（:166-176）: `advancement_completed` に未登録の進捗のうち、`previous_advancement` がすべて完了済み **または None** のものを解放。※ `core/utils.py:389-391` の `complete_advancement`（None を未達成扱い）と判定が食い違う（カタログ C-06）。
-7. **コグロード**（`core/state.py:178-185`）: `from cogs import EXTENSIONS`（`cogs/__init__.py:6-23` の 16 コグ）を順に `await self.load_extension(ext)`。失敗は `print` のみで続行（:184-185）。※ Docker では `requirements.lock` に `deepmerge` が無いため `admin_manage` のロード失敗が想定される（カタログ C-01 / U-01）。
-8. **バックグラウンドループ開始**（`core/state.py:187-189`）: `Thread(target=start_background_loop, daemon=True).start()` でデーモンスレッドを起動。詳細は `07-event-processing/scheduled-and-background-jobs.md`。
+   - `advancement_now` を再構築（:166-176）: `advancement_completed` に未登録の進捗のうち、`previous_advancement` がすべて完了済み **または None** のものを解放。**2026-08-07 決定**: null 前提は**初期付与専用**であり、`complete_advancement` ではアンロックしない（**C-06 解決**）。
+7. **コグロード**（`core/state.py:178-185`）: `from cogs import EXTENSIONS`（`cogs/__init__.py:6-23` の 16 コグ）を順に `await self.load_extension(ext)`。失敗は `logger.exception` で記録し続行（**C-12 解決**）。※ `requirements.lock` に `deepmerge` が追加されたため `admin_manage` のロード失敗は解消（**C-01 解決**。Docker ビルド実起動は U-01 として延期）。
+8. **バックグラウンドループ開始**（`core/state.py`）: `self.background_task = self.loop.create_task(self._background_loop())` で **asyncio タスク**を起動。詳細は `07-event-processing/scheduled-and-background-jobs.md`。
 9. **コマンドツリー同期**（`core/state.py:192`）: `await self.tree.sync()` を guild 指定なしで実行（グローバル同期）。詳細は `08-external-integrations/discord.md` の EXT-001-E。
 
 ### 3.2 失敗時（現行実装）
@@ -119,20 +123,22 @@ sequenceDiagram
 | 失敗シナリオ | 現行の挙動 | 根拠 |
 |---|---|---|
 | 絵文字取得失敗（ネットワーク / レート制限 / API エラー） | try/except なし。例外が setup_hook から伝播し、**起動が失敗**（Gateway 未接続）。再試行なし | `core/state.py:97` |
-| 価格導出（`set_item_value`）で売却価格 0 | `print` 警告のみで value=0 のまま続行 | `core/state.py:76-77` |
+| 価格導出（`set_item_value`）で売却価格 0 | `logger.warning` のみで value=0 のまま続行 | `core/state.py:76-77` |
 | ユーザーデータに `level_global` 等が欠損 | `KeyError` → setup_hook 失敗 → 起動失敗 | `core/state.py:163-164` |
-| 特定コグのロード失敗 | `print` のみでスキップし起動続行。失敗コグのコマンドは未登録のまま | `core/state.py:184-185` |
+| 特定コグのロード失敗 | `logger.exception` で記録しスキップして起動続行。失敗コグのコマンドは未登録のまま | `core/state.py:297-303` |
 | `tree.sync()` 失敗 | 例外が伝播し起動失敗。再試行なし | `core/state.py:192` |
 
 ### 3.3 再実装契約（to-be）
 
-- **絵文字取得**: 取得失敗で起動を落とさない。失敗時はログに記録し、ITEMS の emoji 未設定分は `:item_id:` フォールバック（現行 :109-110 と同様）で起動を継続する。リトライ・タイムアウトのポリシーを明示（実測で確定すべきものは U-08 参照）。
-- **選択リスト/価格導出**: レシピ循環参照を検出し、価格 0 の扱い（警告で続行 or 起動失敗）を明示する。
-- **ユーザー状態リフレッシュ**: 起動時にデータスキーマを検証し、欠損ユーザーを隔離（起動継続）する。
-- **advancement_now 再構築**: `core/state.py:172`（None を解放扱い）と `core/utils.py:389-391`（None を未達成扱い）の判定不一致を解消し、解放ロジックを単一化する（C-06 解決。現状は `gather_forest` の初期付与で顕在化していないが、データ追加時に食い違う）。
-- **コグロード**: 依存関係を `requirements.lock` に含めて全コグのロードを保証する（C-01 解決）。ロード失敗はログで明確にし、方針（起動継続 or 起動失敗）を明示する。
-- **ツリー同期**: 失敗時のリトライ（例: 指数バックオフ）を定義し、失敗時は起動を続行して再同期の契機（on_ready 後等）を定める。
-- **観測性**: 全 step を `logging` で記録（C-12 解決）。
+> **2026-08-07 更新**: 下記のうち多くは実装済み（解決）。
+
+- **絵文字取得**: 取得失敗で起動を落とさない。失敗時はログに記録し、ITEMS の emoji 未設定分は `:item_id:` フォールバックで起動を継続する。**未実装**（現状は起動失敗。U-08 参照）。
+- **選択リスト/価格導出**: レシピ循環参照を検出し、価格 0 の扱いを明示する。**未実装**。
+- **ユーザー状態リフレッシュ**: 起動時にデータスキーマを検証し、欠損ユーザーを隔離（起動継続）する。**未実装**。
+- **advancement_now 再構築**: null 前提の扱いを単一化する。**実装済み**（null 前提は初期付与専用と決定。**C-06 解決**）。
+- **コグロード**: 依存関係を `requirements.lock` に含めて全コグのロードを保証する。**実装済み**（`deepmerge==2.1.0` を lock へ追加。**C-01 解決**）。ロード失敗は `logger.exception` で記録（**C-12 解決**）。
+- **ツリー同期**: 失敗時のリトライを定義する。**未実装**。
+- **観測性**: 全 step を `logging` で記録する。**実装済み**（**C-12 解決**）。
 
 ---
 
@@ -142,18 +148,18 @@ sequenceDiagram
 
 ### 4.1 時間順の処理
 
-1. `print('Botが起動しました')`（`core/state.py:197`）。
-2. `await self.change_presence(activity=discord.Game(name="うおおおお～～～～～～～～～～～～～～～"))`（`core/state.py:199`）。
-3. 失敗は `except: pass`（:200-201）で握りつぶし。
+1. `logger.info('Botが起動しました')`（`core/state.py`、旧 print）。
+2. `await self.change_presence(activity=discord.Game(name="うおおおお～～～～～～～～～～～～～～～"))`（`core/state.py`）。
+3. 失敗は `except Exception: pass` で握りつぶし。
 
 ### 4.2 失敗時（現行実装）
 
-presence 設定失敗（レート制限 / ゲートウェイ状態）は**静かに無視**される（ログなし、C-12）。on_ready は discord.py の仕様上、再接続時にも呼ばれ得る（ライブラリ責務、詳細未確定）。
+presence 設定失敗（レート制限 / ゲートウェイ状態）は**静かに無視**される（ログなし）。on_ready は discord.py の仕様上、再接続時にも呼ばれ得る（ライブラリ責務、詳細未確定）。
 
 ### 4.3 再実装契約（to-be）
 
-- presence 設定の失敗をログに記録し、無視の判断を可視化する。
-- on_ready が複数回呼ばれるケース（再接続）を想定し、冪等にする。
+- presence 設定の失敗をログに記録し、無視の判断を可視化する。**未実装**。
+- on_ready が複数回呼ばれるケース（再接続）を想定し、冪等にする。**未実装**。
 
 ---
 
@@ -170,15 +176,15 @@ presence 設定失敗（レート制限 / ゲートウェイ状態）は**静か
 
 ### 5.2 失敗時（現行実装）
 
-- エラーハンドラが**未登録**（`on_command_error` / `tree.error` / `add_error_handler` が grep 0 件、カタログ C-12）。ハンドラ内の未捕捉例外は discord.py 既定の「This interaction failed」応答になり、**ログが残らない**。
+- **2026-08-07 修正**: `BotTree.on_error`（`core/state.py`）が未処理のアプリコマンドエラーをログに記録し、ユーザーへ安全な ephemeral 応答（「エラーが発生しました。」）を返す（**C-12 解決**）。`Bot.on_error` がイベントリスナー例外を記録する。
 - Discord の応答期限（3 秒ルール）を超える処理への延長手段（`defer`）は使われていない。重い処理で期限超過した場合の挙動は未確定（U-04 系）。
-- `new_user` 内の `fetch_user` 失敗（ネットワーク / レート制限）は例外として伝播し、コマンドが失敗する。
+- `new_user` 内の `fetch_user` 失敗は捕捉され、フォールバック名 `user_{id}` で登録継続する（**C-18 解決**。例外型・UI は U-14）。
 
 ### 5.3 再実装契約（to-be）
 
-- グローバルエラーハンドラ（`tree.error` 等）を登録し、例外をログに記録したうえでユーザー向け応答を返す（C-12 解決）。
-- 応答期限を超え得る処理には `defer`（延長応答）を導入する。
-- 重複実行・二重応答を防ぐ冪等性を検証条件に含める（実測で確定、U-04 参照）。
+- グローバルエラーハンドラ（`tree.error` 等）を登録し、例外をログに記録したうえでユーザー向け応答を返す。**実装済み**（`BotTree.on_error`。**C-12 解決**）。
+- 応答期限を超え得る処理には `defer`（延長応答）を導入する。**未実装**。
+- 重複実行・二重応答を防ぐ冪等性を検証条件に含める（実測で確定、U-04 参照）。**未実装**。
 
 ---
 
@@ -194,14 +200,14 @@ presence 設定失敗（レート制限 / ゲートウェイ状態）は**静か
 
 ### 6.2 失敗時（現行実装）
 
-- コールバック内の未捕捉例外は EVT-002 と同様に「This interaction failed」になりログなし（C-12）。
-- timeout は 180 秒を明示宣言（カタログ §3.2）。timeout 超過後の操作・応答済み Interaction への再編集（`views/sell_view.py:114,146` の `edit_original_response` 等）の実挙動は未検証（U-04）。
+- **2026-08-07 修正**: 各 View に `on_error`（内部情報を漏らさず安全応答）・`on_timeout`（子要素を無効化し元メッセージを更新）・`interaction_check`（所有者制御）を実装（**C-12 / C-19 解決**）。`item_select_view.py` の `_get_callback` は `eval` を廃止し、未登録名は `None` を返して安全に拒否（**C-11 解決**）。
+- timeout は 180 秒を明示宣言。timeout 超過後の操作・応答済み Interaction への再編集の実挙動は未検証（U-04、実機確認は延期）。
 
 ### 6.3 再実装契約（to-be）
 
-- コールバック例外の捕捉・ログを共通化する。
-- View 破棄後（timeout 超過）の操作への応答方針を明示する。
-- コールバック名はユーザー入力から導出せず内部定数のみを使用し、`eval()` フォールバックを撤廃する（C-11 解決）。
+- コールバック例外の捕捉・ログを共通化する。**実装済み**（各 View の `on_error`。**C-12 解決**）。
+- View 破棄後（timeout 超過）の操作への応答方針を明示する。**実装済み**（`on_timeout` で無効化。実機確認は U-04 として延期）。
+- コールバック名はユーザー入力から導出せず内部定数のみを使用し、`eval()` フォールバックを撤廃する。**実装済み**（**C-11 解決**）。
 
 ---
 
@@ -217,33 +223,33 @@ presence 設定失敗（レート制限 / ゲートウェイ状態）は**静か
 
 ### 7.2 失敗時（現行実装）
 
-- 未捕捉例外は「This interaction failed」になりログなし（C-12）。例: クラフトのツール破損時 `remove_item_from_index` が `list.pop(dict)` を呼び `TypeError` を起こす（カタログ C-03）。
-- timeout は**未宣言**（`__init__` に `timeout=` 指定なし）。既定値に依存する（U-03、View の 180 秒と同じとは断定しない）。
+- **2026-08-07 修正**: Modal は `modals/_common.py:safe_on_error`（内部情報を漏らさず正確に一度だけ応答）と `respond`（未応答なら初期応答、応答済みならフォローアップ）を共通化（**C-12 解決**）。クラフトのツール破損時 `remove_item_from_index` は `pop(index)` へ修正済み（**C-03 解決**）。
+- timeout は **180 秒を明示宣言**（`modals/craft_modal.py` / `modals/sell_modal.py` / `modals/settings_modal.py`。**U-03 解決**）。
 
 ### 7.3 再実装契約（to-be）
 
-- `on_submit` の例外捕捉・ログを共通化する。
-- timeout を明示宣言し、宣言値を機能カタログに反映する（U-03 解決）。
-- 既応答 Interaction の編集（U-05）は実機検証後に契約として確定する。
+- `on_submit` の例外捕捉・ログを共通化する。**実装済み**（`safe_on_error`。**C-12 解決**）。
+- timeout を明示宣言する。**実装済み**（`timeout=180`。**U-03 解決**）。
+- 既応答 Interaction の編集（U-05）は実機検証後に契約として確定する。**コード解決済**（`respond` + Modal 側で再描画。実機確認は延期）。
 
 ---
 
 ## 8. EVT-005: バックグラウンドループ 1 tick
 
-対応: JOB-TIMESTATE / JOB-PERSIST。デーモンスレッドが約 1 秒毎に 1 回実行する（`core/state.py:187-189` で起動）。
+対応: JOB-TIMESTATE / JOB-PERSIST。**asyncio タスク**（`core/state.py:_background_loop`）が約 1 秒毎に 1 回実行する。
 
 ### 8.1 時間順の処理
 
-1. `unix_time = time.time()` を取得。
-2. 全 USERS を走査し、時間状態（スタミナ回復・放射線減少・冷気減少・ショップ更新）を更新。
-3. 5 tick 毎に `save_users()`。
-4. `time.sleep(TICK_RATE)`（=1 秒）で待機。
+1. `update_tick()` を実行（`core/background.py`）。`now = time.time()` を取得。
+2. `list(USERS.keys())` のスナップショットで全 USERS を走査し、時間状態（スタミナ回復・放射線減少・冷気減少・ショップ更新）を更新。ユーザー単位の例外は捕捉して `logger.exception` で記録し継続。
+3. 5 tick 毎に `save_users()`（atomic 書込）。
+4. `asyncio.sleep(TICK_RATE)`（=1 秒）で待機。
 
 詳細なアルゴリズム・同期・停止/例外/競合は `07-event-processing/scheduled-and-background-jobs.md` に譲る。
 
 ### 8.2 失敗時・再実装契約
 
-`07-event-processing/scheduled-and-background-jobs.md` §5 に記載。スレッドは未捕捉例外で黙って停止し監視手段がないため、生存監視とログを再実装契約とする。
+`07-event-processing/scheduled-and-background-jobs.md` §5 に記載。**2026-08-07 修正**: ループはユーザー単位 try/except + `logger.exception` で生存し、`USERS.items()` 反復 race（C-17）はスナップショット反復で解消済み。
 
 ---
 
@@ -255,48 +261,48 @@ presence 設定失敗（レート制限 / ゲートウェイ状態）は**静か
 
 1. 運営が `docker compose stop` / コンテナ停止 → `stop_signal: SIGINT`（`compose.yaml:13`）、`stop_grace_period: 15s`（:14）、`init: true`（:11）が適用される。
 2. SIGINT を受けた discord.py の `bot.run(TOKEN)` がクリーン終了を試みる（Gateway close）。これはライブラリ責務であり、内部詳細は本リポジトリの一次根拠外（**未確定**）。
-3. バックグラウンドスレッドはデーモン（`daemon=True`、`core/state.py:189`）のため、プロセス終了と同時に強制終了される。最終保存が 5 秒間隔に間に合わない場合、**最大約 5 秒分の状態変化が失われ得る**。
-4. 保存は `user.json` への直接 `json.dump`（`core/utils.py:454-457`）であり atomic ではない（カタログ C-07）。
+3. **2026-08-07 修正**: `Bot.close` がバックグラウンドタスク（`self.background_task`）をキャンセルしてから `super().close()` を呼ぶ。ただし**最終保存は行わない**ため、5 秒間隔に間に合わない場合、**最大約 5 秒分の状態変化が失われ得る**。
+4. 保存は `save_users` の atomic 書込（一時ファイル + `os.replace`。**C-07 解決**）。
 
 ### 9.2 再実装契約（to-be）
 
-- SIGTERM/SIGINT ハンドラで最終 `save_users()` を実行し、Graceful シャットダウンを保証する。
-- 保存を atomic 化（一時ファイル + `os.replace`）する（C-07 解決。詳細は scheduled-and-background-jobs.md と共通）。
-- `stop_grace_period` 内に保存が完了するよう、保存時間を検証条件に含める。
+- SIGTERM/SIGINT ハンドラで最終 `save_users()` を実行し、Graceful シャットダウンを保証する。**未実装**。
+- 保存を atomic 化（一時ファイル + `os.replace`）する。**実装済み**（**C-07 解決**。詳細は scheduled-and-background-jobs.md と共通）。
+- `stop_grace_period` 内に保存が完了するよう、保存時間を検証条件に含める。**未実装**。
 
 ---
 
 ## 10. 現行の失敗時の共通挙動（まとめ）
 
-- エラーハンドラ（`on_command_error` / `tree.error` / `add_error_handler`）は**未登録**。例外は Discord 側の「This interaction failed」表示になり、Bot 側にログが残らない（C-12）。
-- `logging` / `logger` / `traceback` は 0 件（grep 確認）。観測手段は `print` のみ。
+- **2026-08-07 修正**: エラーハンドラ（`BotTree.on_error` / `Bot.on_error` / Modal `safe_on_error` / View `on_error`）が登録され、未捕捉例外はログに記録されユーザーへ安全な応答が返る（**C-12 解決**）。
+- `logging` 標準モジュールを導入し、`print` による観測を廃止（**C-12 解決**）。
 - setup_hook 中の未捕捉例外は起動失敗につながる（絵文字取得・ツリー同期・ユーザー状態リフレッシュ）。
-- バックグラウンドスレッドの未捕捉例外はプロセスに影響せず黙って停止する。
+- バックグラウンドタスクの例外はユーザー単位 try/except で捕捉され、ループは生存する（**C-17 解決**）。
 
 ---
 
 ## 11. 未確定事項
 
-| ID | 項目 | 内容 | 確定に必要な確認 |
-|---|---|---|---|
-| U-01 | deepmerge 欠落の実行時影響 | `admin_manage` のロード失敗が Docker で実際に起きるかは未確認（C-01） | `docker compose build` + 起動ログ確認 |
-| U-03 | Modal timeout 値 | 3 Modal とも未宣言。既定値はライブラリ依存 | discord.py 既定値確認 / 明示化 |
-| U-04 | View/Modal 破棄後操作・二重応答 | timeout 超過後や既応答 Interaction への再編集の実挙動 | 実機操作 |
-| U-05 | sell_modal の応答済み Interaction 編集 | `modals/sell_modal.py:60` の `sell_selecting` 実行挙動 | 実機の売却フロー |
-| U-06 | ショップ再抽選の件数整合 | `random.sample(shop_data, 10)` が `len(shop_data) < 10` で失敗しないか | ローテーション実行の観察 |
-| U-09 | 複数インスタンス同時実行 | 同時書込による破損（単一レプリカ要請の根拠） | 多重起動テスト |
-| U-12 | ゲームバランス数値 | スタミナ回復 20/h 等の数値が意図されたバランスか | Phase2 の仕様定義 |
+| ID | 項目 | 内容 | 確定に必要な確認 | 状態 |
+|---|---|---|---|---|
+| U-01 | deepmerge 欠落の実行時影響 | `admin_manage` のロード失敗が Docker で実際に起きるかは未確認（C-01） | `docker compose build` + 起動ログ確認 | コード解決済（lock 追加）。Docker ビルド実起動は**延期** |
+| U-03 | Modal timeout 値 | 3 Modal とも `timeout=180` を明示（**U-03 解決**） | — | **解決済** |
+| U-04 | View/Modal 破棄後操作・二重応答 | timeout 超過後や既応答 Interaction への再編集の実挙動 | 実機操作 | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期** |
+| U-05 | sell_modal の応答済み Interaction 編集 | `modals/sell_modal.py` の `sell_selecting` 実行挙動 | 実機の売却フロー | コード解決済（`respond` + Modal 側で再描画）。実機確認は**延期** |
+| U-06 | ショップ再抽選の件数整合 | `rotate_shop` が候補不足でも安全に処理 | ローテーション実行の観察 | コード解決済。実機確認は**延期** |
+| U-09 | 複数インスタンス同時実行 | `acquire_state_lock` が起動時ロックで多重起動を拒否 | 多重起動テスト | コード解決済。実機確認は**延期** |
+| U-12 | ゲームバランス数値 | スタミナ回復 20/h 等の数値は**文書化された契約として維持**（2026-08-07 決定） | — | **解決済（決定）** |
 
 ---
 
 ## 12. 再実装契約サマリ（C-* 対応一覧）
 
-| カタログ懸念 | 本仕様での契約 | 適用箇所 |
-|---|---|---|
-| C-01 | 依存を `requirements.lock` に含め全コグのロードを保証。ロード失敗は明示ログ | LIF-002 コグロード |
-| C-06 | advancement 解放判定（None の扱い）を単一化 | LIF-002 ユーザー状態リフレッシュ |
-| C-07 | 保存の atomic 化（一時ファイル + rename）+ シャットダウン時最終保存 | EVT-006 / jobs 文書 |
-| C-08 | `user.json` の裸 except 廃止、例外型限定、破損時バックアップ退避 | LIF-001 |
-| C-10 | ショップ更新を tick 基準でなく壁時計基準へ | jobs 文書 JOB-001 |
-| C-11 | `eval()` フォールバック撤廃、コールバック名は内部定数のみ | EVT-003 |
-| C-12 | `logging` 導入、エラーハンドラ登録、全フェーズの観測性 | 全 LIF/EVT |
+| カタログ懸念 | 本仕様での契約 | 適用箇所 | 状態 |
+|---|---|---|---|
+| C-01 | 依存を `requirements.lock` に含め全コグのロードを保証。ロード失敗は明示ログ | LIF-002 コグロード | **解決済**（`deepmerge==2.1.0` を lock へ追加） |
+| C-06 | advancement 解放判定（None の扱い）を単一化 | LIF-002 ユーザー状態リフレッシュ | **解決済**（null 前提は初期付与専用と決定） |
+| C-07 | 保存の atomic 化（一時ファイル + rename）+ シャットダウン時最終保存 | EVT-006 / jobs 文書 | **解決済**（atomic 化。最終保存は未実装） |
+| C-08 | `user.json` の裸 except 廃止、例外型限定、破損時バックアップ退避 | LIF-001 | **解決済**（fail-closed: 隔離 + exit 1） |
+| C-10 | ショップ更新を tick 基準でなく壁時計基準へ | jobs 文書 JOB-001 | **解決済**（`rotate_shop`、壁時計 1 時間毎） |
+| C-11 | `eval()` フォールバック撤廃、コールバック名は内部定数のみ | EVT-003 | **解決済**（`_get_callback` が `None` を返す） |
+| C-12 | `logging` 導入、エラーハンドラ登録、全フェーズの観測性 | 全 LIF/EVT | **解決済**（`logging` + `BotTree.on_error` + Modal/View `on_error`） |

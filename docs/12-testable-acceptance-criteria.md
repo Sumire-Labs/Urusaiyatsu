@@ -18,9 +18,11 @@
 ## 2. 検証制約（現行のテスト環境）
 
 - 自動テスト・linter・type check・formatter・CI は存在しない（[00-feature-catalog.md](00-feature-catalog.md) C-13、`AGENTS.md` も同旨）。実行可能な非ライブ検証は `compileall`（Docker 内）のみ。
+- **2026-08-07・後続**: `tests/` に**非ライブ単体テスト**（`_harness.py` の隔離サブプロセス方式 + `test_sell.py` / `test_views.py` / `test_utils.py` / `test_state.py` / `test_lock.py` / `test_compile.py`）と `.github/workflows/ci.yml`（Python 3.12・`requirements.lock` 導入・`unittest discover -s tests`・compileall）を追加（**C-13 解決**）。これらは Discord ライブ検証ではなく、隔離サブプロセスで実コードを実行する非ライブ単体テスト。**実行結果の完了は主張しない**（CI・ローカル実行の成否は未確認）。
 - Discord ライブ検証は Bot token が必要であり Phase1/Phase2 執筆時点では未実施 → 該当する受入条件は「未検証」。
 - Docker ビルドは `docker compose build` で検証可能（実行時影響は U-01）。
 - 破壊的テスト（多重起動・`down -v`・user.json 破損）は隔離環境で実施すること。
+- **2026-08-07 更新**: 実装（作業ツリー `new-item-system`）により多くの既知欠陥（C-01〜C-08, C-10〜C-12, C-14, C-16〜C-22）が**コード・静的解析で解決済み**となった。ただし**実行時テストの完了は主張しない**（Docker ビルド・Discord ライブでの検証は未実施。手動のライブ検証として延期）。ユーザー決定（2026-08-07）: ショップ更新は壁時計 1 時間毎、null 前提は初期付与専用、`count` は 1〜100・ユーザー毎 3 秒クールダウン、advancement 欠落参照は `gather_mythical_mines` へ修正、バランス数値は文書化された契約として維持、状態ストアは単一プロセスロック。
 
 ## 3. 表記法
 
@@ -161,7 +163,7 @@ ACR-XXX — <タイトル>
 - **When**: そのユーザーが `/status` を実行する
 - **Then**: `new_user` によりデフォルト状態（インベントリ空・stamina 100・level_global 1 等）が作成され、ステータス Embed + ページング View が**公開**で表示される
 - **状態**: 確定（`cogs/status.py:21`, `core/utils.py:new_user`）。Discord 実表示は未検証
-- **補足**: `/settings`・`/leaderboard` は `new_user` を呼ばないため未登録ユーザーでは例外となる（C-05 → ACR-K-04）
+- **補足**: `/settings`・`/leaderboard` も `new_user` を呼ぶ（**C-05 解決** → ACR-K-04）
 
 ### E2E-02 — 採集フロー（装備→採集→XP/進捗→保存）【CMD-GATHER, CTX-LOOT, CTX-XP, CTX-INV-CRUD】
 
@@ -184,7 +186,7 @@ ACR-XXX — <タイトル>
 - **Given**: クラフトレシピの素材・スタミナ・必要なツール（`tool_tag`）を所持するユーザーがいる
 - **When**: `/craft` → レシピ選択（View）→ 個数入力（Modal）と進める
 - **Then**: 素材・スタミナ（`crafting_stamina_saving_chance` 分岐）が消費され、ツール耐久 `meta.damage` が +1 され、`max_damage` 未満なら続行、到達なら破損処理（交換設定に応じた交換/中断）が走り、結果アイテム・XP・進捗が付与され、`save_users()` が呼ばれる
-- **状態**: 確定（`views/craft_view.py`, `modals/craft_modal.py:36-186`）。ツール破損到達時の pop bug（C-03 → ACR-K-02）により現状は例外の可能性（U-02 で確認）
+- **状態**: 確定（`views/craft_view.py`, `modals/craft_modal.py:36-186`）。ツール破損時の pop bug（C-03）は `pop(index)` へ修正済み（**C-03 解決** → ACR-K-02）。実機確認は U-02 として延期
 - **補足**: 素材は `remove_item_stacked`（`core/utils.py:147`）で一括消費される
 
 ### E2E-05 — 売却フロー（View→Modal→money 増加）【CMD-SELL, VIEW-SELLSELECT, MODAL-SELLQTY, CTX-VALUE】
@@ -199,14 +201,14 @@ ACR-XXX — <タイトル>
 - **Given**: `level_global >= 7` かつ `money >= price` のユーザーがいる
 - **When**: `/buy` → 商品選択（View）と進める
 - **Then**: money が `price` 減少し、アイテムが 1 個追加され、`shop_count` が +1 され、残り購入回数 `shop_amount - bought_count` が表示され、`save_users()` が呼ばれる
-- **状態**: 確定（`cogs/buy.py:20-40`, `views/shop_view.py:22-57`）。ショップローテーションの周期整合は未検証（U-06）
+- **状態**: 確定（`cogs/buy.py:20-40`, `views/shop_view.py:22-57`）。ショップローテーションは壁時計 1 時間毎（**C-10 解決** → ACR-R-04）。実機確認は U-06 として延期
 
 ### E2E-07 — 装備フロー（選択→装備→交換/外し）【CMD-EQUIP, VIEW-EQUIPSELECT, VIEW-EQUIPREMOVE, CTX-STATS】
 
 - **Given**: equippable アイテムを持つユーザーがいる
 - **When**: `/equip` → アイテム選択（View）→ 装備（または「装備品を外す」→ 対象選択）と進める
 - **Then**: インベントリから `remove_item` / `remove_item_from_dict` で減らして `equipment[slot]` へ移動（同一スロット既装備は交換）、装備結果が**公開**メッセージで表示され、`save_users()` が呼ばれる
-- **状態**: 確定（`cogs/equip.py:13-111`, `views/equip_view.py`）。アクセサリーの stats は現行コードではステータス計算に反映されない（C-04 → ACR-K-03）
+- **状態**: 確定（`cogs/equip.py:13-111`, `views/equip_view.py`）。アクセサリーの stats は `user_stats` へ書戻しされ反映される（**C-04 解決** → ACR-K-03）
 
 ### E2E-08 — 使用フロー（スタミナ/loot/燃料/放射線）【CMD-USE, CTX-LOOT】
 
@@ -220,7 +222,7 @@ ACR-XXX — <タイトル>
 - **Given**: `config.json` の `admin[].id` に登録された管理者（および非管理者）がいる
 - **When**: 各 `/admin_*` を実行する
 - **Then**: 非管理者は拒否メッセージ（ephemeral）、管理者は付与/移行/変更の成功メッセージ（ephemeral）を受け取り、`save_users()` が呼ばれる
-- **状態**: 確定（`cogs/admin_give.py`, `cogs/admin_transit.py`, `cogs/admin_manage.py`, `core/config.py:18-20`）。admin_give 負数の現行挙動は C-02（→ ACR-K-01）、Docker での admin_manage ロードは C-01（→ ACR-E-02）
+- **状態**: 確定（`cogs/admin_give.py`, `cogs/admin_transit.py`, `cogs/admin_manage.py`, `core/config.py:18-20`）。admin_give 負数は `abs(amount)` で剥奪（**C-02 解決** → ACR-K-01）、Docker での admin_manage ロードは lock 追加で解決（**C-01 解決** → ACR-E-02）
 
 ### E2E-10 — 設定フロー（config 0〜5）【CMD-SETTINGS, MODAL-NAME, VIEW-SETTINGS-*】
 
@@ -234,14 +236,14 @@ ACR-XXX — <タイトル>
 - **Given**: 有効な `data/config.json`（Docker では secret）と永続ボリュームがある
 - **When**: `python main.py`（または Docker 起動）を実行する
 - **Then**: import 時ブートストラップ（chdir → 静的 JSON 7 種読込 → user.json 自動作成/読込）→ `setup_hook`（絵文字取得 → 選択リスト/ショップ/equip_slot 生成 → ユーザー状態リフレッシュ → 16 コグの `load_extension` → バックグラウンドループ起動 → `tree.sync()`）→ `on_ready`（存在感設定）がこの順で実行される
-- **状態**: 確定（`core/state.py:14-49, 92-201`, `cogs/__init__.py:6-23`）。Discord 疎通・絵文字取得・ツリー同期は未検証。deepmerge 欠落で `cogs.admin_manage` のみロード失敗の可能性（C-01 → ACR-E-02）
+- **状態**: 確定（`core/state.py:14-49, 92-201`, `cogs/__init__.py:6-23`）。Discord 疎通・絵文字取得・ツリー同期は未検証。deepmerge は lock 追加で解決（**C-01 解決** → ACR-E-02。Docker ビルド実起動は U-01 として延期）
 
 ### E2E-12 — 永続化と再起動【JOB-PERSIST, DATA-USER, LIFE-IMPORT】
 
 - **Given**: ゲーム操作で何らかの状態（money・inventory 等）を変更したユーザーがいる
 - **When**: 5 秒待機 / コマンド実行 / プロセス再起動を行う
 - **Then**: バックグラウンドループが 5 秒毎に `save_users()` を実行し、再起動後もユーザー状態が `user.json` から復元される
-- **状態**: 確定（保存周期と `save_users` 呼び出しはコードで確定: `core/background.py:95-97`, 各コグ。再起動後の復元は `core/state.py:43-49`、スタミナ全回復は ACR-R-02、非 atomic 書込は ACR-S-03 を参照）
+- **状態**: 確定（保存周期と `save_users` 呼び出しはコードで確定: `core/background.py`, 各コグ。再起動後の復元は `core/state.py:_load_users`、スタミナ全回復は ACR-R-02、atomic 書込は ACR-S-03 を参照）
 
 ### E2E-13 — 障害時（外部/設定/依存欠落）【LIFE-EMOJI, OPS-CONFIG, LIFE-EXTLOAD】
 
@@ -275,6 +277,17 @@ ACR-XXX — <タイトル>
 - **ACR-N-17 ADMIN-MANAGE 変更【確定】** Given: 管理者かつ deepmerge が導入された環境 / When: `/admin_manage` で dict 形式の `data` を実行 / Then: `always_merger.merge` でユーザーデータが変更され、ephemeral で通知、`save_users()` 実行 / 根拠: `cogs/admin_manage.py:37-51` / 機能: CMD-ADMMANAGE
 - **ACR-N-18 自動登録【確定】** Given: 未登録ユーザー / When: ゲーム操作系コマンド（`/status` `/gather` `/fishing` `/use` `/buy` `/refuel` `/equip` `/item_data` 等）を実行 / Then: `new_user` により登録される（`/settings`・`/leaderboard` は対象外 → C-05）/ 根拠: 各コグの `new_user` 呼び出し / 機能: CTX-USER-INIT
 - **ACR-N-19 `/item_data` の自動登録と保存タイミング【確定】** Given: 未登録ユーザー / When: `/item_data` を実行 / Then: `item_select_view` の `new_user`（`views/item_select_view.py:120`）により**メモリ上の `USERS` に登録**されるが、`save_users()` は呼ばれず**即時保存されない**（後続の 5 秒毎保存まで永続化されない）/ 根拠: `views/item_select_view.py:117-128` / 機能: CTX-USER-INIT, CMD-ITEMDATA, VIEW-ITEMSELECT
+- **ACR-N-20 売却 stale 送信の拒否【確定・コード解決済】** Given: 売却 Modal を開いた後にインベントリが変更された / When: 古い Modal を送信 / Then: `expected_item`（開封時点の `id`/`meta`/`count`）と現在の `inventory[index]` を照合し、不一致・範囲外・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否** / 根拠: `modals/sell_modal.py:sell_item` / 機能: MODAL-SELLQTY, CMD-SELL / 補足: `tests/test_sell.py` が非ライブでカバー
+- **ACR-N-21 売却ページクランプ【確定・コード解決済】** Given: 売却後にページが空になる・要求ページが範囲外 / When: `sell_selecting` を実行 / Then: `page_max` を再計算し要求ページを 1..`page_max` へクランプ（ゼロ個セレクトを生成しない）/ 根拠: `views/sell_view.py:sell_selecting` / 機能: VIEW-SELLSELECT / 補足: `tests/test_sell.py` が非ライブでカバー
+- **ACR-N-22 売却の永続化先行【確定・コード解決済】** Given: 売却実行中に再描画が失敗する状況 / When: `sell_item` を実行 / Then: `save_users()` が再描画**前**に実行され、再描画失敗でも売却が永続化される / 根拠: `modals/sell_modal.py:sell_item` / 機能: MODAL-SELLQTY / 補足: `tests/test_sell.py` が非ライブでカバー
+- **ACR-N-23 View タイムアウトメッセージ保持【確定・コード解決済】** Given: View が表示中メッセージ参照（`_message_ref`）を保持している / When: タイムアウト / Then: `on_timeout` が保持メッセージを実際に編集・無効化する。メッセージ未保持の通常タイムアウトは例外・ログ対象にしない / 根拠: `views/*.py` の `_disable_on_timeout` / 機能: VIEW-* / 補足: `tests/test_sell.py` の `TestTimeoutMessageRetention` が非ライブでカバー
+- **ACR-N-24 cooldown 応答【確定・コード解決済】** Given: ユーザーが `/use` `/gather` `/fishing` を 3 秒以内に再実行 / When: 実行 / Then: discord.py フレームワーク既定の `CommandOnCooldown` 応答（「クールダウン中」の旨）が返る / 根拠: `@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` / 機能: CMD-USE, CMD-GATHER, CMD-FISHING / 補足: 実機表示文言はライブ検証として延期
+- **ACR-N-25 admin check 応答【確定・コード解決済】** Given: 非 ADMIN ユーザー / When: `/admin_*` を実行 / Then: `admin_check` が `app_commands.CheckFailure` を送出し、フレームワーク既定の権限不足応答（`このコマンドの使用にはBotの管理権限が必要です。` の文言を含む）が返る / 根拠: `cogs/_helpers.py:admin_check` / 機能: CMD-ADMGIVE, CMD-ADMTRANSIT, CMD-ADMMANAGE / 補足: 実機表示文言はライブ検証として延期
+- **ACR-N-26 事前バインド所有者 ID【確定・コード解決済】** Given: `/equip` `/buy` を実行 / When: View を表示 / Then: `equip_select` / `remove_equip_choice` / `shop_choice` が `owner_id=user_id` で**事前バインド**され、所有者不一致操作は `interaction_check` で拒否される / 根拠: `cogs/equip.py`, `cogs/buy.py`, `views/*.py` / 機能: VIEW-EQUIPSELECT, VIEW-EQUIPREMOVE, VIEW-SHOP
+- **ACR-N-27 非ミューテーション釣りテーブル【確定・コード解決済】** Given: 餌装備で釣りを実行 / When: `get_fishing_loot_table` を実行 / Then: `deepcopy` でコピー上で操作し、グローバル `FISHING_PLACES` の `weight` は不変（観測-7 解決）/ 根拠: `cogs/fishing.py:get_fishing_loot_table` / 機能: CMD-FISHING
+- **ACR-N-28 釣り確率の重複エントリ集計【確定・コード解決済】** Given: 釣り場所テーブルに同一 `item_id` の重複エントリがある / When: `/item_data` で確率表示 / Then: `_fishing_probability_range` が重複エントリの `weight` を合算し、実際のテーブルフィルタリングと重み付けに一致する確率範囲を表示 / 根拠: `cogs/item_data.py:_fishing_probability_range` / 機能: CMD-ITEMDATA
+- **ACR-N-29 境界付き leaderboard【確定・コード解決済】** Given: 多数のユーザー / When: `/leaderboard` を実行 / Then: 自分の順位を「自分よりスコアが高い人数 + 1」の単一走査で算出し、上位 10 件を `heapq.nlargest(10, ...)` で選択（全件ソート回避）/ 根拠: `cogs/leaderboard.py` / 機能: CMD-LEADERBOARD
+- **ACR-N-30 売却回帰テスト【確定・コード解決済】** Given: `tests/test_sell.py` / When: 実行 / Then: stale 送信拒否・永続化先行・ページクランプ・タイムアウトメッセージ保持・安全な on_error を非ライブ（隔離サブプロセス）で検証する / 根拠: `tests/test_sell.py`, `tests/_harness.py` / 機能: MODAL-SELLQTY, VIEW-SELLSELECT / 補足: 非ライブ単体テスト。実行結果の完了は主張しない（CI・ローカル実行の成否は未確認）
 
 ### 6.2 異常系（Abnormal）
 
@@ -297,7 +310,7 @@ ACR-XXX — <タイトル>
 - **ACR-A-17 ADMIN-GIVE amount=0【確定】** Given: 管理者 / When: `/admin_give` に `amount = 0` を指定 / Then: 「有効な整数を入力してください。」（ephemeral）が返る / 根拠: `cogs/admin_give.py:28-30` / 機能: CMD-ADMGIVE
 - **ACR-A-18 ADMIN-MANAGE 変換失敗【確定】** Given: 管理者 / When: `/admin_manage` に dict に変換できない文字列または dict 以外を指定 / Then: 「データの変換に失敗しました。」（ephemeral）が返る / 根拠: `cogs/admin_manage.py:28-35` / 機能: CMD-ADMMANAGE
 - **ACR-A-19 ADMIN-TRANSIT 移行元不在【確定】** Given: 管理者かつ移行元未登録 / When: `/admin_transit` を実行 / Then: 「存在しないユーザーです。」（ephemeral）が返る / 根拠: `cogs/admin_transit.py:26-28` / 機能: CMD-ADMTRANSIT
-- **ACR-A-20 未捕捉例外【確定・欠陥】Given: ハンドラ内で例外が発生する操作 / When: コマンド・View・Modal を実行 / Then: エラーハンドラ未登録のため Discord クライアント既定の「interaction failed」になり、内部状態のログは残らない / 根拠: エラーハンドラ grep 0 件（C-12） / 機能: 全 CMD/VIEW/MODAL / 補足: 解決方針は `09-error-handling-and-observability.md` で決定
+- **ACR-A-20 未捕捉例外【解決済（C-12）】** Given: ハンドラ内で例外が発生する操作 / When: コマンド・View・Modal を実行 / Then: `BotTree.on_error` / Modal `safe_on_error` / View `on_error` が例外をログに記録し、ユーザーへ安全な応答（「エラーが発生しました。」）を返す（**C-12 解決**）/ 根拠: `core/state.py:BotTree`, `modals/_common.py:safe_on_error`, `views/*.py` / 機能: 全 CMD/VIEW/MODAL
 - **ACR-A-21 EQUIP アクセサリー重複【確定】** Given: 同一 `equip_type` のアクセサリーを装備済み / When: 別の同一 `equip_type` を選択 / Then: 重複装備不可メッセージが返る / 根拠: `cogs/equip.py:50-72` / 機能: CMD-EQUIP
 - **ACR-A-22 EQUIP アクセサリースロット不足【確定】** Given: アクセサリースロット 2 枠が埋まっている / When: アクセサリーを選択 / Then: 「アクセサリースロットが足りません。」が返る / 根拠: `cogs/equip.py:50-72` / 機能: CMD-EQUIP
 - **ACR-A-23 EQUIP 未所持アイテム【確定】** Given: インベントリに無いアイテムを選択 / When: 装備を実行 / Then: 「持っていません。」が返る / 根拠: `cogs/equip.py:44-47` / 機能: CMD-EQUIP
@@ -321,74 +334,74 @@ ACR-XXX — <タイトル>
 - **ACR-R-01 データ復元【確定・実測未検証】** Given: 保存済みの `user.json` がある / When: プロセスを再起動 / Then: `core.state` の読込（`core/state.py:43-49`）により money・inventory・level 等が復元される / 機能: DATA-USER, LIFE-IMPORT
 - **ACR-R-02 起動時スタミナ全回復【確定・期待仕様】Given: スタミナを消費した状態で再起動 / When: `setup_hook` が実行 / Then: 全ユーザーの `stamina` が `stamina_max`（= `100 + level_global - 1`）に強制セットされる / 根拠: `core/state.py:163-164` / 機能: LIFE-CHOICES / 補足: 期待仕様として確定（起動時スタミナ全回復は意図された動作）。スタミナ数値のバランス調整は U-12 で検討
 - **ACR-R-03 進捗リスト再構築【確定】** Given: 達成済み・進行中の進捗がある / When: 再起動 / Then: `advancement_now` が `previous_advancement` 判定で再構築される / 根拠: `core/state.py:167-176` / 機能: LIFE-CHOICES
-- **ACR-R-04 ショップローテーションのずれ【確定・現行仕様】Given: プロセスを再起動 / When: 再起動後 3600 tick が経過 / Then: ショップ更新が起動時点基準の tick で走るため壁時計とは非同期になる / 根拠: `core/background.py:29`（C-10） / 機能: JOB-TIMESTATE / 補足: 是正は C-10 で判断
-- **ACR-R-05 user.json 破損時のリセット【確定・欠陥】Given: `user.json` が破損（JSON 不正・I/O エラー）/ When: 起動 / Then: 裸 `except` により `{}` で上書きされ、既存ユーザーデータが失われる / 根拠: `core/state.py:43-49`（C-08） / 機能: DATA-USER, LIFE-IMPORT
+- **ACR-R-04 ショップローテーションのずれ【解決済（C-10）】** Given: プロセスを再起動 / When: 再起動後 1 時間境界が経過 / Then: `rotate_shop` が壁時計の 1 時間毎に更新し、再起動で周期がずれない（**C-10 解決**）/ 根拠: `core/utils.py:rotate_shop` / 機能: JOB-TIMESTATE
+- **ACR-R-05 user.json 破損時のリセット【解決済（C-08）】** Given: `user.json` が破損（JSON 不正・I/O エラー）/ When: 起動 / Then: `_load_users` が破損ファイルを `user.json.bak.<ts>` へ隔離し ERROR ログ + exit 1（fail-closed。自動 `{}` 上書きはしない）/ 根拠: `core/state.py:_load_users`（C-08）/ 機能: DATA-USER, LIFE-IMPORT
 - **ACR-R-06 停止時の未保存ロス【確定・実測未検証】** Given: 5 秒毎保存の仕様 / When: SIGINT 停止 / Then: 最後の保存から停止までの最大 5 秒分の進行が失われる / 根拠: ルート `README.md`（運用注意）, `core/background.py:95-97` / 機能: JOB-PERSIST, OPS-CONFIG
 
 ### 6.5 永続化（Persistence）
 
 - **ACR-S-01 5 秒毎保存【確定】** Given: bot 稼働中 / When: 5 秒（`SAVE_INTERVAL=5`）経過毎 / Then: `save_users()` が呼ばれ `user.json` が更新される / 根拠: `core/background.py:12, 95-97` / 機能: JOB-PERSIST
 - **ACR-S-02 随時保存【確定】** Given: ゲーム操作・View・Modal・admin 操作の成功 / When: 各処理の最後 / Then: `save_users()` が呼ばれる（※ `/ping`・`/leaderboard`・`/item_data` は状態変更が無く、`/settings` の config 2/3/4 は View 表示時は保存されず選択時に保存される）/ 根拠: 各コグ・View・Modal の `save_users` 呼び出し / 機能: JOB-PERSIST
-- **ACR-S-03 非 atomic 書込【確定・欠陥】Given: 保存が発生する状況 / When: `save_users()` 実行 / Then: 一時ファイル+rename を伴わない直接 `json.dump` のため、同時書込・クラッシュ時に破損リスクがある / 根拠: `core/utils.py:454-457`（C-07） / 機能: JOB-PERSIST, DATA-USER
-- **ACR-S-04 単一レプリカ【確定】** Given: 本番運用 / When: 複数インスタンスを起動しない（運用規約） / Then: `user.json` の同時書込による破損を回避できる。**多重起動時の挙動は未検証** / 根拠: `AGENTS.md`, ルート `README.md`, C-07, U-09 / 機能: OPS-CONFIG
+- **ACR-S-03 非 atomic 書込【解決済（C-07）】** Given: 保存が発生する状況 / When: `save_users()` 実行 / Then: `_save_lock` 下で深いスナップショット + 一時ファイル + `fsync` + `os.replace` の **atomic 書込**（**C-07 解決**）/ 根拠: `core/utils.py:save_users` / 機能: JOB-PERSIST, DATA-USER
+- **ACR-S-04 単一レプリカ【解決済（U-09）】** Given: 本番運用 / When: 複数インスタンスを起動 / Then: `acquire_state_lock` が起動時ロック（POSIX `flock`）で多重起動を拒否（**U-09 解決**）。多重起動時の実挙動は未検証（延期）/ 根拠: `core/state.py:acquire_state_lock`, `AGENTS.md`, C-07, U-09 / 機能: OPS-CONFIG
 - **ACR-S-05 Docker 永続化【確定】** Given: Docker 運用 / When: コンテナ作成 / Then: `user.json` が `bot_runtime` ボリュームの `/app/runtime/user.json` へ symlink され永続化される / 根拠: `Dockerfile:31-36`, `compose.yaml:29` / 機能: DATA-USER, OPS-CONFIG
 - **ACR-S-06 破壊的操作【確定】** Given: 運用者 / When: `docker compose down -v` を実行 / Then: `user.json` を含む永続データが消去される / 根拠: ルート `README.md`, `compose.yaml` / 機能: DATA-USER, OPS-CONFIG
 
 ### 6.6 外部障害（External Failure）
 
 - **ACR-E-01 絵文字未設定のフォールバック【確定・表示未検証】Given: アプリ絵文字が未設定 / When: 起動後の各表示 / Then: `core/state.py:110` により `:{item_id}:` 文字列で表示される / 根拠: `core/state.py:97-110`（U-08） / 機能: LIFE-EMOJI, EXT-DISCORD, DATA-ITEM
-- **ACR-E-02 deepmerge 欠落（Docker）【確定・ビルド未検証】Given: `requirements.lock` に deepmerge が無い Docker イメージ / When: 起動 / Then: `cogs.admin_manage` の `load_extension` が失敗し、`/admin_manage` が登録されない可能性がある（他コグはロード続行）/ 根拠: `requirements.lock`（deepmerge なし）, `Dockerfile:19`, `core/state.py:181-185`（C-01, U-01） / 機能: LIFE-EXTLOAD, CMD-ADMMANAGE, OPS-CONFIG
+- **ACR-E-02 deepmerge 欠落（Docker）【解決済（C-01）】** Given: `requirements.lock` に deepmerge が含まれる Docker イメージ / When: 起動 / Then: `cogs.admin_manage` の `load_extension` が成功し、`/admin_manage` が登録される（**C-01 解決**。Docker ビルド実起動は U-01 として延期）/ 根拠: `requirements.lock`（deepmerge あり）, `Dockerfile:19`, `core/state.py` / 機能: LIFE-EXTLOAD, CMD-ADMMANAGE, OPS-CONFIG
 - **ACR-E-03 Docker secret 欠落【確定】** Given: `data/config.json` 未作成 / When: コンテナ起動 / Then: エントリポイントが `ERROR: /run/secrets/bot_config を読み込めません...` を出力し exit 1 で終了する / 根拠: `docker-entrypoint.sh:8-11`, `compose.yaml:33-38` / 機能: OPS-CONFIG, DATA-CONFIG
 - **ACR-E-04 Discord API 障害【未検証】** Given: Discord API が応答しない・レートリミット等 / When: `new_user` の `fetch_user`（`core/utils.py:18`）・絵文字取得（`core/state.py:97`）・`tree.sync()`（`core/state.py:192`）を実行 / Then: 例外がハンドラ未登録のため uncaught となり「interaction failed」や起動失敗になる可能性がある / 機能: EXT-DISCORD, CTX-USER-INIT, LIFE-EMOJI, LIFE-TREESYNC
 - **ACR-E-05 on_ready の存在感設定失敗【確定】** Given: 起動完了処理中 / When: `change_presence` が失敗 / Then: `except: pass` により握りつぶされ起動は継続する / 根拠: `core/state.py:198-201` / 機能: LIFE-ONREADY, EXT-DISCORD
-- **ACR-E-06 拡張ロード失敗時【確定】** Given: いずれかの拡張ロードが失敗 / When: 起動 / Then: print で失敗を記録するのみで、他の拡張と起動は継続する / 根拠: `core/state.py:181-185`（C-12） / 機能: LIFE-EXTLOAD
+- **ACR-E-06 拡張ロード失敗時【解決済（C-12）】** Given: いずれかの拡張ロードが失敗 / When: 起動 / Then: `logger.exception` で失敗を記録し、他の拡張と起動は継続する（**C-12 解決**）/ 根拠: `core/state.py:297-303` / 機能: LIFE-EXTLOAD
 
 ---
 
 ## 7. 既知の欠陥（C-01〜C-08, C-10〜C-14, C-16〜C-22）と受入条件の対応
 
-下表は現行実装で**受入条件を満たさない**既知の欠陥と、その影響を受ける受入条件・機能 ID の対応表である。現状は「未達」として記録し、解決方針は [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) で管理する。
+下表は現行実装で**受入条件を満たさない**既知の欠陥と、その影響を受ける受入条件・機能 ID の対応表である。**2026-08-07 更新**: 実装（作業ツリー `new-item-system`）により多くの欠陥が**解決済み**となった。解決済み項目は「解決済」とし、対応する受入条件（ACR-K-xx）も解決済みとして更新する。解決方針は [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) で管理する。
 
-| 欠陥 ID | 現行挙動（未達内容） | 影響受入条件 | 機能 ID |
-|---|---|---|---|
-| C-01 | Docker 環境で `admin_manage` がロードされない可能性 | ACR-E-02 | LIFE-EXTLOAD, CMD-ADMMANAGE |
-| C-02 | `/admin_give` 負数が剥奪ではなく**加算**になる | ACR-K-01 | CMD-ADMGIVE, CTX-INV-CRUD |
-| C-03 | クラフトのツール破損時に `pop(dict)` で TypeError → Interaction Failed の可能性 | ACR-K-02 | CMD-CRAFT, MODAL-CRAFTQTY, CTX-INV-CRUD |
-| C-04 | アクセサリー stats がステータス計算に反映されない | ACR-K-03 | CTX-STATS, CMD-EQUIP |
-| C-05 | 未登録ユーザーの `/settings` / `/leaderboard` で例外 | ACR-K-04 | CMD-SETTINGS, CMD-LEADERBOARD |
-| C-06 | 3 進捗が前提参照欠落で永久に解放されない。前提 `null` の扱いも判定が食い違う | ACR-K-05 | DATA-ADVANCEMENT, CTX-XP, LIFE-CHOICES |
-| C-07 | 非 atomic・無 lock 保存（破損リスク） | ACR-S-03 | JOB-PERSIST, DATA-USER |
-| C-08 | user.json 破損時に全データを `{}` でリセット | ACR-R-05 | LIFE-IMPORT, DATA-USER |
-| C-10 | ショップ更新が tick 基準（壁時計と非同期） | ACR-R-04 | JOB-TIMESTATE, CMD-BUY |
-| C-11 | `eval` fallback（任意コード実行の余地） | ACR-K-06 | VIEW-ITEMSELECT, CMD-ITEMDATA |
-| C-12 | エラーハンドラ・logging なし（観測不可） | ACR-A-20, ACR-E-06 | 全機能 |
-| C-13 | テスト・CI なし（回帰検知不可） | 検証制約 §2 | 検証工程 |
-| C-14 | 未装備時の空 View 送信（デッドコード） | ACR-K-07 | CMD-EQUIP, VIEW-EQUIPREMOVE |
-| C-16 | `/use` の負数 `count` で在庫増加・効果反転 | ACR-K-09 | CMD-USE, CTX-INV-CRUD |
-| C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race（`RuntimeError` でスレッド終了） | ACR-K-10 | JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT |
-| C-18 | `new_user` の `fetch_user` 失敗が未捕捉 | ACR-K-11 | CTX-USER-INIT, 全ゲーム系 CMD |
-| C-19 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在 | ACR-K-12 | 全 CMD/VIEW/MODAL |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | ACR-K-13 | CMD-USE, CMD-GATHER, CMD-FISHING |
-| C-21 | stale shop choice の `shop_content.index` `ValueError` | ACR-K-14 | VIEW-SHOP, CMD-BUY |
-| C-22 | `set_craft_func` / `_craft_func` デッドコード | ACR-K-15 | VIEW-CRAFTSELECT, CMD-CRAFT |
+| 欠陥 ID | 現行挙動（未達内容） | 影響受入条件 | 機能 ID | 状態 |
+|---|---|---|---|---|
+| C-01 | Docker 環境で `admin_manage` がロードされない可能性 | ACR-E-02 | LIFE-EXTLOAD, CMD-ADMMANAGE | **解決済**（`deepmerge==2.1.0` を lock へ追加） |
+| C-02 | `/admin_give` 負数が剥奪ではなく**加算**になる | ACR-K-01 | CMD-ADMGIVE, CTX-INV-CRUD | **解決済**（`abs(amount)` で剥奪） |
+| C-03 | クラフトのツール破損時に `pop(dict)` で TypeError → Interaction Failed の可能性 | ACR-K-02 | CMD-CRAFT, MODAL-CRAFTQTY, CTX-INV-CRUD | **解決済**（`pop(index)` + トランザクション化） |
+| C-04 | アクセサリー stats がステータス計算に反映されない | ACR-K-03 | CTX-STATS, CMD-EQUIP | **解決済**（`user_stats` へ書戻し） |
+| C-05 | 未登録ユーザーの `/settings` / `/leaderboard` で例外 | ACR-K-04 | CMD-SETTINGS, CMD-LEADERBOARD | **解決済**（両コマンドで `new_user` 呼び出し） |
+| C-06 | 3 進捗が前提参照欠落で永久に解放されない。前提 `null` の扱いも判定が食い違う | ACR-K-05 | DATA-ADVANCEMENT, CTX-XP, LIFE-CHOICES | **解決済**（`gather_mythical_mines` へ修正 + null 前提は初期付与専用） |
+| C-07 | 非 atomic・無 lock 保存（破損リスク） | ACR-S-03 | JOB-PERSIST, DATA-USER | **解決済**（atomic 化 + `_save_lock` + 単一プロセスロック） |
+| C-08 | user.json 破損時に全データを `{}` でリセット | ACR-R-05 | LIFE-IMPORT, DATA-USER | **解決済**（fail-closed: 隔離 + exit 1） |
+| C-10 | ショップ更新が tick 基準（壁時計と非同期） | ACR-R-04 | JOB-TIMESTATE, CMD-BUY | **解決済**（壁時計 1 時間毎・`rotate_shop`） |
+| C-11 | `eval` fallback（任意コード実行の余地） | ACR-K-06 | VIEW-ITEMSELECT, CMD-ITEMDATA | **解決済**（`_get_callback` が `None` を返す） |
+| C-12 | エラーハンドラ・logging なし（観測不可） | ACR-A-20, ACR-E-06 | 全機能 | **解決済**（`logging` + `BotTree.on_error` + Modal/View `on_error`） |
+| C-13 | テスト・CI なし（回帰検知不可） | 検証制約 §2 | 検証工程 | 未解決（テスト・CI は未導入） |
+| C-14 | 未装備時の空 View 送信（デッドコード） | ACR-K-07 | CMD-EQUIP, VIEW-EQUIPREMOVE | **解決済**（`if not equip_choices:`） |
+| C-16 | `/use` の負数 `count` で在庫増加・効果反転 | ACR-K-09 | CMD-USE, CTX-INV-CRUD | **解決済**（`valid_count` で 1〜100 に制限） |
+| C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race（`RuntimeError` でスレッド終了） | ACR-K-10 | JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT | **解決済**（スナップショット反復 + `_users_lock`） |
+| C-18 | `new_user` の `fetch_user` 失敗が未捕捉 | ACR-K-11 | CTX-USER-INIT, 全ゲーム系 CMD | **解決済**（フォールバック名で登録継続） |
+| C-19 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在 | ACR-K-12 | 全 CMD/VIEW/MODAL | **一部解決**（use/gather/fishing 3 秒・admin check・View interaction_check。残りは U-15） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | ACR-K-13 | CMD-USE, CMD-GATHER, CMD-FISHING | **解決済**（1〜100 に制限） |
+| C-21 | stale shop choice の `shop_content.index` `ValueError` | ACR-K-14 | VIEW-SHOP, CMD-BUY | **解決済**（`item_id not in shop_content` ガード） |
+| C-22 | `set_craft_func` / `_craft_func` デッドコード | ACR-K-15 | VIEW-CRAFTSELECT, CMD-CRAFT | **解決済**（削除） |
 
 ### 欠陥対応の個別受入条件
 
-- **ACR-K-01 admin_give 負数【確定・欠陥（C-02）】** Given: 管理者が `/admin_give` に負の `amount` を指定 / When: 実行 / Then: 現行は `remove_item` の内部計算（`core/utils.py:135-138`）によりアイテム count が**加算**される。期待: 剥奪される / 機能: CMD-ADMGIVE
-- **ACR-K-02 craft ツール破損時【確定・欠陥（C-03）】** Given: ツール耐久が `max_damage` に到達するクラフト / When: 破損処理（`modals/craft_modal.py:126`）実行 / Then: `core/utils.py:212` の `pop(dict)` により `TypeError` → Interaction Failed の可能性。期待: 破損ツールの除去と交換が正常動作 / 機能: CMD-CRAFT, MODAL-CRAFTQTY（発火条件は U-02）
-- **ACR-K-03 アクセサリー stats【確定・欠陥（C-04）】** Given: stats 付きアクセサリーを装備 / When: `get_stats()` を参照（`/status`・採集・釣り等）/ Then: 現行はアクセサリー分岐が書戻しを行わないため変化しない。期待: 加算・乗算が反映 / 機能: CTX-STATS, CMD-EQUIP
-- **ACR-K-04 未登録 settings/leaderboard【確定・欠陥（C-05）】** Given: 未登録ユーザー / When: `/settings` または `/leaderboard` を実行 / Then: `KeyError` / `ValueError` の可能性。期待: `new_user` 相当の登録または適切なエラー応答 / 機能: CMD-SETTINGS, CMD-LEADERBOARD
-- **ACR-K-05 進捗解放不能【確定・欠陥（C-06）】** Given: `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` の前提を達成 / When: `complete_advancement`（`core/utils.py:386-394`）実行 / Then: 存在しない `craft_drill_engine` を参照し常に false のため解放されない。期待: データ修正または解放条件の仕様確定 / 機能: DATA-ADVANCEMENT, CTX-XP
-- **ACR-K-06 eval fallback【確定・欠陥（C-11）】** Given: 未登録のコールバック名 / When: `_get_callback` 実行 / Then: `eval(name)` が走る。期待: 登録済み名のみ解決し、未知名は安全に拒否 / 機能: VIEW-ITEMSELECT, CMD-ITEMDATA
-- **ACR-K-07 equip 空判定【確定・欠陥（C-14）】** Given: 未装備ユーザー / When: `/equip` → 「装備品を外す」 / Then: `len(equip_choices) < 0` が常に false のため空セレクト付き View が送信される。期待: 「アイテムを装備していません。」表示 / 機能: CMD-EQUIP, VIEW-EQUIPREMOVE
+- **ACR-K-01 admin_give 負数【解決済（C-02）】** Given: 管理者が `/admin_give` に負の `amount` を指定 / When: 実行 / Then: `abs(amount)` で剥奪が実行される（`cogs/admin_give.py:46-48`）。期待: 剥奪される / 機能: CMD-ADMGIVE
+- **ACR-K-02 craft ツール破損時【解決済（C-03）】** Given: ツール耐久が `max_damage` に到達するクラフト / When: 破損処理（`modals/craft_modal.py:126`）実行 / Then: `remove_item_from_index` が `pop(index)` へ修正され、破損ツールの除去と交換が正常動作する。期待: 破損ツールの除去と交換が正常動作 / 機能: CMD-CRAFT, MODAL-CRAFTQTY（実機確認は U-02 として延期）
+- **ACR-K-03 アクセサリー stats【解決済（C-04）】** Given: stats 付きアクセサリーを装備 / When: `get_stats()` を参照（`/status`・採集・釣り等）/ Then: アクセサリー分岐が `user_stats` へ書戻し、加算・乗算が反映される。期待: 加算・乗算が反映 / 機能: CTX-STATS, CMD-EQUIP
+- **ACR-K-04 未登録 settings/leaderboard【解決済（C-05）】** Given: 未登録ユーザー / When: `/settings` または `/leaderboard` を実行 / Then: 両コマンド冒頭で `new_user` を呼び、`KeyError` / `ValueError` を起こさない。期待: `new_user` 相当の登録 / 機能: CMD-SETTINGS, CMD-LEADERBOARD
+- **ACR-K-05 進捗解放不能【解決済（C-06）】** Given: `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` の前提を達成 / When: `complete_advancement` 実行 / Then: `previous_advancement` が `gather_mythical_mines` へ修正され解放される。null 前提は初期付与専用（`complete_advancement` ではアンロックしない）。期待: データ修正 + 解放条件の仕様確定 / 機能: DATA-ADVANCEMENT, CTX-XP
+- **ACR-K-06 eval fallback【解決済（C-11）】** Given: 未登録のコールバック名 / When: `_get_callback` 実行 / Then: `eval` を廃止し `_callbacks.get(name)` で登録済み名のみ解決。未登録名は `None` を返し安全に拒否。期待: 登録済み名のみ解決し、未知名は安全に拒否 / 機能: VIEW-ITEMSELECT, CMD-ITEMDATA
+- **ACR-K-07 equip 空判定【解決済（C-14）】** Given: 未装備ユーザー / When: `/equip` → 「装備品を外す」 / Then: `if not equip_choices:` により「アイテムを装備していません。」が表示される。期待: 「アイテムを装備していません。」表示 / 機能: CMD-EQUIP, VIEW-EQUIPREMOVE
 - **ACR-K-08 採集破損ツール集計【確定・期待仕様】** Given: 採集中にツールが破損 / When: 結果集計（`cogs/gather.py:112-115, 143`） / Then: `broken_tool` が負数で結果辞書に合成され Embed に負数表示される（craft は正数で集計・表示）。負数は `item_count > 0` ガード（`cogs/gather.py:147`）により `add_item` に渡らず在庫は減らない / 機能: CMD-GATHER, MODAL-CRAFTQTY / 補足: 文脈別の期待仕様として確定（採集＝破損ツールを負数表示、クラフト＝破損ツールを正数で集計・表示）
-- **ACR-K-09 `/use` 負数 count【確定・欠陥（C-16）】** Given: `/use` に負の `count` を指定 / When: 実行 / Then: `remove_item_stacked` の負数 `remove_count`（`core/utils.py:172-185`）により**在庫が増え**、効果（`con_stamina` / `con_fuel` / `con_radiation`）が**反転**する。`con_loot` は `random.choices(..., k=負数)` が空 list を返すため結果 `{}` となり、loot なしで処理が継続する。期待: 非正数の拒否 / 機能: CMD-USE / 未検証（実機確認）
-- **ACR-K-10 背景ループ race【確定・欠陥（C-17）】** Given: 背景ループが `USERS.items()` を反復中 / When: `new_user`（`core/utils.py:17`）または `admin_transit`（`cogs/admin_transit.py:33-36`）がトップレベルキーを追加/削除 / Then: `RuntimeError: dictionary changed size during iteration` が起き、try/except がないためデーモンスレッドが終了し JOB-TIMESTATE / JOB-PERSIST が停止し得る。期待: 反復中サイズ変更の防御・ループの生存 / 機能: JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT / 頻度は U-13（未検証）
-- **ACR-K-11 `fetch_user` 失敗【確定・欠陥（C-18）】** Given: Discord API 障害等で `bot.fetch_user` が失敗 / When: 新規登録を伴うコマンド/View 実行 / Then: `core/utils.py:18` に try/except がなく例外が未捕捉のまま呼び出し元ハンドラへ伝播する。期待: 失敗時の安全な登録/応答 / 機能: CTX-USER-INIT / 例外型・UI は U-14（未検証、断定しない）
-- **ACR-K-12 framework check 不在【確定・欠陥（C-19）】** Given: 任意コマンド/View/Modal / When: 実行 / Then: cooldown / `max_concurrency` / `@commands.has_permissions` / 共通 `interaction_check` が存在せず（grep 0 件）、実行間隔・同時実行数・権限の制御がない。期待: 必要に応じた導入（要否・値は U-15 未確定、再実装必須要件としない）/ 機能: 全 CMD/VIEW/MODAL
-- **ACR-K-13 count 入力境界【確定・欠陥（C-20）】** Given: `/use` `/gather` `/fishing` に非正数または極端な高値を指定 / When: 実行 / Then: 非正数ガード・上限チェックが存在しない（`cogs/use.py:21`, `cogs/gather.py:21`, `cogs/fishing.py:23`）。挙動は推測しない（実機確認が必要）。期待: 入力境界の定義 / 機能: CMD-USE, CMD-GATHER, CMD-FISHING
-- **ACR-K-14 stale shop choice【確定・欠陥（C-21）】** Given: ショップ View 表示後に再抽選が走る / When: 選択を送信 / Then: `views/shop_view.py:27` の `shop_content.index` が `ValueError` → interaction failed になり得る。期待: stale 選択の安全な再提示 / 機能: VIEW-SHOP, CMD-BUY
-- **ACR-K-15 craft_view デッドコード【確定・欠陥（C-22）】** Given: `views/craft_view.py:12-19` / When: リポジトリを検索 / Then: `set_craft_func` / `_craft_func` は定義のみで登録元・呼び出し元なし。期待: 不要コードの除去（機能影響なし）/ 機能: VIEW-CRAFTSELECT, CMD-CRAFT
+- **ACR-K-09 `/use` 負数 count【解決済（C-16）】** Given: `/use` に非正数または 100 超の `count` を指定 / When: 実行 / Then: `valid_count`（1〜100）により「使用回数は1〜100の範囲で指定してください。」と応答し状態変更前に拒否。期待: 非正数・上限外の拒否 / 機能: CMD-USE / 実機確認は延期
+- **ACR-K-10 背景ループ race【解決済（C-17）】** Given: 背景ループが `USERS` を反復中 / When: `new_user` または `admin_transit` がトップレベルキーを追加/削除 / Then: `list(USERS.keys())` のスナップショット反復 + `_users_lock` により `RuntimeError` を起こさず、ユーザー単位 try/except でループが生存する。期待: 反復中サイズ変更の防御・ループの生存 / 機能: JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT / 実機観察は U-13 として延期
+- **ACR-K-11 `fetch_user` 失敗【解決済（C-18）】** Given: Discord API 障害等で `bot.fetch_user` が失敗 / When: 新規登録を伴うコマンド/View 実行 / Then: `new_user` が失敗を捕捉しフォールバック名 `user_{id}` で登録継続する。期待: 失敗時の安全な登録/応答 / 機能: CTX-USER-INIT / 例外型・UI は U-14（実機確認は延期）
+- **ACR-K-12 framework check 不在【一部解決（C-19）】** Given: 任意コマンド/View/Modal / When: 実行 / Then: `/use` `/gather` `/fishing` にユーザー毎 3 秒 cooldown、admin 3 コマンドに `admin_check`、全 View に `interaction_check` を導入。`max_concurrency` と他コマンドへの cooldown は未導入（U-15 として延期）。期待: 必要に応じた導入（決定範囲は実装済み）/ 機能: 全 CMD/VIEW/MODAL
+- **ACR-K-13 count 入力境界【解決済（C-20）】** Given: `/use` `/gather` `/fishing` に非正数または 100 超を指定 / When: 実行 / Then: `valid_count`（1〜100）により「〜回数は1〜100の範囲で指定してください。」と応答し状態変更前に拒否。期待: 入力境界の定義（1〜100）/ 機能: CMD-USE, CMD-GATHER, CMD-FISHING
+- **ACR-K-14 stale shop choice【解決済（C-21）】** Given: ショップ View 表示後に再抽選が走る / When: 選択を送信 / Then: `shop_buy` が `item_id not in shop_content` を先に判定し「その商品は現在販売されていません。ショップを更新してください。」と安全に応答。期待: stale 選択の安全な再提示 / 機能: VIEW-SHOP, CMD-BUY
+- **ACR-K-15 craft_view デッドコード【解決済（C-22）】** Given: `views/craft_view.py` / When: リポジトリを検索 / Then: `set_craft_func` / `_craft_func` は削除済み。期待: 不要コードの除去（機能影響なし）/ 機能: VIEW-CRAFTSELECT, CMD-CRAFT
 
 ---
 

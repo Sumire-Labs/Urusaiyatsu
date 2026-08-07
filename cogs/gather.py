@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from core.state import USERS, ITEMS, PLACES, ADVANCEMENTS, EMOJIS, place_choices
 from core.utils import new_user, xp, complete_advancement, save_users, table_roll, add_item, remove_item, remove_item_from_dict, get_stats, get_item
+from cogs._helpers import valid_count, user_cooldown_key
 
 
 class GatherCog(commands.Cog):
@@ -18,7 +19,13 @@ class GatherCog(commands.Cog):
 
     @app_commands.command(name="gather", description="採集によってアイテムを手に入れます。スタミナを10消費します。")
     @app_commands.choices(place=place_choices)
+    @app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)
     async def gather_command(self, interaction: discord.Interaction, place: str, count: int = 1):
+
+        # 入力検証（状態変更前に拒否）
+        if not valid_count(count):
+            await interaction.response.send_message('採集回数は1〜100の範囲で指定してください。', ephemeral=True)
+            return
 
         # データ読み込み
         user_id = interaction.user.id

@@ -72,7 +72,7 @@
 5. **燃料**: `fuel < stats['fuel_uses']` → `ドリルの燃料が足りません。(**{fuel}/{fuel_uses}**{EMOJIS.fuel})`
    - ※既定 `fuel_uses = 0` のため、燃料消費装備が無い限りこのゲートは通る。
 6. **スタミナ**: `stamina_uses = stats['gathering_stamina_uses'] + int(radiation * stats['radiation_effect'])`（既定 10 + 放射線×0.1）に対し `stamina < stamina_uses` → `スタミナが足りません。(**{stamina}/{stamina_uses}**{EMOJIS.stamina})`
-   - ※`count` 引数（`cogs/gather.py:21`）の非正数ガード・上限チェックは**存在しない**（**C-20**）。負数・高値指定の具体挙動は推測せず、実機確認が必要（[`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) 参照）。
+   - ※`count` 引数（`cogs/gather.py:21`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**）。
 
 **採集ループ（`process_count < count` の間）**
 7. **放射線（`radioactive: true` の場所のみ）**: `radiation < max_radiation` かつ `radiation_protecting_chance < random.random()` なら `radiation += 1` して `stamina_uses` を再計算。
@@ -105,12 +105,11 @@
 2. **釣り竿装備**: `equipment['fishing_rod'] == {}` → `釣り竿を装備してください。`
 3. **レベル**: `level_fishing < required_level` → `{場所}での釣りには釣りレベルが**{n}**以上必要です。`
 4. **スタミナ**: `stamina < stats['fishing_stamina_uses']`（既定 10）→ `スタミナが足りません。(**{stamina}/{n}**{EMOJIS.stamina})`
-   - ※`count` 引数（`cogs/fishing.py:23`）の非正数ガード・上限チェックは**存在しない**（**C-20**）。負数・高値指定の具体挙動は推測しない。
+   - ※`count` 引数（`cogs/fishing.py:23`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**）。
 
 **ルートテーブル構築 `get_fishing_loot_table(place, power, bait=None)`**
 5. `power += int((20 - abs(現在時刻の時 - 6)) / 3)`（**時刻ボーナス**。6 時前後で最大。式の意図は U-11、§13）。
-6. 餌がある場合: `ITEMS[bait]['table_addition']` の `{場所: {id: 加算weight}}` に従い、対象エントリの `weight` へ加算。
-   - ※**静的データ `FISHING_PLACES[place]['table']` の weight を直接変更する**（実行中に蓄積する観測事項、§13）。
+6. **2026-08-07・後続（非ミューテーション）**: `table = deepcopy(FISHING_PLACES[place]['table'])` で**コピー上で操作**する。餌がある場合、`ITEMS[bait]['table_addition']` の `{場所: {id: 加算weight}}` に従い、対象エントリの `weight` へ加算（**グローバル `FISHING_PLACES` は不変・観測-7 解決**）。
 7. フィルタ: `power_max == -1 かつ power_min <= power`、または `power_min <= power <= power_max` のエントリのみ返す。`power_max == -1` は上限なし。
 
 **釣りループ（`process_count < count` の間）**
@@ -146,7 +145,7 @@
 3. 該当ページ窓（`page*100 <= 対象順番 < (page+1)*100`）のレシピを `SelectOption` 化。ラベル: `{結果名} ⇐ [素材名×個数...] スタミナ: {n} ツールタグ: {tag}`（タグは `None` 以外のみ）。値: **RECIPES の全体インデックス**。
 4. 対象レシピが 0 件なら `表示できるレシピがありません。`（ephemeral）。
 5. `page_max = ceil(対象件数 / 100)`。4 セレクト × 25 件 + `<` `>` ボタン。`next_page.custom_id = "{user_id}/{page 1-based}/{page_max}"`。
-   - ※`views/craft_view.py:12-19` の `_craft_func` / `set_craft_func` は登録元がなく**デッドコード**（**C-22**、クラフトは `modals/craft_modal.py:craft` を直接 import）。
+   - ※`views/craft_view.py` の `_craft_func` / `set_craft_func` は削除済み（**C-22 解決**。クラフトは `modals/craft_modal.py:craft` を直接 import）。
 
 **レシピ選択 → Modal**
 6. セレクトの値（RECIPES 全体インデックス）から `craft(interaction, recipe_id)` を呼ぶ。
@@ -166,7 +165,7 @@
     - `process_count += 1`。
     - **ツール耐久**（`tool_tag` かつ `max_damage` 定義あり）: `meta['damage'] += 1`。
       - `damage < max_damage`: `modify_item(user_id, tool_index, meta)` で更新（スタック化されたツールの耐久を個別管理）。
-      - `damage >= max_damage`（破損）: `remove_item_from_index(user_id, tool_index)` で破棄し、`broken_tool[tool_id] += 1`（**正値で集計。期待仕様**: クラフトは破損ツールを正数で集計・表示する）。※`remove_item_from_index` は現行実装が `list.pop(辞書)` で `TypeError` を投げる（**現行バグ C-03**）。
+      - `damage >= max_damage`（破損）: `remove_item_from_index(user_id, tool_index)` で破棄し、`broken_tool[tool_id] += 1`（**正値で集計。期待仕様**: クラフトは破損ツールを正数で集計・表示する）。※`remove_item_from_index` は **2026-08-07 修正**: `pop(index)` へ修正済み（**C-03 解決**）。
         - 交換設定 0（同種）: `tool_index = get_item_index(user_id, tool_id)`。`None` なら `break`。
         - 交換設定 1（使用可能）: インベントリの `tool_tag` 付きアイテムへ更新。無ければ `break`。
         - 交換設定 2（続行しない）: **break が無く、壊れたツールの index を引き継いでループが続く（観測事項、§13）**。
@@ -236,9 +235,9 @@
 - **リソース消費のループ内判定**: 採集/釣りは 1 ループ毎にスタミナ・燃料を再判定するため、`count` 指定より少ない回数で終了し得る（`process_count` が実績）。クラフトはループ開始時に素材・スタミナの可能数を確定する。
 - **非 atomic**: ループ中にリソースが尽きた場合も、消費済み分は反映される（部分実行が結果として出る）。
 - **静的データのミューテーション**: 釣りの `table_addition` は `FISHING_PLACES` の `weight` を直接加算するため、プロセス生存中は累積する（§13 観測事項）。採集の結果マージは `broken_tool` の負値が `result` に入る。
-- 単一プロセス・単一レプリカ前提。`save_users()` は lock なし直接書込（**C-07**、ファイル書込 race）。
-- 背景ループの `USERS.items()` 反復（`core/background.py:22`）中に、本節コマンド冒頭の `new_user` が `USERS.setdefault` でトップレベルキーを追加すると `RuntimeError` になり得る（**C-17**、メモリミューテーション race。頻度は U-13）。ループに try/except がないため発生時はデーモンスレッドが終了する。
-- 高 `count` 指定時はループ数がそのまま処理量になる（`count` 上限のガードなし、**C-20**）。
+- 単一プロセス・単一レプリカ前提。`save_users()` は atomic 書込 + `_save_lock`（**C-07 解決**）。`acquire_state_lock` が起動時に多重起動を拒否（**U-09 解決**）。
+- 背景ループの `USERS` 反復（`core/background.py:update_tick`）は **2026-08-07 修正**: `list(USERS.keys())` のスナップショットで反復し、`_users_lock` でトップレベル `USERS` の構造ミューテーションを直列化（**C-17 解決**）。ユーザー単位の例外は捕捉して `logger.exception` で記録しループを継続。頻度は U-13（実機観察は延期）。
+- 高 `count` 指定時はループ数がそのまま処理量になるが、`valid_count`（1〜100）で上限がガードされる（**C-20 解決**）。
 
 ## 11. 関連
 
@@ -279,19 +278,19 @@
 
 > 現行仕様（§5）と区別するため、現行実装の欠陥・未確定事項をここに集約する。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md) を参照（C-ID / U-ID 対応）。
 
-| ID | 内容 | 種別 |
-|---|---|---|
-| C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` → クラフトのツール破損経路で interaction failed。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ |
-| C-16 | `/use` の `count` 負数で在庫増加・効果反転。`con_loot` は `random.choices(..., k=負数)` が空 list のため loot なし（結果 `{}`）で処理継続（詳細は `progression-and-inventory.md` §5.4 参照） | 現行バグ |
-| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） |
-| C-18 / U-14 | 採集・釣り冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） |
-| C-20 | gather / fishing / use の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） |
-| C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | 現行バグ |
-| U-11 | 釣りの時刻ボーナス `int((20 - abs(hour - 6)) / 3)` の数式のバランス意図は文書化されていない | 未確定 |
-| U-10 | `item_data` の釣り確率表示は `power_min`/`power_max` の中間値で近似しており、実ロール（`get_fishing_loot_table`）の条件と完全一致するか未検証 | 未検証 |
-| 観測-5 | 釣りの `add_item(user_id, item_id)` が個数を渡していないため、釣果は各 1 個だけ加算される（表示上の個数とインベントリが不一致） | 現行バグ（要検証） |
-| 観測-6 | 餌切れ後も `equipment['fishing_bait']` に `count: 0` の辞書が残る。ステータス表示上は装備中に見え、次回 `/fishing` では `fishing_bait != {}` により餌として扱われ stats が適用され続ける | 現行バグ（要検証） |
-| 観測-7 | `get_fishing_loot_table` の `table_addition` が静的 `FISHING_PLACES` の `weight` を直接加算するため、プロセス生存中に餌使用ごと累積する | 現行バグ（要検証） |
-| 観測-8 | クラフトの交換設定 2（続行しない）に `break` が無く、破損ツールのインデックスを引き継いでループが続く。誤消費・IndexError の可能性 | 現行バグ（要検証） |
-| U-12 | `gathering_stamina_uses` 10、`fishing_stamina_uses` 10、`xp`・消費量等の数値はコード既定であり、意図されたバランスか未確定 | 未確定 |
-| 未確定 | `get_item` は meta 不問のため、採集ツール交換設定 0 の「同種交換」は別 meta（耐久違い）スタックを選び得る。仕様意図の確認が必要 | 未確定 |
+| ID | 内容 | 種別 | 状態 |
+|---|---|---|---|
+| C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` → クラフトのツール破損経路で interaction failed。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ | **解決済**（`pop(index)` + トランザクション化） |
+| C-16 | `/use` の `count` 負数で在庫増加・効果反転。`con_loot` は `random.choices(..., k=負数)` が空 list のため loot なし（結果 `{}`）で処理継続（詳細は `progression-and-inventory.md` §5.4 参照） | 現行バグ | **解決済**（`valid_count` で 1〜100 に制限） |
+| C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） | **解決済**（スナップショット反復 + `_users_lock`。実機観察は延期） |
+| C-18 / U-14 | 採集・釣り冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） | **解決済**（フォールバック名で登録継続。実機確認は延期） |
+| C-20 | gather / fishing / use の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（1〜100 に制限） |
+| C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | 現行バグ | **解決済**（削除） |
+| U-11 | 釣りの時刻ボーナス `int((20 - abs(hour - 6)) / 3)` の数式のバランス意図は文書化されていない | 未確定 | 未解決（数式は不変・契約として維持） |
+| U-10 | `item_data` の釣り確率表示は `power_min`/`power_max` の中間値で近似しており、実ロール（`get_fishing_loot_table`）の条件と完全一致するか未検証 | 未検証 | コード解決済（`_fishing_probability_range` で確率範囲表示）。実機確認は**延期** |
+| 観測-5 | 釣りの `add_item(user_id, item_id)` が個数を渡していないため、釣果は各 1 個だけ加算される（表示上の個数とインベントリが不一致） | 現行バグ（要検証） | 未解決（変更なし） |
+| 観測-6 | 餌切れ後も `equipment['fishing_bait']` に `count: 0` の辞書が残る。ステータス表示上は装備中に見え、次回 `/fishing` では `fishing_bait != {}` により餌として扱われ stats が適用され続ける | 現行バグ（要検証） | 未解決（変更なし） |
+| 観測-7 | `get_fishing_loot_table` の `table_addition` が静的 `FISHING_PLACES` の `weight` を直接加算するため、プロセス生存中に餌使用ごと累積する | 現行バグ（要検証） | **解決済**（`deepcopy` でコピー上で操作。グローバルテーブルは不変） |
+| 観測-8 | クラフトの交換設定 2（続行しない）に `break` が無く、破損ツールのインデックスを引き継いでループが続く。誤消費・IndexError の可能性 | 現行バグ（要検証） | 未解決（変更なし） |
+| U-12 | `gathering_stamina_uses` 10、`fishing_stamina_uses` 10、`xp`・消費量等の数値はコード既定であり、意図されたバランスか未確定 | 未確定 | **解決済（決定）**（文書化された契約として維持） |
+| 未確定 | `get_item` は meta 不問のため、採集ツール交換設定 0 の「同種交換」は別 meta（耐久違い）スタックを選び得る。仕様意図の確認が必要 | 未確定 | 未解決（変更なし） |

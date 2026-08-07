@@ -25,7 +25,7 @@
 
 ## 2. 共通事項（権限判定）
 
-- 判定方式：`interaction.user.id` が `core/config.py:18-20` で構築した `ADMIN`（`config.json` の `admin[].id` のリスト）に含まれるかのみ。Discord のロール・権限（`has_permissions` 等）は一切使用しない。
+- 判定方式：`interaction.user.id` が `core/config.py:18-20` で構築した `ADMIN`（`config.json` の `admin[].id` のリスト）に含まれるかのみ。Discord のロール・権限（`has_permissions` 等）は一切使用しない。**2026-08-07 追加**: 3 コマンドに `@app_commands.check(admin_check)`（`cogs/_helpers.py`、ADMIN リストを裏付け）を付与（**C-19 解決**）。
 - 判定は各コマンドハンドラの冒頭で実施され、非許可なら **ephemeral** テキスト `このコマンドの使用にはBotの管理権限が必要です。` を返して以降の処理を中断する（`admin_give.py:22-24` / `admin_transit.py:23-25` / `admin_manage.py:24-26`）。
 - 全応答は ephemeral（`send_message(..., ephemeral=True)`）。
 - 秘密実値（`config.json` の admin 実値）は本仕様に記載しない。
@@ -41,13 +41,13 @@
 | 入力 | `user: discord.User`（必須・操作対象）、`item_id: str`（必須・`ITEMS` キー）、`amount: int`（必須・0 以外） |
 | DM-Guild context | 双方で発火可能（`discord.User` 型引数は DM でも指定可） |
 | 前提 | ① `interaction.user.id` ∈ `ADMIN`。② `item_id` ∈ `ITEMS`。③ `amount != 0` |
-| 処理フロー | ① 権限チェック → ② アイテム存在チェック → ③ `amount == 0` チェック → ④ `new_user(user_id)`（対象ユーザーを自動登録）→ ⑤ `amount > 0` なら `add_item(user_id, item_id, amount)`（付与）、`amount < 0` なら `remove_item(user_id, item_id, amount)`（剥奪）→ ⑥ ephemeral 応答 → ⑦ `save_users()` |
+| 処理フロー | ① 権限チェック → ② アイテム存在チェック → ③ `amount == 0` チェック → ④ `new_user(user_id)`（対象ユーザーを自動登録）→ ⑤ `amount > 0` なら `add_item(user_id, item_id, amount)`（付与）、`amount < 0` なら `remove_item(user_id, item_id, abs(amount))`（剥奪。**2026-08-07 修正・C-02 解決**）→ ⑥ ephemeral 応答 → ⑦ `save_users()` |
 | 読書き状態 | 読：`USERS`/`ITEMS`。書：対象ユーザーの `inventory`（`add_item`/`remove_item`）、`new_user` による初期化。保存：`save_users()`（`cogs/admin_give.py:51`） |
 | 成功応答 | **ephemeral** テキスト<br>- 付与：`{name}に{item_name}{amount}個を付与しました。`（`cogs/admin_give.py:41`）<br>- 剥奪：`{name}から{item_name}{amount}個を剥奪しました。`（`cogs/admin_give.py:48`） |
 | 失敗応答 | すべて**ephemeral** テキスト<br>- `このコマンドの使用にはBotの管理権限が必要です。`（`cogs/admin_give.py:23`）<br>- `存在しないアイテムIDです。`（`cogs/admin_give.py:26`）<br>- `有効な整数を入力してください。`（`amount == 0`、`cogs/admin_give.py:29`） |
-| 例外 | - **C-02**: `amount < 0` の剥奪が `remove_item(user_id, item_id, amount)` に負数を渡すため、`core/utils.py:135` の `count = min(count, inv_item['count'])` が負数を維持し、`core/utils.py:138` の `inv_item['count'] -= count` で**加算**になる。負の `amount` 指定で剥奪どころかアイテムが増える<br>- 未捕捉例外は「interaction failed」（C-12） |
-| 並行性 | 対象ユーザー状態を無ロックで変更。バックグラウンドスレッド（5 秒毎保存）と並走 |
-| 受入基準 | ① 非 ADMIN ユーザーの実行が ephemeral で拒否される。② `item_id` 不正・`amount == 0` が拒否される。③ 正の `amount` で付与が反映される。④ 負の `amount` の剥奪は現行コードでは加算になる（C-02、再実装時の契約として解決要） |
+| 例外 | - **C-02（解決済）**: `amount < 0` の剥奪は `abs(amount)` で `remove_item` へ渡すため、負数がそのまま渡らず**剥奪が正しく実行**される（`cogs/admin_give.py:46-48`）<br>- 未捕捉例外は `BotTree.on_error` で捕捉・ログ + 安全応答（**C-12 解決**） |
+| 並行性 | 対象ユーザー状態を無ロックで変更。バックグラウンドタスク（5 秒毎保存）と並走 |
+| 受入基準 | ① 非 ADMIN ユーザーの実行が ephemeral で拒否される。② `item_id` 不正・`amount == 0` が拒否される。③ 正の `amount` で付与が反映される。④ 負の `amount` の剥奪が正しく実行される（**C-02 解決**） |
 
 ### 3.2 CMD-015 `/admin_transit` — ユーザーデータ移行
 
@@ -75,18 +75,18 @@
 | 読書き状態 | 読：`USERS`。書：対象ユーザーのデータ全体を `always_merger.merge` でマージ、`new_user` による初期化。保存：`save_users()`（`cogs/admin_manage.py:51`） |
 | 成功応答 | **ephemeral** テキスト：`{user_name}のデータを変更しました。`（`cogs/admin_manage.py:48`） |
 | 失敗応答 | すべて**ephemeral** テキスト<br>- `このコマンドの使用にはBotの管理権限が必要です。`（`cogs/admin_manage.py:25`）<br>- `データの変換に失敗しました。`（`ast.literal_eval` 失敗・非 dict、`cogs/admin_manage.py:31,34`）<br>- `{user_name}のデータの変更に失敗しました。`（merge 例外、`cogs/admin_manage.py:45`） |
-| 例外 | - **C-01 / U-01**: `from deepmerge import always_merger`（`cogs/admin_manage.py:8`）は `requirements.lock` に `deepmerge` が含まれず、Docker ビルド（`pip install --no-deps --requirement requirements.lock`）では import 失敗 → `setup_hook` の `load_extension` で本 cog のみロード失敗する可能性がある。ローカル（`requirements.txt`）では入るため環境差が発生。実際の Docker ビルドでの影響は未確認（U-01）<br>- 未捕捉例外は「interaction failed」（C-12） |
-| 並行性 | 対象ユーザー状態を無ロックで変更。バックグラウンドスレッドと並走 |
-| 受入基準 | ① 非 ADMIN の実行が拒否される。② 非 dict・変換不能な `data` で失敗応答が出る。③ 正常な dict で deepmerge が適用され永続化される。④ Docker 運用時は `deepmerge` のロック反映（C-01）を確認すること |
+| 例外 | - **C-01 / U-01（解決済）**: `from deepmerge import always_merger`（`cogs/admin_manage.py:8`）は `requirements.lock` に `deepmerge==2.1.0` が追加されたため Docker ビルド（`pip install --no-deps --requirement requirements.lock`）でも import 成功（**C-01 解決**）。Docker ビルド実起動は U-01 として延期<br>- 未捕捉例外は `BotTree.on_error` で捕捉・ログ + 安全応答（**C-12 解決**） |
+| 並行性 | 対象ユーザー状態を無ロックで変更。バックグラウンドタスクと並走 |
+| 受入基準 | ① 非 ADMIN の実行が拒否される。② 非 dict・変換不能な `data` で失敗応答が出る。③ 正常な dict で deepmerge が適用され永続化される。④ Docker 運用時は `deepmerge` のロック反映（**C-01 解決**）を確認すること |
 
 ---
 
 ## 4. 既知問題と再実装時の契約（要約）
 
-| 機能ID | 既知問題 | 影響 |
-|---|---|---|
-| CMD-014 | C-02（負数剥奪が加算） | 剥奪操作がアイテム増加になる |
-| CMD-016 | C-01（`deepmerge` がロック欠落）、U-01（ビルド影響未確認） | Docker で本コマンドのみロード失敗の可能性 |
-| 共通 | C-12（エラーハンドラ未登録） | 未捕捉例外は「interaction failed」 |
+| 機能ID | 既知問題 | 影響 | 状態 |
+|---|---|---|---|
+| CMD-014 | C-02（負数剥奪が加算） | 剥奪操作がアイテム増加になる | **解決済**（`abs(amount)` で剥奪） |
+| CMD-016 | C-01（`deepmerge` がロック欠落）、U-01（ビルド影響未確認） | Docker で本コマンドのみロード失敗の可能性 | **解決済**（`deepmerge==2.1.0` を lock へ追加。Docker ビルド実起動は U-01 として延期） |
+| 共通 | C-12（エラーハンドラ未登録） | 未捕捉例外は「interaction failed」 | **解決済**（`BotTree.on_error` 等で捕捉・ログ + 安全応答） |
 
-再実装時には剥奪の符号処理（`remove_item` に正数を渡す等）、`requirements.lock` への `deepmerge` 追加を契約として解決することが望ましい。
+再実装時には剥奪の符号処理（`remove_item` に正数を渡す等）、`requirements.lock` への `deepmerge` 追加を契約として解決することが望ましい。**2026-08-07 更新**: いずれも実装済み（解決）。

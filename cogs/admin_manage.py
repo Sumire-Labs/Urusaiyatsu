@@ -10,6 +10,7 @@ from deepmerge import always_merger
 from core.state import USERS
 from core.utils import new_user, save_users
 from core.config import ADMIN
+from cogs._helpers import admin_check
 
 class AdminManageCog(commands.Cog):
     """管理者用アイテム付与コマンド"""
@@ -18,6 +19,7 @@ class AdminManageCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="admin_manage", description="管理者用コマンドです。ユーザーのデータを変更します。")
+    @app_commands.check(admin_check)
     async def admin_manage_command(self, interaction: discord.Interaction, user: discord.User, data: str):
         user_id = user.id
         my_id = interaction.user.id

@@ -7,7 +7,7 @@ from discord.app_commands import Choice
 from discord.ext import commands
 
 from core.state import USERS
-from core.utils import save_users
+from core.utils import new_user, save_users
 from modals.settings_modal import set_name
 from views.settings_view import status_setting_view, crafting_tool_replacement_setting_view, gathering_tool_replacement_setting_view
 
@@ -28,6 +28,7 @@ class SettingsCog(commands.Cog):
     ])
     async def settings_command(self, interaction: discord.Interaction, config: int):
         user_id = interaction.user.id
+        await new_user(user_id)
         user_data = USERS[str(user_id)]
 
         if config == 0:

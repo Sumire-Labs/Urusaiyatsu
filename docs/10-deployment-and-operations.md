@@ -125,7 +125,7 @@
 - `.github/` ディレクトリなし、CI ワークフローなし。
 - テストファイル（`test_*` / `*_test` / `conftest.py`）、`pytest` 設定、`pyproject.toml` / `tox.ini` / `setup.cfg` いずれも存在しない（ファイルシステム確認）。
 - lint・型チェック・formatter 設定なし。`AGENTS.md` も「自動テストなし、検証は compileall のみ」を明記（C-13）。
-- ローカル `requirements.txt` は非完全固定（`>=`）。Docker のみ `requirements.lock` で固定。**`requirements.lock` に `deepmerge` が欠落**（C-01）し、Docker イメージで `admin_manage` 拡張がロード失敗する環境差が想定される。
+- ローカル `requirements.txt` は非完全固定（`>=`）。Docker のみ `requirements.lock` で固定。**`requirements.lock` の `deepmerge` 欠落は 2026-08-07 に解消**（`deepmerge==2.1.0` を追加。**C-01 解決**）。Docker ビルド実起動は U-01 として延期。
 
 ---
 
@@ -153,23 +153,23 @@
   docker compose run --rm --no-deps bot sh -c 'PYTHONPYCACHEPREFIX=/tmp/pycache python -m compileall -q /app'
   ```
 - 再実装時に追加すべき検証:
-  - 依存の完全性チェック: `python -c "import discord, deepmerge"` を起動前検証に追加し、C-01（`requirements.lock` への `deepmerge` 欠落）をビルド時に検出する。
+  - 依存の完全性チェック: `python -c "import discord, deepmerge"` を起動前検証に追加し、C-01（`requirements.lock` への `deepmerge` 欠落）をビルド時に検出する。**C-01 は lock 追加で解決済み**（2026-08-07）。
   - 設定スキーマ検証: token の存在・`admin[].id` の型を起動前（ローカルは `main.py` 実行前、Docker はエントリポイント）に検証する。
-  - 静的データ整合性検証: 機能カタログ §5.1 C-06（advancement 参照欠落）等の参照整合性チェックを検証コマンドへ追加する。
+  - 静的データ整合性検証: 機能カタログ §5.1 C-06（advancement 参照欠落）等の参照整合性チェックを検証コマンドへ追加する。**C-06 は `gather_mythical_mines` への修正で解決済み**（2026-08-07）。
   - CI 未整備の解消は §4.9 参照。
 
 ### 4.3 コンテナプロセス・セキュリティ規約（DP-03）
 
 - コンテナは**非 root（UID/GID 10001）**でアプリを実行し、`read_only` rootfs・`cap_drop: ALL`＋最小 `cap_add`・`no-new-privileges` を維持する（現行 §3.4-3.5 を既定とする）。
 - PID 1 はエントリポイント→`setpriv` exec の構造を維持し、`init: true`・`stop_signal: SIGINT`・`stop_grace_period: 15s` を既定とする。
-- 依存導入はロックファイル（`requirements.lock`）を唯一のソースとし、`requirements.txt` と常に同期させる（C-01 解消）。
+- 依存導入はロックファイル（`requirements.lock`）を唯一のソースとし、`requirements.txt` と常に同期させる（C-01 解消）。**実装済み**（`deepmerge==2.1.0` を lock へ追加。**C-01 解決**）。
 - イメージは内容検証済みダイジェストでベースを固定する（現行維持）。
 
 ### 4.4 ボリューム・永続化規約（DP-04）
 
 - 永続化対象は `bot_runtime` の `user.json` のみとし、設定・静的データはイメージ/secret/tmpfs に置く（現行維持）。
-- **単一レプリカ運用を厳守**する。多重起動の抑止（例: 起動時ロック）は 11 章 §4.4 と一体で検討する。
-- 書込を atomic 化する（一時ファイル＋`os.replace`）ことを契約とする（C-07 の解決は 11 章 §4.4 のデータ整合性と一体。本章ではロス特性の改善として位置付ける）。
+- **単一レプリカ運用を厳守**する。多重起動の抑止は **実装済み**: `core/state.py:acquire_state_lock` が状態ファイル実体ディレクトリの `.state.lock` に POSIX `flock` を取得し、既に別インスタンスがロック保持中なら起動を拒否（**U-09 解決**）。
+- 書込を atomic 化する（一時ファイル＋`os.replace`）ことを契約とする。**実装済み**: `save_users` が一時ファイル + `fsync` + `os.replace` で原子的に書込（**C-07 解決**）。
 
 ### 4.5 バックアップ / リカバリ手順（DP-05）
 
@@ -178,12 +178,12 @@
   1. `docker compose stop` で停止
   2. 退避済み `user.json` をボリュームへ戻す
   3. `docker compose up -d --force-recreate`
-- 破損時（C-08）の挙動を変更する: 裸 `except` をやめ、JSON 破損を ERROR ログに記録し、**既存ファイルを保持したまま**起動を停止（または隔離した退避ファイルへコピー）する。自動で `{}` に上書きしない。
+- 破損時（C-08）の挙動を変更する: 裸 `except` をやめ、JSON 破損を ERROR ログに記録し、**既存ファイルを保持したまま**起動を停止（または隔離した退避ファイルへコピー）する。自動で `{}` に上書きしない。**実装済み**: `core/state.py:_load_users` が破損ファイルを `user.json.bak.<ts>` へ隔離し ERROR ログ + exit 1（fail-closed。**C-08 解決**）。
 - 破壊的操作 `docker compose down -v` の実行前にバックアップ確認を運用ルールとする。
 
 ### 4.6 データロス許容範囲（DP-06）
 
-- **RPO（目標復旧時点）**: SIGINT 正常停止時は最大 5 秒の未保存分を許容（現行仕様を明文化）。SIGKILL・クラッシュ時は atomic 化により**保存済み時点までは破損なし**を目標とする。
+- **RPO（目標復旧時点）**: SIGINT 正常停止時は最大 5 秒の未保存分を許容（現行仕様を明文化）。SIGKILL・クラッシュ時は atomic 化により**保存済み時点までは破損なし**を目標とする。**atomic 化は実装済み**（`save_users`、**C-07 解決**）。
 - 定期保存間隔は現行 5 秒を維持（短縮はコスト次第で未決定、§6 参照）。
 
 ### 4.7 停止・再起動手順（DP-07）
@@ -212,28 +212,28 @@
 
 ## 5. 受入観点
 
-| ID | 受入観点 | 確認手段 |
-|---|---|---|
-| AV-10-01 | `requirements.lock` に `deepmerge` が含まれ、`docker compose build` で `admin_manage` を含む全 16 拡張がロードされる | Docker ビルド + 起動ログで「Loaded extension: cogs.admin_manage」確認（C-01 / U-01 解消） |
-| AV-10-02 | 検証コマンド（compileall）が CI 用・ローカル用に定義され、実行可能である | コマンド実行の exit 0 確認 |
-| AV-10-03 | コンテナが非 root（UID 10001）・read_only・最小 cap で起動し、`/app/runtime` のみ書込可能である | `docker compose exec bot id` / プロセス・マウント確認 |
-| AV-10-04 | `docker compose stop`（SIGINT）で graceful に停止し、最大 5 秒の未保存分だけが失われる | 停止ログと `user.json` の保存時刻の確認 |
-| AV-10-05 | `user.json` 破損時に `{}` 上書きではなく ERROR ログ＋隔離で停止する（C-08 解消） | 破損ファイルでの起動テスト |
-| AV-10-06 | バックアップ/リカバリ手順が文書化され、退避 → 復元でデータが復元できる | 実ボリュームでのリカバリ演習 |
-| AV-10-07 | `compose.yaml` に healthcheck が定義される（採用時） | `docker compose ps` の status 確認 |
-| AV-10-08 | CI に構文・依存・ビルド検証が定義される | CI 実行結果の確認 |
+| ID | 受入観点 | 確認手段 | 状態 |
+|---|---|---|---|
+| AV-10-01 | `requirements.lock` に `deepmerge` が含まれ、`docker compose build` で `admin_manage` を含む全 16 拡張がロードされる | Docker ビルド + 起動ログで「Loaded extension: cogs.admin_manage」確認（C-01 / U-01 解消） | コード解決済（lock 追加）。Docker ビルド実起動は**延期** |
+| AV-10-02 | 検証コマンド（compileall）が CI 用・ローカル用に定義され、実行可能である | コマンド実行の exit 0 確認 | 未解決（CI 未導入） |
+| AV-10-03 | コンテナが非 root（UID 10001）・read_only・最小 cap で起動し、`/app/runtime` のみ書込可能である | `docker compose exec bot id` / プロセス・マウント確認 | 未解決（実機確認は延期） |
+| AV-10-04 | `docker compose stop`（SIGINT）で graceful に停止し、最大 5 秒の未保存分だけが失われる | 停止ログと `user.json` の保存時刻の確認 | 未解決（実機確認は延期） |
+| AV-10-05 | `user.json` 破損時に `{}` 上書きではなく ERROR ログ＋隔離で停止する（C-08 解消） | 破損ファイルでの起動テスト | コード実装済み（`_load_users` fail-closed）。実機確認は**延期** |
+| AV-10-06 | バックアップ/リカバリ手順が文書化され、退避 → 復元でデータが復元できる | 実ボリュームでのリカバリ演習 | 未解決（実機確認は延期） |
+| AV-10-07 | `compose.yaml` に healthcheck が定義される（採用時） | `docker compose ps` の status 確認 | 未解決（healthcheck 未導入） |
+| AV-10-08 | CI に構文・依存・ビルド検証が定義される | CI 実行結果の確認 | 未解決（CI 未導入） |
 
 ---
 
 ## 6. 未確定事項
 
-| ID | 項目 | 内容 | 確定に必要な確認 |
-|---|---|---|---|
-| U-01 | deepmerge 欠落の実行時影響 | C-01 はコード・ロック比較で確定だが、実際のビルド/起動結果は未確認 | `docker compose build` + 起動確認（AV-10-01） |
-| — | healthcheck の具体的コマンド | §4.8 の候補が動作するか（config import が起動プロセスを妨げないか） | 実装と試行 |
-| — | 定期バックアップの自動化要否 | Phase2 では手動手順のみ契約。自動化は運用規模次第 | 運用要件の決定 |
-| — | 定期保存間隔 | 5 秒を維持。短縮（例: 1 秒）のコスト・効果は未評価 | 負荷測定 |
-| — | 多重起動の抑止方式 | §4.4 でロック方式を検討と明記したが、方式（ファイルロック等）は未決定 | 実装設計 |
+| ID | 項目 | 内容 | 確定に必要な確認 | 状態 |
+|---|---|---|---|---|
+| U-01 | deepmerge 欠落の実行時影響 | C-01 はコード・ロック比較で確定だが、実際のビルド/起動結果は未確認 | `docker compose build` + 起動確認（AV-10-01） | コード解決済（lock 追加）。Docker ビルド実起動は**延期** |
+| — | healthcheck の具体的コマンド | §4.8 の候補が動作するか（config import が起動プロセスを妨げないか） | 実装と試行 | 未解決（延期） |
+| — | 定期バックアップの自動化要否 | Phase2 では手動手順のみ契約。自動化は運用規模次第 | 運用要件の決定 | 未解決（延期） |
+| — | 定期保存間隔 | 5 秒を維持。短縮（例: 1 秒）のコスト・効果は未評価 | 負荷測定 | 未解決（延期） |
+| — | 多重起動の抑止方式 | §4.4 でロック方式を検討と明記したが、方式（ファイルロック等）は未決定 | 実装設計 | **解決済**（`acquire_state_lock` の POSIX `flock`。**U-09 解決**） |
 
 ---
 
@@ -243,5 +243,5 @@
 |---|---|---|
 | TD-10-01 | 自動バックアップ・DR の不在 | Phase2 では手動手順の文書化まで。災害時復旧（別ホスト移行等）は将来課題 |
 | TD-10-02 | 自動テスト・lint・型チェック・CI の不在 | C-13。§4.9 の最小 CI を Phase2 以降に導入するまで回帰検知手段なし（compileall のみ） |
-| TD-10-03 | ローカル `requirements.txt` の非完全固定 | Docker はロック固定だが、ローカルは `>=`。環境差の温床（C-01 の一因） |
-| TD-10-04 | 非 atomic 書込（現状維持中の期間） | §4.4 / §4.5 の対応まで、SIGKILL 時の破損リスクを許容。対応は 11 章 §4.4 と一体で実施 |
+| TD-10-03 | ローカル `requirements.txt` の非完全固定 | Docker はロック固定だが、ローカルは `>=`。環境差の温床（C-01 の一因。**lock 側は解決済み**） |
+| TD-10-04 | ~~非 atomic 書込（現状維持中の期間）~~ | **解決済**（`save_users` の atomic 化。**C-07 解決**） |

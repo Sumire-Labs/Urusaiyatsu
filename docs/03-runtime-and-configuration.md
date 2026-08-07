@@ -56,16 +56,16 @@
 | パッケージ | ローカル指定（`requirements.txt`） | Docker 指定（`requirements.lock`） | 用途 |
 |---|---|---|---|
 | discord.py | `discord.py>=2.6.4` | `discord.py==2.6.4` | 全 Discord 機能（Bot クラス、`discord.ui`、`app_commands`） |
-| deepmerge | `deepmerge>=2.1.0` | **含まれない**（欠落） | `always_merger`（`cogs/admin_manage.py:8`）で `/admin_manage` のデータ deepmerge に使用 |
-| その他（aiohttp / aiosignal / yarl / attrs 等） | 未明示（discord.py の推移依存に任せている） | 全 11 パッケージを完全固定（package entries 11 行、他はコメント 2 行） | discord.py の実行時依存 |
+| deepmerge | `deepmerge>=2.1.0` | `deepmerge==2.1.0`（**2026-08-07 に追加・C-01 解決**） | `always_merger`（`cogs/admin_manage.py:8`）で `/admin_manage` のデータ deepmerge に使用 |
+| その他（aiohttp / aiosignal / yarl / attrs 等） | 未明示（discord.py の推移依存に任せている） | 全 12 パッケージを完全固定（package entries 12 行、他はコメント 2 行） | discord.py の実行時依存 |
 
-一次根拠: `requirements.txt:7-8`、`requirements.lock`（**13 物理行 = コメント 2 行 + package entries 11 行**）、`Dockerfile:19`。
+一次根拠: `requirements.txt:7-8`、`requirements.lock`（**14 物理行 = コメント 2 行 + package entries 12 行**）、`Dockerfile:19`。
 
 ### 3.3 ローカルと Docker の依存差（→ §8）
 
 - ローカル: `requirements.txt` で `deepmerge` を導入するため `admin_manage` は動作する。
-- Docker: `pip install --no-deps --requirement requirements.lock`（`Dockerfile:19`）で lock に無い `deepmerge` は**導入されない**。
-- 結果、Docker イメージでは `core/state.py:179-185` の `load_extension("cogs.admin_manage")` が `ImportError` で失敗する。ただし `setup_hook` は例外を `try/except` で print のみ（`core/state.py:184-185`）のため、**Bot 自体は起動し続け、`/admin_manage` コマンドのみが欠落する**（懸念 C-01、未検証 U-01）。
+- Docker: `pip install --no-deps --requirement requirements.lock`（`Dockerfile:19`）で lock に含まれる `deepmerge` も導入される（**C-01 解決**）。
+- 結果、Docker イメージでも `cogs.admin_manage` の `load_extension` は `ImportError` を起こさない。Docker ビルドの実起動確認は U-01 として延期（未実施）。
 
 ---
 
@@ -100,8 +100,9 @@
 | 2 | `config.json` を開いて `CONFIG` / `TOKEN` / `ADMIN` を設定 | `core/config.py:12-20` |
 | 3 | プロセス CWD を `data/` に変更（以降の相対パスが `data/` 基準になる） | `core/state.py:14-15` |
 | 4 | 静的 JSON 7 種を一括読込（`RECIPES` / `ITEMS` / `PLACES` / `FISHING_PLACES` / `LOOTS` / `LOCALIZATIONS` / `ADVANCEMENTS`） | `core/state.py:27-40` |
-| 5 | `user.json` を読込。**存在しない / 読込失敗時は例外型を指定しない `except:` で握りつぶし** `{}` として自動作成・保存（懸念 C-08） | `core/state.py:43-49` |
-| 6 | `EMOJIS` 初期マップ（8 キー、空文字）を定義 | `core/state.py:52-61` |
+| 5 | **状態ロック取得**: `acquire_state_lock()` が状態ファイル実体ディレクトリの `.state.lock` に POSIX `flock`（`LOCK_EX | LOCK_NB`）を取得。既に別インスタンスがロック保持中なら ERROR ログ + `sys.exit(1)`（**単一プロセスロック・C-07/U-09 解決**） | `core/state.py:acquire_state_lock` |
+| 6 | `user.json` を読込。**存在しない場合のみ**空 `{}` を作成。破損（`JSONDecodeError`）・読取不能（`OSError`）時はタイムスタンプ付きバックアップ（`user.json.bak.<ts>`）へ隔離し**起動を非ゼロで失敗**（fail-closed。**C-08 解決**） | `core/state.py:_load_users` |
+| 7 | `EMOJIS` 初期マップ（8 キー、空文字）を定義 | `core/state.py:52-61` |
 
 ### 4.4 setup_hook（起動時初期化・LIFE-SETUP）
 
@@ -113,9 +114,9 @@
 | 選択リスト生成 | `item_choices`（25 件/ページ × 4 ページ分の `SelectOption` 群）、`consumable_choices`（17 件）、`equippable_choices`（69 件+「装備品を外す」）、`equip_slot`、`shop_list`（31 件）、`place_choices`（13 件）、`fishing_choices`（7 件）を生成 | `core/state.py:104-158` |
 | 価格導出 | `value` 未定義アイテムへ `set_item_value()` で再帰導出、`spawnable_in_shop` で `price` 未定義なら `value*4` を setdefault | `core/state.py:117-119,128-132`、`core/state.py:64-78` |
 | ユーザー状態リフレッシュ | 全ユーザーの `stamina` を `stamina_max` に**強制セット**（**期待仕様**）、`advancement_now` を前提条件（`previous_advancement`）から再構築 | `core/state.py:160-176` |
-| 拡張ロード | `cogs.EXTENSIONS`（16 コグ）を順次 `load_extension`、失敗は print のみ | `cogs/__init__.py:6-23`、`core/state.py:179-185` |
-| 背景ループ | `start_background_loop` をデーモンスレッドで開始（1 秒 tick・5 秒毎保存） | `core/state.py:187-189`、`core/background.py:11-12` |
-| コマンド同期 | グローバルコマンドツリー同期 `self.tree.sync()`（guild 指定なし） | `core/state.py:192` |
+| 拡張ロード | `cogs.EXTENSIONS`（16 コグ）を順次 `load_extension`、失敗は `logger.exception` で記録（**C-12 解決**） | `cogs/__init__.py:6-23`、`core/state.py:297-303` |
+| 背景ループ | `Bot._background_loop` を **asyncio タスク**（`self.loop.create_task`）として開始（1 秒 tick・5 秒毎保存・ユーザー単位 try/except・`list(USERS.keys())` スナップショット反復。**C-17 解決**） | `core/state.py:_background_loop`、`core/background.py:update_tick` |
+| コマンド同期 | グローバルコマンドツリー同期 `self.tree.sync()`（guild 指定なし） | `core/state.py:313` |
 
 `on_ready`（接続完了後）は Game status（存在感）設定のみで、失敗は握りつぶし（`core/state.py:195-201`）。
 
@@ -216,7 +217,9 @@
 | `admin` が空配列 | 起動時 | 正常起動。`ADMIN` 空リストのため全 `admin_*` が拒否応答 | `core/config.py:18-20` |
 | `token` 空文字・無効 | `bot.run` 時 | ローカル検証なし。discord.py 側で `LoginFailure` / `PrivilegedIntentsRequired` 等 | `main.py:7` |
 | Docker: secret 読込不可 | コンテナ起動時 | エントリポイントが `ERROR: /run/secrets/bot_config を読み込めません...` を出力し **exit 1**（プロセス終了 → `restart: unless-stopped` で再試行ループになり得る） | `docker-entrypoint.sh:8-11` |
-| 依存欠落（Docker の deepmerge） | setup_hook 時 | `load_extension("cogs.admin_manage")` が例外。**Bot は起動継続**し `/admin_manage` のみ欠落（print のみで観測不可） | `core/state.py:181-185` |
+| `user.json` 破損（JSON 不正） | import 時 | `_load_users` が破損ファイルを `user.json.bak.<ts>` へ隔離し **ERROR ログ + exit 1**（fail-closed。**C-08 解決**。自動 `{}` 上書きはしない） | `core/state.py:_load_users` |
+| `user.json` 読取不能（I/O エラー） | import 時 | `_load_users` が ERROR ログ + exit 1（fail-closed） | `core/state.py:_load_users` |
+| 多重起動（状態ロック競合） | import 時 | `acquire_state_lock` が「別のBotインスタンスが既に起動しています」を ERROR ログ + `sys.exit(1)`（**単一プロセスロック・U-09 解決**） | `core/state.py:acquire_state_lock` |
 
 ---
 
@@ -224,7 +227,7 @@
 
 | 項目 | ローカル | Docker | 差異の影響 |
 |---|---|---|---|
-| 依存解決 | `requirements.txt`（`discord.py>=2.6.4` + `deepmerge>=2.1.0`、非固定） | `requirements.lock`（完全固定 11 パッケージ、deepmerge **なし**） | **C-01**: Docker で `/admin_manage` がロードされない可能性（U-01 でビルド確認要） |
+| 依存解決 | `requirements.txt`（`discord.py>=2.6.4` + `deepmerge>=2.1.0`、非固定） | `requirements.lock`（完全固定 12 パッケージ、deepmerge **あり**） | **C-01 解決**（2026-08-07 に `deepmerge==2.1.0` を追加）。Docker ビルド実起動は U-01 として延期 |
 | 設定の供給 | `data/config.json` を直接読込 | secret → tmpfs 複製 → symlink | アプリコード上の違いはなし（同一パスに見える） |
 | 永続データ | `data/user.json` を直接読書 | `/app/runtime/user.json`（volume）へ symlink | 挙動同一。`docker compose down -v` で破壊 |
 | ファイルシステム | 通常 | `read_only: true` + tmpfs（`/tmp`, `/run/urusaiyatsu`） | アプリが書けるのは `user.json` のみ。`save_users` は CWD= `data/` の symlink 先へ書く |
@@ -242,19 +245,19 @@
 
 ### 9.2 既知の懸念（機能カタログ §5 より引き継ぎ・本文書関連分）
 
-| ID | 懸念 | 確定根拠 | 影響 |
-|---|---|---|---|
-| C-01 | lock に deepmerge 欠落（§3.3, §8） | `requirements.lock` vs `requirements.txt:8` vs `cogs/admin_manage.py:8`、`Dockerfile:19` | Docker で `/admin_manage` 欠落の可能性。環境差 |
-| C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時全ユーザーデータが `{}` で上書き |
-| C-R01 | **Intent 要求過多の疑い**（本稿で新規整理） | `core/state.py:85-89` で要求する `message_content` / `members` / `messages` / `reactions` に対し、使用するイベントハンドラ（`on_message` / `on_member_*` / `on_reaction_*`）が grep で 0 件 | 特権 Intent（message_content / members）の要求が不要なら Portal で許可が必要な面を増やし、起動失敗のリスクを高めている。`command_prefix="!"` も未使用（`core/state.py:90`） |
+| ID | 懸念 | 確定根拠 | 影響 | 状態 |
+|---|---|---|---|---|
+| C-01 | lock に deepmerge 欠落（§3.3, §8） | `requirements.lock` vs `requirements.txt:8` vs `cogs/admin_manage.py:8`、`Dockerfile:19` | Docker で `/admin_manage` 欠落の可能性。環境差 | **解決済**（2026-08-07 に `deepmerge==2.1.0` を lock へ追加。Docker ビルド実起動は U-01 として延期） |
+| C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時全ユーザーデータが `{}` で上書き | **解決済**（`_load_users` が fail-closed: 隔離 + exit 1） |
+| C-R01 | **Intent 要求過多の疑い**（本稿で新規整理） | `core/state.py:85-89` で要求する `message_content` / `members` / `messages` / `reactions` に対し、使用するイベントハンドラ（`on_message` / `on_member_*` / `on_reaction_*`）が grep で 0 件 | 特権 Intent（message_content / members）の要求が不要なら Portal で許可が必要な面を増やし、起動失敗のリスクを高めている。`command_prefix="!"` も未使用（`core/state.py:90`） | 未解決（変更なし） |
 
 ### 9.3 未確定（検証が必要な事項）
 
-| ID | 項目 | 内容 | 確定に必要な確認 |
-|---|---|---|---|
-| U-01 | deepmerge 欠落の実行時影響 | C-01 の影響が実際に起きるか | `docker compose build` と起動ログで `admin_manage` ロード可否を確認 |
-| U-R02 | Portal 特権 Intent と起動の関係 | `PrivilegedIntentsRequired` で実際に起動失敗するか、またどの Intent が必要かを実機で確認 | Discord Portal 設定と実起動 |
-| U-R03 | アプリ絵文字フォールバックの見え方 | 絵文字未登録時の `:item_id:` 文字列表示 | 実運用での表示確認 |
+| ID | 項目 | 内容 | 確定に必要な確認 | 状態 |
+|---|---|---|---|---|
+| U-01 | deepmerge 欠落の実行時影響 | C-01 の影響が実際に起きるか | `docker compose build` と起動ログで `admin_manage` ロード可否を確認 | コード解決済（lock 追加）。Docker ビルド実起動は**延期** |
+| U-R02 | Portal 特権 Intent と起動の関係 | `PrivilegedIntentsRequired` で実際に起動失敗するか、またどの Intent が必要かを実機で確認 | Discord Portal 設定と実起動 | 未解決（延期） |
+| U-R03 | アプリ絵文字フォールバックの見え方 | 絵文字未登録時の `:item_id:` 文字列表示 | 実運用での表示確認 | 未解決（延期） |
 
 ---
 

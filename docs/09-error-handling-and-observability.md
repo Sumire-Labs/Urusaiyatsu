@@ -18,6 +18,8 @@
 
 現行実装では `logging` 不使用・グローバルエラーハンドラ未登録のため、例外が Discord 側で「interaction failed」になるだけで、原因・内部状態を観測する手段がない（機能カタログ §5.1 C-12）。本仕様は、再実装時に満たすべき **例外の分類**・**ユーザーへの応答契約**・**捕捉/未捕捉の境界**・**ログと監視**・**監査とメトリクス**・**秘密をログに書かない要件** を定義する。
 
+> **2026-08-07 更新**: 実装（作業ツリー `new-item-system`）により、`logging` 導入・`BotTree.on_error`・`Bot.on_error`・Modal/View の `on_error` が実装され、**C-12 は解決済み**。本仕様の §4 のうち多くは実装済み（解決）となった。残る未確定は §6 参照。
+
 ### 2.2 境界
 
 - **含む**: 例外の分類規約、ユーザー向けエラー応答、グローバルエラーハンドラ、ログ出力規約（秘密非含有）、監査・メトリクスの有無の決定、監視・手動介入の手順、バックグラウンドループの耐障害性。
@@ -31,17 +33,19 @@
 
 | # | 分類 | 代表例 | 現行の扱い | 一次根拠 |
 |---|---|---|---|---|
-| E-1 | ユーザー入力値の妥当性 | `admin_give` の存在しない `item_id`、`admin_manage` の非 dict 入力、Modal の非整数入力 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照） | `cogs/admin_give.py:25-30`, `cogs/admin_manage.py:33-35`, `modals/craft_modal.py:20-33` |
+| E-1 | ユーザー入力値の妥当性 | `admin_give` の存在しない `item_id`、`admin_manage` の非 dict 入力、Modal の非整数入力、`/use` `/gather` `/fishing` の `count` 範囲外 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照）。`count` は `valid_count`（1〜100）で拒否（**C-16/C-20 解決**） | `cogs/admin_give.py:25-30`, `cogs/admin_manage.py:33-35`, `modals/craft_modal.py:20-33`, `cogs/_helpers.py:valid_count` |
 | E-2 | ゲーム状態由来（資源不足・未所持・未装備） | スタミナ不足、燃料不足、素材不足、レベル不足、未装備 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照） | `cogs/gather.py:34-64`, `cogs/fishing.py:34-52`, `modals/craft_modal.py:56-93` |
 | E-3 | データ変換由来 | `ast.literal_eval` の構文エラー、`int()` の `ValueError` | 一部のみ `try/except` で捕捉（§3.3 参照） | `cogs/admin_manage.py:28-31`, `modals/craft_modal.py:20-22`, `modals/sell_modal.py:23-25` |
-| E-4 | 実装バグ由来（未捕捉） | `core/utils.py:212` の `list.pop(dict)` による `TypeError`（C-03）、未登録ユーザーの `KeyError`（C-05）、admin_give 負数剥奪（C-02） | **未捕捉** → interaction failed | `core/utils.py:212`, `cogs/settings.py:31`, `cogs/leaderboard.py:97` |
-| E-5 | Discord 外部 API 由来 | レート制限、ゲートウェイ断、`fetch_application_emojis` 失敗、応答期限切れ（3 秒/15 分）、`new_user` の `bot.fetch_user` 失敗（C-18、例外型・UI は U-14） | `on_ready` の `change_presence` のみ握りつぶし。他は未捕捉 | `core/state.py:97-102`, `core/state.py:198-201`, `core/utils.py:18` |
-| E-6 | ファイル I/O 由来 | `user.json` 読込の破損・書込失敗 | 読込は裸 `except` で握りつぶし（C-08）、書込は未捕捉 | `core/state.py:43-49`, `core/utils.py:454-457` |
-| E-7 | ライフサイクル起動由来 | 拡張（cog）のロード失敗、コマンドツリー同期失敗 | 拡張ロードは `print` のみ（続行）、同期失敗は未捕捉 | `core/state.py:179-193` |
+| E-4 | 実装バグ由来（未捕捉） | `core/utils.py:212` の `list.pop(dict)` による `TypeError`（C-03）、未登録ユーザーの `KeyError`（C-05）、admin_give 負数剥奪（C-02） | **2026-08-07 修正**: C-03（`pop(index)`）・C-05（`new_user` 呼び出し）・C-02（`abs(amount)`）は解決。残る未捕捉例外は `BotTree.on_error` / Modal `safe_on_error` / View `on_error` で捕捉・ログ + 安全応答（**C-12 解決**） | `core/utils.py`, `cogs/settings.py`, `cogs/leaderboard.py`, `core/state.py:BotTree` |
+| E-5 | Discord 外部 API 由来 | レート制限、ゲートウェイ断、`fetch_application_emojis` 失敗、応答期限切れ（3 秒/15 分）、`new_user` の `bot.fetch_user` 失敗（C-18） | `new_user` の `fetch_user` は捕捉しフォールバック名で登録継続（**C-18 解決**）。他は `BotTree.on_error` / `Bot.on_error` で記録 | `core/state.py:97-102`, `core/utils.py:new_user`, `core/state.py:BotTree` |
+| E-6 | ファイル I/O 由来 | `user.json` 読込の破損・書込失敗 | 読込は fail-closed（隔離 + exit 1、**C-08 解決**）。書込は `_save_lock` + atomic（**C-07 解決**）、失敗は `logger.exception` | `core/state.py:_load_users`, `core/utils.py:save_users` |
+| E-7 | ライフサイクル起動由来 | 拡張（cog）のロード失敗、コマンドツリー同期失敗 | 拡張ロード失敗は `logger.exception` で記録し続行（**C-12 解決**）。同期失敗は未捕捉 | `core/state.py:297-303` |
 
 ### 3.2 現行のユーザー応答（エラーメッセージ台帳）
 
 コマンド/View/Modal がゲート判定で返すメッセージ。公開性は `send_message` の引数に基づく（`ephemeral=True` あり/なし）。
+
+> **2026-08-07・後続（フレームワーク応答）**: `/use` `/gather` `/fishing` の cooldown 超過時は discord.py フレームワーク既定の `CommandOnCooldown` 応答（「クールダウン中」の旨）が返る。非 ADMIN の `/admin_*` は `admin_check`（`cogs/_helpers.py`）が `app_commands.CheckFailure` を送出し、フレームワーク既定の権限不足応答（`このコマンドの使用にはBotの管理権限が必要です。` の文言を含む）が返る。View の `interaction_check` は所有者不一致時に各 View の DENY 文言（例: `他のユーザーの装備は操作できません。`）を ephemeral で返す。**実機での表示文言は手動のライブ検証として延期**。
 
 | 機能 | 条件 | 応答メッセージ | 公開性 | 一次根拠 |
 |---|---|---|---|---|
@@ -83,52 +87,42 @@
 
 ### 3.3 捕捉されている例外（try/except 一覧）
 
-`except` を伴う箇所は下記の 7 箇所のみ。
+**2026-08-07 更新**: 実装により捕捉箇所が大幅に増加した。主要なもの:
 
 | 箇所 | 捕捉型 | 現行の挙動 | 一次根拠 |
 |---|---|---|---|
-| `user.json` 読込 | 裸 `except`（型指定なし） | 握りつぶして `{}` で上書き（C-08） | `core/state.py:43-49` |
-| 拡張ロード | `except Exception as e` | `print(f'Failed to load extension {ext}: {e}')` のみで続行（C-01 に直結） | `core/state.py:179-185` |
-| `on_ready` の `change_presence` | `except Exception` | `pass`（握りつぶし） | `core/state.py:198-201` |
+| `user.json` 読込 | `json.JSONDecodeError` / `OSError` | 破損ファイルを `user.json.bak.<ts>` へ隔離し **ERROR ログ + exit 1**（fail-closed。**C-08 解決**） | `core/state.py:_load_users` |
+| 拡張ロード | `except Exception` | `logger.exception` で記録し続行（**C-12 解決**） | `core/state.py:297-303` |
+| `on_ready` の `change_presence` | `except Exception` | `pass`（握りつぶし） | `core/state.py` |
 | `admin_manage` の `ast.literal_eval` | 裸 `except` | 「データの変換に失敗しました。」 | `cogs/admin_manage.py:28-31` |
 | `admin_manage` の `always_merger.merge` | 裸 `except` | 「{name}のデータの変更に失敗しました。」 | `cogs/admin_manage.py:41-45` |
 | MODAL-CRAFTQTY の `int()` | `except ValueError` | 「有効な整数を入力してください。」 | `modals/craft_modal.py:20-22` |
 | MODAL-SELLQTY の `int()` | `except ValueError` | 「有効な整数を入力してください。」 | `modals/sell_modal.py:23-25` |
+| `new_user` の `fetch_user` | `except Exception` | フォールバック名 `user_{id}` で登録継続（**C-18 解決**） | `core/utils.py:new_user` |
+| バックグラウンドティック | `except Exception` | ユーザー単位 try/except + `logger.exception`（ループ継続。**C-17 解決**） | `core/background.py:update_tick`, `core/state.py:_background_loop` |
+| 未処理アプリコマンドエラー | `BotTree.on_error` | ログ + 安全な ephemeral 応答（**C-12 解決**） | `core/state.py:BotTree` |
+| Modal の `on_error` | `safe_on_error` | ログ + 汎用文案（**C-12 解決**） | `modals/_common.py:safe_on_error` |
+| View の `on_error` | 各 View | ログ + 汎用文案（**C-12 解決**） | `views/*.py` |
 
-※ 裸 `except` は 3 箇所（`core/state.py:46`、`cogs/admin_manage.py:30,44`）。型指定は 4 箇所のうち `ValueError` ×2 と `Exception` ×2 のみ。
+※ 裸 `except` は `cogs/admin_manage.py:30,44` の 2 箇所に残る（TD-09-01）。
 
 ### 3.4 未捕捉の例外と Discord 側の挙動
 
-- **グローバルエラーハンドラ未登録**: `on_command_error` / `tree.error` / `add_error_handler` はリポジトリ全体で grep 0 件（機能カタログ §4.1 注記と一致）。
-- **スラッシュ/View/Modal**: ハンドラ内で捕捉されない例外は Discord クライアント既定の挙動となり、ユーザーには「interaction failed（この操作は失敗しました）」としてのみ通知され、原因は誰にも記録されない。
-- **バックグラウンドループ**（`core/background.py:14-99`）: `while True` のデーモンスレッドに `try/except` が**一切ない**。ループ内で例外が一度でも発生するとスレッドが死に、時間状態更新（JOB-TIMESTATE）と 5 秒保存（JOB-PERSIST）が**以後永久に停止**する。プロセス自体は生き続けるため、稼働中に見かけは正常でも全員の進行が止まる。
-- **背景ループの構造 race（C-17 / U-13）**: `USERS.items()` 反復（`core/background.py:22`）中に `new_user` / `admin_transit` がトップレベルキーを追加/削除すると `RuntimeError` になり、上記のとおりスレッドが黙って終了する。C-07 のファイル書込 race とは別のメモリミューテーション race。発生頻度は U-13。
+- **2026-08-07 修正**: グローバルエラーハンドラが登録された。`BotTree.on_error`（`core/state.py`、`tree_cls=BotTree`）が未処理のアプリコマンドエラーをログに記録し、ユーザーへ安全な ephemeral 応答（「エラーが発生しました。」）を返す。`Bot.on_error` がイベントリスナー例外を記録する（**C-12 解決**）。
+- **スラッシュ/View/Modal**: ハンドラ内で捕捉されない例外は `BotTree.on_error` / Modal `safe_on_error` / View `on_error` で捕捉・ログ + 安全応答される（**C-12 解決**）。
+- **バックグラウンドループ**（`core/background.py:update_tick`）: `list(USERS.keys())` のスナップショットで反復し、ユーザー単位の例外は捕捉して `logger.exception` で記録しループを継続（**C-17 解決**）。`Bot._background_loop` もティック・保存の例外を捕捉してループを停止させない。
+- **背景ループの構造 race（C-17 / U-13）**: 旧実装の `USERS.items()` 反復 race はスナップショット反復 + `_users_lock` で解消済み。発生頻度の実機観察は U-13 として延期。
 
 ### 3.5 標準出力（print）による観測
 
-`logging` は未使用（grep 0 件）。観測手段は print のみで、計 10 箇所。
-
-| 箇所 | 出力内容 | 一次根拠 |
-|---|---|---|
-| `core/state.py` | 「警告: {item}の売却価格が設定されていません。」 | `core/state.py:77` |
-| `core/state.py` | 「setup_hookを実行中」 | `core/state.py:94` |
-| `core/state.py` | 「アイテム登録: {n}」 | `core/state.py:148` |
-| `core/state.py` | 「釣りエリア登録: {n}」 | `core/state.py:153` |
-| `core/state.py` | 「採集エリア登録: {n}」 | `core/state.py:158` |
-| `core/state.py` | 「Loaded extension: {ext}」 | `core/state.py:183` |
-| `core/state.py` | 「Failed to load extension {ext}: {e}」 | `core/state.py:185` |
-| `core/state.py` | 「コマンドツリーを同期しました」 | `core/state.py:193` |
-| `core/state.py` | 「Botが起動しました」 | `core/state.py:197` |
-| `core/background.py` | 「バックグラウンドループを開始しました」 | `core/background.py:16` |
-
-※ 起動直後の print は `PYTHONUNBUFFERED=1`（`compose.yaml:27`）により Docker 標準出力へ即時出力される。タイムスタンプ・ログレベル・トレースバックは付与されない。
+**2026-08-07 更新**: `logging` 標準モジュールを導入し、`core/state.py` / `core/background.py` / `core/utils.py` / `views/*.py` / `modals/_common.py` の print を `logger` へ移行（**C-12 解決**）。`logging.basicConfig` がタイムスタンプ・ログレベル・モジュール名を付与する（`core/state.py`）。旧 print の一覧（`core/state.py` の 9 件、`core/background.py` の 1 件）はすべて `logger.info` / `logger.warning` / `logger.exception` へ移行済み。
 
 ### 3.6 監査・メトリクスの有無
 
 | 項目 | 有無 | 備考 | 一次根拠 |
 |---|---|---|---|
 | 監査ログ（admin 操作の記録） | 無し | `admin_give` / `admin_transit` / `admin_manage` は ephemeral 応答のみで、実行者・対象・内容・日時の永続記録がない | `cogs/admin_*.py` |
-| アプリケーションログ | 無し | `logging` 未使用（print のみ） | リポジトリ全体 grep |
+| アプリケーションログ | **有り** | `logging` を導入（**C-12 解決**）。起動・拡張ロード・エラーを記録 | `core/state.py` ほか |
 | メトリクス（コマンド回数・エラー率・レイテンシ等） | 無し | 外部メトリクス基盤・コード上の計測点とも不在 | リポジトリ全体 grep |
 | クラッシュレポート / 例外収集 | 無し | Sentry 等の外部サービスへの連携なし | リポジトリ全体 grep |
 
@@ -161,22 +155,22 @@
 
 ### 4.3 グローバルエラーハンドラの登録（ER-03）
 
-- スラッシュコマンド: `tree.error`（`discord.app_commands.CommandTree.error`）を登録し、E-4〜E-6 を捕捉する。応答済みでない場合は汎用文案で応答し、以降はログへ送る。
-- View / Modal: `add_error_handler`（`discord.ext.commands` の Interaction エラーハンドラ）を登録する。
-- ゲートウェイ全体: `on_error` イベントを登録し、接続断・再送等をログに記録する。
-- バックグラウンドループ（`core/background.py`）: ループ全体を `try/except` で包み、(1) 例外をログへ記録し、(2) 単発の回復可能エラーは次 tick に継続、(3) 致命エラーはループ再開またはプロセス終了のポリシーを設定する。**ループ死によるサイレント停止を禁止**する（§3.4 の現状を是正）。
-- 拡張ロード失敗（`core/state.py:179-185`）: ロード失敗をログレベル ERROR で記録し、失敗コグを明示する（C-01 の深merge 欠落で `admin_manage` が落ちるケースを検知可能にする）。起動を継続するか中止するかは設定で選択可能とする。
+- スラッシュコマンド: `tree.error`（`discord.app_commands.CommandTree.error`）を登録し、E-4〜E-6 を捕捉する。応答済みでない場合は汎用文案で応答し、以降はログへ送る。**実装済み**（`BotTree.on_error`、`tree_cls=BotTree`。**C-12 解決**）。
+- View / Modal: `add_error_handler`（`discord.ext.commands` の Interaction エラーハンドラ）を登録する。**実装済み**（Modal は `safe_on_error`、View は各 `on_error`）。
+- ゲートウェイ全体: `on_error` イベントを登録し、接続断・再送等をログに記録する。**実装済み**（`Bot.on_error`）。
+- バックグラウンドループ（`core/background.py`）: ループ全体を `try/except` で包み、(1) 例外をログへ記録し、(2) 単発の回復可能エラーは次 tick に継続、(3) 致命エラーはループ再開またはプロセス終了のポリシーを設定する。**ループ死によるサイレント停止を禁止**する。**実装済み**（`update_tick` のユーザー単位 try/except + `Bot._background_loop` のティック/保存 try/except。**C-17 解決**）。
+- 拡張ロード失敗（`core/state.py:297-303`）: ロード失敗をログレベル ERROR で記録し、失敗コグを明示する。**実装済み**（`logger.exception`。**C-12 解決**）。起動を継続するか中止するかは設定で選択可能とする。**未実装**（現状は起動継続）。
 
 ### 4.4 ログ規約（ER-04）
 
-- `logging` 標準モジュールを使用し、`print` による観測を廃止する（C-12 の解消）。ログレコードに**タイムスタンプ・ログレベル・発生源（モジュール名）**を必ず付与する。
+- `logging` 標準モジュールを使用し、`print` による観測を廃止する（C-12 の解消）。**実装済み**（`logging.basicConfig` + `logger` 移行。**C-12 解決**）。ログレコードに**タイムスタンプ・ログレベル・発生源（モジュール名）**を必ず付与する。**実装済み**（`format='%(asctime)s %(levelname)s %(name)s: %(message)s'`）。
 - ログレベル指針:
   - DEBUG: トレース目的（ゲームロール結果、状態遷移）
   - INFO: 起動フェーズ（setup_hook の各段階、拡張ロード、ツリー同期、on_ready）、バックグラウンドループの開始/停止
   - WARNING: 回復可能な異常（絵文字未取得、売却価格未設定 `core/state.py:77` 相当）
   - ERROR: 未捕捉例外、ファイル I/O 失敗、拡張ロード失敗、ループ異常
   - CRITICAL: 起動不能（config 読込失敗、静的 JSON 読込失敗、ツリー同期不能）
-- 既存 print の移行先は §3.5 の表と 1 対 1 で対応させる（`core/state.py` の 9 件、`core/background.py` の 1 件）。
+- 既存 print の移行先は §3.5 の表と 1 対 1 で対応させる。**実装済み**（旧 print 10 件を `logger` へ移行）。
 
 ### 4.5 監査・メトリクス（ER-05）
 
@@ -206,29 +200,29 @@
 
 ## 5. 受入観点
 
-| ID | 受入観点 | 確認手段 |
-|---|---|---|
-| AV-09-01 | グローバルエラーハンドラ（`tree.error` / `add_error_handler` / `on_error`）が登録され、未捕捉例外時にユーザーへ統一の汎用文案が応答され、原因が内部ログへ記録される | 意図的に例外を発生させる注入テスト（E-4 の `pop(dict)` 等）と `docker compose logs` の確認 |
-| AV-09-02 | `logging` 使用により全 print（§3.5 の 10 件）が移行され、`print(` の残存が 0 件である | リポジトリ grep |
-| AV-09-03 | ログレコードにタイムスタンプ・レベル・モジュール名が付与される | `docker compose logs` の出力確認 |
-| AV-09-04 | バックグラウンドループに例外対策があり、単発エラーで停止せず、致命エラー時はログに ERROR が出る。ループ死のサイレント状態が発生しない | ループ内に注入した例外での挙動確認 |
-| AV-09-05 | 監査ログに `admin_*` 操作が記録され、秘密・個人データ実値が含まれない | `admin_*` 実行後の監査ログ閲覧 |
-| AV-09-06 | 秘密フィルタにより、DEBUG を含む全ログに token・ユーザー ID 実値・`user.json` 内容・入力文字列が現れない | 例外注入・admin 操作を含む一連の動作後にログ全文を grep 検証 |
-| AV-09-07 | 拡張ロード失敗が ERROR で記録され、失敗コグが識別できる（C-01 検知） | 依存欠落状態での起動ログ確認 |
+| ID | 受入観点 | 確認手段 | 状態 |
+|---|---|---|---|
+| AV-09-01 | グローバルエラーハンドラ（`tree.error` / `add_error_handler` / `on_error`）が登録され、未捕捉例外時にユーザーへ統一の汎用文案が応答され、原因が内部ログへ記録される | 意図的に例外を発生させる注入テストと `docker compose logs` の確認 | コード実装済み（`BotTree.on_error` / Modal `safe_on_error` / View `on_error`）。実機確認は**延期** |
+| AV-09-02 | `logging` 使用により全 print（§3.5 の 10 件）が移行され、`print(` の残存が 0 件である | リポジトリ grep | コード実装済み（`logger` へ移行）。grep 確認は**延期** |
+| AV-09-03 | ログレコードにタイムスタンプ・レベル・モジュール名が付与される | `docker compose logs` の出力確認 | コード実装済み（`logging.basicConfig`）。実機確認は**延期** |
+| AV-09-04 | バックグラウンドループに例外対策があり、単発エラーで停止せず、致命エラー時はログに ERROR が出る。ループ死のサイレント状態が発生しない | ループ内に注入した例外での挙動確認 | コード実装済み（ユーザー単位 try/except + `logger.exception`）。実機確認は**延期** |
+| AV-09-05 | 監査ログに `admin_*` 操作が記録され、秘密・個人データ実値が含まれない | `admin_*` 実行後の監査ログ閲覧 | **未実装**（監査ログは未導入） |
+| AV-09-06 | 秘密フィルタにより、DEBUG を含む全ログに token・ユーザー ID 実値・`user.json` 内容・入力文字列が現れない | 例外注入・admin 操作を含む一連の動作後にログ全文を grep 検証 | コード実装済み（ログに生のユーザー ID を含めない方針）。実機確認は**延期** |
+| AV-09-07 | 拡張ロード失敗が ERROR で記録され、失敗コグが識別できる（C-01 検知） | 依存欠落状態での起動ログ確認 | コード実装済み（`logger.exception`）。C-01 は lock 追加で解決。実機確認は**延期** |
 
 ---
 
 ## 6. 未確定事項
 
-| ID | 項目 | 内容 | 確定に必要な確認 |
-|---|---|---|---|
-| U-03 | Modal のタイムアウト値 | 3 Modal とも `timeout` 未宣言（機能カタログ §5.2 U-03）。エラー応答仕様（§4.2）は実挙動次第で調整 | discord.py 既定値の確認、または明示化 |
-| U-04 / U-05 | View / Modal 破棄後・応答済み Interaction の操作 | timeout 超過後の再操作、`edit_original_response` の実挙動が未検証。エラーハンドラ設計（§4.3）に影響 | 実機操作テスト |
-| U-09 | 複数インスタンス同時実行 | 単一レプリカ運用が前提だが、多重起動時のエラー挙動は未検証（監視観点で既知の問題を検知可能か） | 多重起動テスト |
-| U-13 | C-17 の race 発生頻度 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation が重なる頻度 | 新規登録・`admin_transit` 実行下での観察 |
-| U-14 | C-18 の `fetch_user` 失敗の例外型・UI | `new_user` の `bot.fetch_user` 失敗時の実際の例外型とユーザー表示は未検証（**断定しない**） | Discord API 障害時の新規登録実行 |
-| — | 拡張ロード失敗時の起動継続/中止ポリシー | §4.3 で「設定で選択可能」としたが、デフォルト値は未決定 | 運用方針の決定 |
-| — | 監査ログのファイルローテーション | 監査ログの容量・保持期間・ローテーション方式は未決定 | 運用要件の決定 |
+| ID | 項目 | 内容 | 確定に必要な確認 | 状態 |
+|---|---|---|---|---|
+| U-03 | Modal のタイムアウト値 | 3 Modal とも `timeout=180` を明示（**U-03 解決**） | — | **解決済** |
+| U-04 / U-05 | View / Modal 破棄後・応答済み Interaction の操作 | timeout 超過後の再操作、`edit_original_response` の実挙動が未検証 | 実機操作テスト | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期** |
+| U-09 | 複数インスタンス同時実行 | `acquire_state_lock` が起動時ロックで多重起動を拒否 | 多重起動テスト | コード解決済。実機確認は**延期** |
+| U-13 | C-17 の race 発生頻度 | `list(USERS.keys())` スナップショット反復でコード解決済。実機観察は未実施 | 新規登録・`admin_transit` 実行下での観察 | コード解決済。実機観察は**延期** |
+| U-14 | C-18 の `fetch_user` 失敗の例外型・UI | `new_user` がフォールバック名で登録継続（コード解決済）。実際の例外型・UI は未検証 | Discord API 障害時の新規登録実行 | コード解決済。実機確認は**延期** |
+| — | 拡張ロード失敗時の起動継続/中止ポリシー | §4.3 で「設定で選択可能」としたが、デフォルト値は未決定 | 運用方針の決定 | 未解決（現状は起動継続） |
+| — | 監査ログのファイルローテーション | 監査ログの容量・保持期間・ローテーション方式は未決定 | 運用要件の決定 | 未解決（監査ログ自体が未導入） |
 
 ---
 
@@ -237,6 +231,7 @@
 | ID | 内容 | 理由・影響 |
 |---|---|---|
 | TD-09-01 | `admin_manage` の裸 `except`（`cogs/admin_manage.py:30,44`） | 入力検証の再設計（[11-security-and-authorization.md](11-security-and-authorization.md) §4.3）と一体で解消するため、09 章単独では改修しない |
-| TD-09-02 | `core/state.py:46` の裸 `except` による user.json 読込（C-08） | データ整合性・バックアップ（[10-deployment-and-operations.md](10-deployment-and-operations.md) §4.5）と一体で扱う。破損時リカバリ手順の整備後に対応 |
+| TD-09-02 | ~~`core/state.py:46` の裸 `except` による user.json 読込（C-08）~~ | **解決済**（`_load_users` が fail-closed: 隔離 + exit 1） |
 | TD-09-03 | エラー文案の公開/ephemeral 混在（§3.2「公開」欄） | ユーザー体験の調整でありゲーム契約に影響しないため、再実装の後工程で統一する |
 | TD-09-04 | 外部メトリクス基盤・クラッシュレポートの不採用 | 秘密送信リスクと導入コストの観点で Phase2 では負債として許容（§4.5） |
+| TD-09-05 | 監査ログ（admin 操作の永続記録）の不在 | §4.5 の監査ログは未導入。admin 操作の事後調査手段がない |

@@ -6,31 +6,31 @@ import random
 
 from core.state import USERS, ITEMS, RECIPES, ADVANCEMENTS, EMOJIS
 from core.utils import xp, complete_advancement, save_users, get_stats, get_item_stacked, get_item_index, remove_item_stacked, get_item, modify_item, add_item, remove_item_from_index
+from ._common import respond, safe_on_error
 
 
 class craft_amount(discord.ui.Modal):
     """クラフト個数入力Modal"""
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, timeout=180, **kwargs)
         self.add_item(discord.ui.TextInput(label="クラフトする個数", placeholder="整数を入力", max_length=8))
 
     async def on_submit(self, interaction: discord.Interaction):
-        success = True
         try:
-            int(self.children[0].value)
-        except ValueError:
-            success = False
-
-        if success:
             count = int(self.children[0].value)
-            if count > 0:
-                recipe_id = int(self.custom_id)
-                await craft_item(interaction, recipe_id, count)
-            else:
-                await interaction.response.send_message('有効な整数を入力してください。')
+        except ValueError:
+            await respond(interaction, '有効な整数を入力してください。')
+            return
+
+        if count > 0:
+            recipe_id = int(self.custom_id)
+            await craft_item(interaction, recipe_id, count)
         else:
-            await interaction.response.send_message('有効な整数を入力してください。')
+            await respond(interaction, '有効な整数を入力してください。')
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        await safe_on_error(interaction, error)
 
 
 async def craft_item(interaction: discord.Interaction, recipe: int, count: int = 1):
@@ -59,14 +59,15 @@ async def craft_item(interaction: discord.Interaction, recipe: int, count: int =
             for item_id, item_data in ITEMS.items():
                 if tool_tag in item_data['tag']:
                     embed.description += f'**{ITEMS[item_id]["name_e"]}**\n'
-            await interaction.response.send_message('クラフトに必要なツールが不足しています。',embed=embed)
+            await respond(interaction, 'クラフトに必要なツールが不足しています。', embed=embed)
             return
         
 
     # スタミナ
     stamina_uses = recipe_data['stamina']
     if user_data['stamina'] < stamina_uses:
-        await interaction.response.send_message(
+        await respond(
+            interaction,
             f'スタミナが足りません。(**{user_data["stamina"]}/{stamina_uses}{EMOJIS["stamina"]}**)'
         )
         return
@@ -89,7 +90,7 @@ async def craft_item(interaction: discord.Interaction, recipe: int, count: int =
 
     count = min(crafting_counts)
     if count == 0:
-        await interaction.response.send_message('クラフトに必要なアイテムが不足しています。',embed=embed)
+        await respond(interaction, 'クラフトに必要なアイテムが不足しています。', embed=embed)
         return
 
     # クラフト処理
@@ -179,7 +180,8 @@ async def craft_item(interaction: discord.Interaction, recipe: int, count: int =
 
     # 送信
     item_name = ITEMS[result_id]['name_e']
-    await interaction.response.send_message(
+    await respond(
+        interaction,
         f'**{item_name}×{process_count}**をクラフトしました！{description}{adv_message}')
 
     # ファイル更新

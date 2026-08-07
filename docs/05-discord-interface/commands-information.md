@@ -75,7 +75,7 @@
 | 読書き状態 | 読み取り専用：`ITEMS`/`RECIPES`/`PLACES`/`FISHING_PLACES`/`LOOTS`/`LOCALIZATIONS`/`EMOJIS`。保存なし。※ `item_select_view` が `new_user`（`views/item_select_view.py:120`）を実行するため、未登録ユーザーは **メモリ上の `USERS` に登録される**が、`save_users()` は呼ばれず**即時保存されない**（後続の 5 秒毎保存まで永続化されない） |
 | 成功応答 | **ephemeral** `embeds=[embed1, embed2, embed3]`（`cogs/item_data.py:171`）<br>- embed1「基本情報」：`# {name_e} ( ID: {item_id} )` と全プロパティ（tag/stats はローカライズ付き整形）<br>- embed2「レシピ情報」：`# このアイテムを作るレシピ({n}件)`（`item == recipe['result']`）と `# このアイテムを使うレシピ({n}件)`（`item in recipe['ingredient']`）。各レシピは `{result} ⇐ [ 素材×個数 ] ツール: {tool_name}( アイテムタグ: {tool_tag} )` + スタミナ/XP<br>- embed3「入手情報」：採集場所（`{w}/{x} = {w/x}%`）、釣り場所（`{name}｜釣りパワー{q}以上{r}以下 ( {w}/{x} = ...% ※釣りパワー{p}の場合 )`）、loot テーブルの入手元/入手先 |
 | 失敗応答 | 明示的な失敗分岐なし（ITEMS に存在する id のみ View が渡す） |
-| 例外 | - **C-11**: `views/item_select_view.py:140-145` の `_get_callback` は未登録名を `eval(name)` で解決する eval fallback。現状は `register_callback('item_data', item_data)`（`cogs/item_data.py:180`）に登録済みの内部定数のみ渡るため発火しない<br>- **U-10**: 釣り確率は `power_min`/`power_max` の中間値 `p`（`power_max == -1` は `p = q`）による近似表示（`cogs/item_data.py:122-127`）。実際のロール条件（`cogs/fishing.py:get_fishing_loot_table`）との完全一致は未検証<br>- 冒頭の `new_user` 内 `bot.fetch_user`（`views/item_select_view.py:120` → `core/utils.py:18`）が失敗すると未捕捉のまま伝播する（**C-18 / U-14**） |
+| 例外 | - **C-11（解決済）**: `views/item_select_view.py:_get_callback` は `eval` を廃止し、`_callbacks.get(name)` で登録済み名のみ解決。未登録名は `None` を返し安全に拒否（**C-11 解決**）<br>- **U-10（コード解決済）**: 釣り確率は `_fishing_probability_range`（`cogs/item_data.py`）で有効な釣りパワー範囲を走査し、出現確率の**最小〜最大の範囲**を表示（中間値近似を廃止）。**2026-08-07・後続**: 同一 `item_id` の**重複エントリをすべて集計**（`item_weight` を合算）し、実際のテーブルフィルタリングと重み付けに一致する確率を計算。実ロールとの突合は実機確認として延期<br>- 冒頭の `new_user` 内 `bot.fetch_user`（`views/item_select_view.py:120` → `core/utils.py:new_user`）は失敗時にフォールバック名 `user_{id}` で登録継続（**C-18 解決**、例外型・UI は U-14） |
 | 並行性 | 読み取り専用のため並行性の影響なし |
 | 受入基準 | ① 選択したアイテムの Embed 3 枚が ephemeral で表示される。② レシピ情報は結果側・素材側の両方向を正しく分類する。③ 入手情報に採集/釣り/loot の 3 系統が表示される |
 
@@ -86,13 +86,13 @@
 | 入力 | `mode: int`（必須・`choices` 0–10、`cogs/leaderboard.py:19-31`）：0=スコア / 1=総合レベル / 2=採集レベル / 3=釣りレベル / 4=目標達成数 / 5=総資産 / 6=コイン / 7=スタミナ / 8=燃料 / 9=アイテム数 / 10=放射線被爆量 |
 | DM-Guild context | 双方で発火可能 |
 | 前提 | なし（※発火ユーザーが `USERS` に未登録の場合は例外、下記参照） |
-| 処理フロー | ① `USERS` 全ユーザーを走査し mode に応じたスコアを `board` に構築 → ② `sorted(board.items(), key=lambda item: item[1], reverse=True)` で降順ソート → ③ 自分の順位 `list(board.keys()).index(str(user_id)) + 1` を description に追記 → ④ 上位 10 件を `add_field(name=f'{j}. {name}', value=score)` で列挙 → ⑤ 公開 Embed 送信 |
-| 読書き状態 | 読み取り専用：`USERS`/`ITEMS`。保存なし。`new_user` 呼び出しなし（C-05） |
+| 処理フロー | ① `new_user(user_id)`（**2026-08-07 追加・C-05 解決**）→ ② `USERS` 全ユーザーを走査し mode に応じたスコアを `board` に構築 → ③ **2026-08-07・後続**: 自分の順位を「自分よりスコアが高い人数 + 1」の単一走査で算出（`my_score` が無い場合は 1 位扱い）→ ④ 上位 10 件を `heapq.nlargest(10, ...)` で**全件ソートを回避**して選択（**境界付き top-10/rank・U-07 解決**）→ ⑤ 上位 10 件を `add_field(name=f'{j}. {name}', value=score)` で列挙 → ⑥ 公開 Embed 送信 |
+| 読書き状態 | 読み取り専用：`USERS`/`ITEMS`。保存なし。`new_user` 呼び出しあり（**C-05 解決**） |
 | 成功応答 | **公開** Embed。title `リーダーボード(スコア順)` 等の mode 別タイトル、description に「あなたは__{n}位__です。」+ スコア算出式（mode 0/5 のみ、`cogs/leaderboard.py:40,65`）、field に上位 10 件の `{name}` とスコア |
 | 失敗応答 | 明示的な失敗分岐なし |
-| 例外 | - **C-05**: `cogs/leaderboard.py:97` の `list(board.keys()).index(str(user_id))` は未登録ユーザー（`board` に存在しない）で `ValueError` を発生 → 未捕捉のため「interaction failed」（C-12）。`new_user` を呼ばないため初回利用ユーザーで発火する<br>- cooldown / `max_concurrency` / 権限チェック / `interaction_check` は存在しない（**C-19 / U-15**） |
-| 並行性 | 読み取り専用。ただし全ユーザー走査・ソート・`list.index` の線形探索（U-07）はユーザー数に比例してコスト増 |
-| 受入基準 | ① 11 モードすべてで Embed が表示され、上位 10 件 + 自分の順位が含まれる。② mode ごとのスコア算出式が仕様どおり（0 は `level_gathering*level_fishing*1000 + 目標達成数*10000 + 売値合計 + money + fuel*2`）。③ 未登録ユーザーでは「interaction failed」になる（既知問題 C-05、再実装時の契約として解決要） |
+| 例外 | - **C-05（解決済）**: `cogs/leaderboard.py` は冒頭で `new_user` を呼ぶため、未登録ユーザーでも `ValueError` を起こさない（**C-05 解決**）<br>- cooldown / `max_concurrency` / 権限チェック / `interaction_check` は `/leaderboard` には未導入（**C-19 / U-15**、決定範囲外） |
+| 並行性 | 読み取り専用。全ユーザー走査のコストはユーザー数に比例（順位は単一走査・上位 10 件は `heapq.nlargest` で全件ソート回避・**U-07 解決**） |
+| 受入基準 | ① 11 モードすべてで Embed が表示され、上位 10 件 + 自分の順位が含まれる。② mode ごとのスコア算出式が仕様どおり（0 は `level_gathering*level_fishing*1000 + 目標達成数*10000 + 売値合計 + money + fuel*2`）。③ 未登録ユーザーでも自動登録され正常表示される（**C-05 解決**） |
 
 ### 3.5 CMD-013 `/settings` — ユーザー設定変更
 
@@ -101,24 +101,24 @@
 | 入力 | `config: int`（必須・`choices` 0–5、`cogs/settings.py:21-28`）：0=ニックネーム変更 / 1=ニュースと目標の表示トグル / 2=ステータスの短縮表示 / 3=クラフトツール交換 / 4=採集ツール交換 / 5=釣り餌切れ時続行トグル |
 | DM-Guild context | 双方で発火可能 |
 | 前提 | なし（※`config=1,5` のトグルと `config=0` は `USERS[str(user_id)]` を直接参照。未登録ユーザーでは例外、下記参照） |
-| 処理フロー | ① `user_data = USERS[str(user_id)]` → ② `config` で分岐：<br>- `0`: `set_name(title="ニックネームの変更")` の Modal（MODAL-NAME（INT-013））を `send_modal`<br>- `1`: `settings.news` を反転し ephemeral メッセージ → `save_users()`<br>- `2`: `status_setting_view`（VIEW-SETTINGS-STATUS（INT-008））<br>- `3`: `crafting_tool_replacement_setting_view`（VIEW-SETTINGS-CRAFTREPL（INT-009））<br>- `4`: `gathering_tool_replacement_setting_view`（VIEW-SETTINGS-GATHERREPL（INT-010））<br>- `5`: `settings.continue_fishing` を反転し ephemeral メッセージ → `save_users()` |
+| 処理フロー | ① `await new_user(user_id)`（**2026-08-07 追加・C-05 解決**）→ ② `user_data = USERS[str(user_id)]` → ③ `config` で分岐：<br>- `0`: `set_name(title="ニックネームの変更")` の Modal（MODAL-NAME（INT-013））を `send_modal`<br>- `1`: `settings.news` を反転し ephemeral メッセージ → `save_users()`<br>- `2`: `status_setting_view`（VIEW-SETTINGS-STATUS（INT-008））<br>- `3`: `crafting_tool_replacement_setting_view`（VIEW-SETTINGS-CRAFTREPL（INT-009））<br>- `4`: `gathering_tool_replacement_setting_view`（VIEW-SETTINGS-GATHERREPL（INT-010））<br>- `5`: `settings.continue_fishing` を反転し ephemeral メッセージ → `save_users()` |
 | 読書き状態 | 読：`USERS`。書：`settings.news` / `settings.continue_fishing`（トグル、`cogs/settings.py:37-61`）。Modal・View 側の書込みは INT-008〜010/INT-013 参照。保存：トグルでは `save_users()`、View/Modal 側は各 `on_submit` 内で `save_users()` |
 | 成功応答 | - config=1：**ephemeral** テキスト `ニュースと目標を「**表示しない/表示する**」に変更しました。`<br>- config=5：**ephemeral** テキスト `釣り餌を使い切ったときの釣りを「**続行しない/続行する**」に変更しました。`<br>- config=0：Modal（MODAL-NAME）<br>- config=2/3/4：各設定 View（ephemeral） |
 | 失敗応答 | 明示的な失敗分岐なし |
-| 例外 | - **C-05**: `cogs/settings.py:31` の `USERS[str(user_id)]` は未登録ユーザーで `KeyError` → 未捕捉のため「interaction failed」（C-12）。`new_user` を呼ばないため初回利用ユーザーで発火する<br>- cooldown / `max_concurrency` / 権限チェック / `interaction_check` は存在しない（**C-19 / U-15**） |
-| 並行性 | `settings` への書込みは無ロック。バックグラウンドスレッドと並走 |
-| 受入基準 | ① config=0 でニックネーム変更 Modal が開き、32 文字以内の名前が反映・永続化される。② config=1/5 のトグルが反転し、結果が ephemeral 表示される。③ config=2/3/4 でそれぞれ対応する設定 View が開き、選択結果が保存される |
+| 例外 | - **C-05（解決済）**: `cogs/settings.py` は冒頭で `new_user` を呼ぶため、未登録ユーザーでも `KeyError` を起こさない（**C-05 解決**）<br>- cooldown / `max_concurrency` / 権限チェック / `interaction_check` は `/settings` には未導入（**C-19 / U-15**、決定範囲外） |
+| 並行性 | `settings` への書込みは無ロック。バックグラウンドタスクと並走 |
+| 受入基準 | ① config=0 でニックネーム変更 Modal が開き、32 文字以内の名前が反映・永続化される。② config=1/5 のトグルが反転し、結果が ephemeral 表示される。③ config=2/3/4 でそれぞれ対応する設定 View が開き、選択結果が保存される。④ 未登録ユーザーでも自動登録され正常動作する（**C-05 解決**） |
 
 ---
 
 ## 4. 既知問題と再実装時の契約（要約）
 
-| 機能ID | 既知問題 | 影響 |
-|---|---|---|
-| CMD-012 | C-05（`new_user` 不在 → `ValueError`） | 未登録ユーザーで「interaction failed」 |
-| CMD-013 | C-05（`new_user` 不在 → `KeyError`） | 未登録ユーザーで「interaction failed」 |
-| CMD-011 | C-11（eval fallback）、U-10（釣り確率近似）、C-18/U-14（`new_user` の `fetch_user` 未捕捉） | コード上の安全余白・表示値の近似・新規登録時の失敗 |
-| CMD-002 | C-04（アクセサリ stats 非反映）、C-18/U-14（`new_user` の `fetch_user` 未捕捉）、`news` リセットの保存順 | ステータス数値にアクセサリ効果が出ない・新規登録時の失敗・`news` リセットは後続保存までメモリのみ |
-| CMD-012 / CMD-013 | C-19/U-15（cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在） | 実行間隔・同時実行数・権限の制御なし |
+| 機能ID | 既知問題 | 影響 | 状態 |
+|---|---|---|---|
+| CMD-012 | C-05（`new_user` 不在 → `ValueError`） | 未登録ユーザーで「interaction failed」 | **解決済**（`new_user` 呼び出し + 単一走査で順位算出） |
+| CMD-013 | C-05（`new_user` 不在 → `KeyError`） | 未登録ユーザーで「interaction failed」 | **解決済**（`new_user` 呼び出し） |
+| CMD-011 | C-11（eval fallback）、U-10（釣り確率近似）、C-18/U-14（`new_user` の `fetch_user` 未捕捉） | コード上の安全余白・表示値の近似・新規登録時の失敗 | **C-11 / C-18 解決**（eval 廃止・フォールバック名）。U-10 はコード解決済（確率範囲表示）。実機確認は延期 |
+| CMD-002 | C-04（アクセサリ stats 非反映）、C-18/U-14（`new_user` の `fetch_user` 未捕捉）、`news` リセットの保存順 | ステータス数値にアクセサリ効果が出ない・新規登録時の失敗・`news` リセットは後続保存までメモリのみ | **C-04 / C-18 解決**（書戻し・フォールバック名）。`news` 保存順は現行仕様 |
+| CMD-012 / CMD-013 | C-19/U-15（cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在） | 実行間隔・同時実行数・権限の制御なし | 一部解決（決定範囲外のため未導入） |
 
-再実装時には各コマンド冒頭での `new_user` 呼び出し、エラーハンドラ登録（C-12）を契約として解決することが望ましい。
+再実装時には各コマンド冒頭での `new_user` 呼び出し、エラーハンドラ登録（C-12）を契約として解決することが望ましい。**2026-08-07 更新**: `new_user` 呼び出し（C-05）とエラーハンドラ（C-12）は実装済み（解決）。

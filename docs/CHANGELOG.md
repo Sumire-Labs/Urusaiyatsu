@@ -8,6 +8,52 @@
 
 ---
 
+## 2026-08-07 — リメディエーション反映の仕様更新（docs-only）
+
+### 概要
+
+実装（作業ツリー `new-item-system` の未コミット変更）の**後続リメディエーション**を各仕様書へ反映した。**実行時テストの完了は主張しない**（コード・静的解析による解決のみ。CI・ローカル実行の成否、Docker ビルド・Discord ライブでの検証は未実施・手動のライブ検証として延期）。
+
+### 反映内容
+
+- **売却 stale Modal の同一性検証・ページクランプ・永続化先行**: `sell_amount` が開封時点の `index` / `page` / `expected_item`（`id`/`meta`/`count`）を内部保持し、`sell_item` が現在のインベントリと照合（不一致・範囲外・所持数不足はミューテーションせず拒否）。`sell_selecting` が `page_max` を再計算し要求ページを 1..`page_max` へクランプ。`save_users()` を再描画**前**に実行（観測-3 対策）。
+- **実際の View タイムアウトメッセージ保持**: 各 View が表示中メッセージ参照（`_message_ref`）を保持し、`on_timeout` が保持メッセージを実際に編集・無効化。メッセージ未保持の通常タイムアウトは例外・ログ対象にしない。
+- **cooldown / admin check の期待ユーザー応答**: cooldown 超過時はフレームワーク既定の `CommandOnCooldown` 応答、非 ADMIN 時は `admin_check` の `CheckFailure` による権限不足応答、View 所有者不一致時は各 DENY 文言（ephemeral）を記録。
+- **装備/ショップ View の事前バインド所有者 ID**: `equip_select` / `remove_equip_choice` / `shop_choice` が `owner_id=user_id` で作成時に事前バインド。
+- **非ミューテーション釣りテーブル**: `get_fishing_loot_table` が `deepcopy` でコピー上で操作し、グローバル `FISHING_PLACES` は不変（観測-7 解決）。
+- **釣り確率の重複エントリ集計**: `_fishing_probability_range` が同一 `item_id` の重複エントリの `weight` を合算し、実際のフィルタリングと重み付けに一致する確率範囲を表示。
+- **境界付き leaderboard**: 順位を「自分よりスコアが高い人数 + 1」の単一走査で算出し、上位 10 件を `heapq.nlargest(10, ...)` で選択（全件ソート回避）。
+- **売却回帰テスト**: `tests/test_sell.py`（stale 送信拒否・永続化先行・ページクランプ・タイムアウトメッセージ保持・安全な on_error）と `tests/` 一式・`.github/workflows/ci.yml` を追加（**C-13 解決**。非ライブ単体テスト）。
+- 各詳細仕様書（05 各種 / 06 各種 / 12 / 13）へ反映。`12-testable-acceptance-criteria.md` に ACR-N-20〜N-30 を追加。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
+## 2026-08-07 — 実装反映の仕様更新（docs-only）
+
+### 概要
+
+実装（作業ツリー `new-item-system` の未コミット変更）により解決された C/U 項目と、ユーザー決定（2026-08-07）を各仕様書へ反映した。**実行時テストの完了は主張しない**（コード・静的解析による解決のみ。Docker ビルド・Discord ライブでの検証は未実施・手動のライブ検証として延期）。
+
+### ユーザー決定（記録）
+
+- **ショップ更新は壁時計の 1 時間毎**（`rotate_shop`、`last_rotation_hour` でべき等。C-10 / U-06 解決）。
+- **進捗の前提 `null` は初期付与専用**（`complete_advancement` ではアンロックしない。C-06 解決）。
+- **`/use` `/gather` `/fishing` の `count` は 1〜100・ユーザー毎 3 秒クールダウン**（`valid_count` + `@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)`。C-16 / C-20 / C-19 解決）。
+- **advancement 欠落参照は `gather_mythical_mines` へ修正**（`craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow`。C-06 解決）。
+- **バランス数値は文書化された契約として維持**（U-12 決定）。
+- **状態ストアは単一プロセスロック**（`acquire_state_lock` の POSIX `flock`。C-07 / U-09 解決）。
+- **Discord ライブ検証は手動で延期**（未実施）。
+
+### 解決済み C/U の反映
+
+- **C-01〜C-08, C-10〜C-12, C-14, C-16〜C-22** を「解決済」として `13-open-questions-and-technical-debt.md` に反映（実装・仕様リンク付き）。**C-13（tests / CI）は未解決のまま**。
+- **U-01〜U-07, U-09, U-10, U-12〜U-15（一部）** を解決済/コード解決済として反映。**未解決のまま残るのは** C-13 と、Discord ライブ検証を要する U-08（絵文字表示）・U-11（時刻ボーナス数式）・U-15（残り範囲）および各 U 項目の実機確認（延期）。
+- 各詳細仕様書（03 / 04 / 05 各種 / 06 各種 / 07 各種 / 09 / 10 / 11 / 12）の関係箇所へ解決状態・実装リンク・ユーザー決定を反映。`12-testable-acceptance-criteria.md` の ACR-K-xx / ACR-R-04 / ACR-R-05 / ACR-S-03 / ACR-S-04 / ACR-E-02 / ACR-A-20 / ACR-E-06 を解決済みへ更新。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
 ## 2026-08-07 — 期待動作の正仕様化（docs-only）
 
 ### 起動時スタミナ全回復・破損ツール結果表現の正仕様化

@@ -68,7 +68,7 @@
 | キー | 型 | 必須性 | 意味・制約 | 参照 |
 |---|---|---|---|---|
 | `inventory` | array | 必須 | Inventory Stack のリスト。**既定は空** | §4.2, Item |
-| `name` | string | 必須 | ニックネーム。`new_user` では `bot.fetch_user` の `user.name`。最大 32 文字（`set_name` Modal の制約） | — |
+| `name` | string | 必須 | ニックネーム。`new_user` では `bot.fetch_user` の `user.name`（**失敗時はフォールバック名 `user_{user_id}` で登録継続・C-18 解決**）。最大 32 文字（`set_name` Modal の制約） | — |
 | `stamina` | int | 必須 | 現在スタミナ。`0 <= stamina <= stamina_max`。回復は §4.4 Timestamp | — |
 | `money` | int | 必須 | 所持金。`>= 0`（実装上は非負が前提） | — |
 | `level_global` | int | 必須 | 総合レベル。`>= 1`。レベル 7 でショップ解放、20 / 100 でアクセサリスロット増 | — |
@@ -94,7 +94,7 @@
 
 - レベルアップ曲線: `level_next = int((level+1) ** 1.5) * 5`（`core/utils.py:413`）。`xp()` で採集/釣り XP から累積し、`level_global` も同時に +1。
 - `get_stats` の `stamina_max = 100 + level_global - 1`（`core/utils.py:373`）。
-- **作成契機**: 未登録ユーザーがゲーム操作を行うと `new_user(user_id)` が自動登録（`core/utils.py:15-55`）。ただし `/settings`（`cogs/settings.py:31`）と `/leaderboard`（`cogs/leaderboard.py:97`）は `new_user` を呼ばず直接参照する（→ §10 懸念 C-05）。
+- **作成契機**: 未登録ユーザーがゲーム操作を行うと `new_user(user_id)` が自動登録（`core/utils.py:15-55`）。`/settings`（`cogs/settings.py:31`）と `/leaderboard`（`cogs/leaderboard.py:35`）も `new_user` を呼ぶ（**C-05 解決**）。
 - ユーザー削除のためのコードは**存在しない**。`admin_transit` はキーの移動のみ（`cogs/admin_transit.py:33-36`）。
 
 ### 4.2 Inventory Stack
@@ -112,8 +112,7 @@
 - **スタック一意制約**: 同一 `(id, meta)` のスタックは 1 つにマージされる（`add_item` は既存一致スタックへ `count +=`。`core/utils.py:66-70`）。
 - **取得系**: `get_item`（id+count 充足で最初の一致）、`get_item_stacked`（複数スタック合算）、`get_item_index`（index 返却）、`get_item_match_meta`（id+meta+count）。
 - **変更系**: `add_item` / `add_item_from_dict` / `modify_item`（index 指定で meta・count 差替、`core/utils.py:102-113`）。
-- **削除系**: `remove_item` / `remove_item_stacked` / `remove_item_from_dict` / `remove_item_from_index` / `remove_item_match_meta`。`required=True` は在庫不足時に何もせず空を返す（部分的消費なしを意図。ただし `remove_item_stacked(required=True)` は**実装不備**で部分消費のまま `[]` を返す → §10 懸念 C-03）。
-- 実装上の不備: `remove_item_from_index` が `list.pop(辞書)` を呼ぶ（`core/utils.py:212`）。`list.pop` は index を要求するため `TypeError`（→ §10 懸念 C-03）。
+- **削除系**: `remove_item` / `remove_item_stacked` / `remove_item_from_dict` / `remove_item_from_index` / `remove_item_match_meta`。`required=True` は在庫不足時に何もせず空を返す（部分的消費なしを意図）。**2026-08-07 修正**: `remove_item_stacked(required=True)` は要素辞書をコピーして作業し、十分な在庫がある場合のみ実インベントリへ反映するトランザクション的実装へ変更（部分消費を残さない。**C-03 解決**）。`remove_item_from_index` は `pop(index)` へ修正（**C-03 解決**）。`remove_item` / `remove_item_stacked` / `remove_item_from_index` / `remove_item_match_meta` に非正数ガード（`count <= 0` でミューテーションせず拒否）を追加。
 
 ### 4.3 Equipment（`user.equipment`）
 
@@ -139,7 +138,7 @@
 参照・制約:
 
 - 装備可能アイテムは `equip_slot` を持つ 69 件。`equip_slot` の値域: `gathering_tool`(19) / `gathering_equipment`(6) / `fishing_rod`(13) / `fishing_bait`(4) / `accessory`(27)。
-- `get_stats`（`core/utils.py:350-371`）は全スロットの装備アイテム `stats` を集計する。アクセサリー分岐は**ローカル変数に加算するだけで `user_stats` へ書き戻していない**（→ §10 懸念 C-04）。
+- `get_stats`（`core/utils.py:350-371`）は全スロットの装備アイテム `stats` を集計する。**2026-08-07 修正**: アクセサリー分岐も `user_stats[item_stat['id']]` へ直接加算・乗算するよう書戻しを追加（**C-04 解決**）。
 - 装備・交換・取り外しの詳細は `cogs/equip.py:13-92`。取り外し（`remove_item`）と交換（旧装備をインベントリへ戻す）で移動する。
 
 ### 4.4 Settings / Timestamp
@@ -268,11 +267,11 @@
 | `description` | string | 必須 | 116/116 | 説明（表示用） | — |
 | `complete_message` | string | 必須 | 116/116 | 達成メッセージ | — |
 | `clear_condition` | object | 必須 | 116/116 | 達成条件。**キーは常に 1 種**（本データでは複合条件なし）: `gather: str`(13)=採集場所 id / `fishing: str`(7)=釣り場所 id / `get_item: str`(92)=アイテム id / `level: int`(4)=総合レベル以上 | Place, Fishing, Item |
-| `previous_advancement` | array | 必須 | 116/116 | 前提進捗 id のリスト（**要素に null を含み得る**。全前提の達成が解放条件。**null は前提なし**を意図）。**現データで null を含むのは `gather_forest`（`[null]`）のみ** | Advancement（自己参照） |
+| `previous_advancement` | array | 必須 | 116/116 | 前提進捗 id のリスト（**要素に null を含み得る**。全前提の達成が解放条件。**null は初期付与専用**を意図・2026-08-07 決定）。**現データで null を含むのは `gather_forest`（`[null]`）のみ** | Advancement（自己参照） |
 
 判定ロジック（`core/utils.py:377-397`, `core/state.py:166-176`）:
 
-- 解放: `complete_advancement` は `previous_advancement` の全要素が `advancement_completed` に含まれる場合のみ解放（`core/utils.py:386-394`）。`setup_hook` 側は `prev_adv is None` を**達成扱い**（`core/state.py:172`）とし、`complete_advancement` 側は `prev_adv not in completed` を**未達成扱い**にする（`core/utils.py:390-391`）→ **判定が食い違う**（→ §10 懸念 C-06）。
+- 解放: `complete_advancement` は `previous_advancement` の全要素が `advancement_completed` に含まれる場合のみ解放（`core/utils.py:386-394`）。**2026-08-07 決定**: null 前提は**初期付与専用**であり、`complete_advancement` ではアンロックしない（`None` は `completed` に含まれないため常に false）。`setup_hook` 側は null 前提を初期付与（`core/state.py:172`）として扱う。**C-06 解決**。
 - 達成: 対象コマンド（gather / fishing / craft / use / レベルアップ）が `advancement_now` を走査し条件一致で `complete_advancement` を呼ぶ。
 
 ### 4.11 Localization（`data/localization.json`）
@@ -338,17 +337,16 @@ flowchart LR
 | データ | 契機 | 方法 | 一次根拠 |
 |---|---|---|---|
 | 静的 JSON 7 種 | `core` import 時 | `json.load` で dict/list 化（例外処理なし → 破損時クラッシュ） | `core/state.py:27-40` |
-| `user.json` | `core` import 時 | `json.load`。**失敗時は裸 `except` で握りつぶし `{}` として上書き保存**（→ §10 懸念 C-08） | `core/state.py:43-49` |
+| `user.json` | `core` import 時 | `_load_users` が `json.load`。**存在しない場合のみ空 `{}` を作成**。破損（`JSONDecodeError`）・読取不能（`OSError`）時は `user.json.bak.<ts>` へ隔離し**起動を非ゼロで失敗**（fail-closed。**C-08 解決**） | `core/state.py:_load_users` |
 | `config.json` | `core.config` import 時 | `json.load`。失敗時クラッシュ | `core/config.py:12-13` |
 
 ### 6.2 保存（`save_users`）
 
-- `json.dump(USERS, f, indent=2, ensure_ascii=False)` で **`user.json` に全量を直接書込**（`core/utils.py:454-457`）。
-- 一時ファイル + rename の原子化・ロックなし（→ §10 懸念 C-07）。
+- **2026-08-07 修正**: `save_users` は `USERS` の**深いスナップショット**を `_save_lock` 下で取得し、一時ファイル（`user.json.tmp`）へ `json.dump` → `flush` → `fsync` → `os.replace` で**原子的に置換**（**C-07 解決**）。対象パスは状態ファイルの実体ディレクトリ（Docker では書き込み可能なランタイムボリューム）に解決される。
 - 呼び出し契機:
-  1. バックグラウンドループで 5 tick（約 5 秒）毎（`core/background.py:94-97`）
+  1. バックグラウンドループで 5 tick（約 5 秒）毎（`core/background.py`）
   2. 状態を変更した各コマンド / View / Modal の末尾（`cogs/*.py`、`views/*.py`、`modals/*.py` の各 `save_users()`）
-  3. `/status` 表示の共通処理末尾（`views/status_view.py:233-234`。状態変更を伴わない保存もある）
+  3. `/status` 表示の共通処理末尾（`views/status_view.py`。状態変更を伴わない保存もある）
 
 ### 6.3 更新
 
@@ -386,7 +384,7 @@ flowchart LR
 - 整合は**コード契約（前提）**でのみ担保される。実行時に壊れた参照は `KeyError` や誤動作として顕在化する。
 - 参照整合の現状（本調査のスクリプトで検出）:
   - `recipe.result` / `recipe.ingredient.*` / `place.table[].id` / `fishing.table[].id` / `loot[].id` / `advancement.clear_condition.*` → `item.json`・`place.json`・`fishing.json` への参照は**すべて有効**。
-  - `advancement.previous_advancement` に **3 件の欠落参照**あり: `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` → 存在しない `craft_drill_engine`（→ §10 懸念 C-06）。
+  - `advancement.previous_advancement` の欠落参照 3 件（`craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` → 存在しない `craft_drill_engine`）は **2026-08-07 に `gather_mythical_mines` へ修正済み**（**C-06 解決**）。
 - 実行時整合の担保（実装依存）: インベントリの `(id, meta)` 一意性は `add_item` の走査、装備スロットの種別衝突は `cogs/equip.py:60-63` で部分担保。完全な不変条件の検査はない。
 
 ---
@@ -395,15 +393,15 @@ flowchart LR
 
 ### 9.1 実行モデル
 
-- プロセスは **単一**。asyncio イベントループ（コマンド・View・Modal 処理）+ **デーモンスレッド**（`core/background.py` の 1 秒ループ）の 2 系統が `USERS`（メモリ上の辞書）を共有する。
-- **ロック・アトミック操作なし**。イベントループとデーモンスレッドが同時に同一ユーザーの値を読書きし得る（例: コマンド実行中にタイム状態更新が走る）。
-- **トップレベル構造の race（C-17）**: デーモンスレッドが `USERS.items()` を反復走査する（`core/background.py:22`）間、イベントループ側の `new_user`（`core/utils.py:17` の `USERS.setdefault`）や `admin_transit`（`cogs/admin_transit.py:33-36` の `USERS.pop` / `setdefault`）が**トップレベルキーを追加/削除**すると `RuntimeError: dictionary changed size during iteration` になり得る。ループに try/except がないため、発生時はデーモンスレッドが終了し JOB-TIMESTATE / JOB-PERSIST が停止する（頻度は **U-13**）。C-07 のファイル書込 race とは**別のメモリミューテーション race**。
+- プロセスは **単一**。asyncio イベントループ（コマンド・View・Modal 処理）+ **asyncio バックグラウンドタスク**（`core/state.py:_background_loop`、旧デーモンスレッド）の 2 系統が `USERS`（メモリ上の辞書）を共有する。
+- **2026-08-07 修正**: トップレベル `USERS` の構造ミューテーション（追加/削除）は `core/utils.py:_users_lock` で直列化。`core/state.py:acquire_state_lock` が POSIX `flock` で**単一プロセスロック**を取得し、多重起動を起動時に拒否（**U-09 解決**）。
+- **トップレベル構造の race（C-17）**: 旧実装はデーモンスレッドが `USERS.items()` を反復走査する間に `new_user` / `admin_transit` がトップレベルキーを追加/削除すると `RuntimeError` になり得た。**2026-08-07 修正**: `core/background.py:update_tick` が `list(USERS.keys())` のスナップショットで反復し、ユーザー単位の例外は捕捉して `logger.exception` で記録しループを継続（**C-17 解決**）。発生頻度の実機観察は U-13 として延期。
 
 ### 9.2 永続化の並行性
 
-- `save_users` は `user.json` へ**全量を直接書込**（一時ファイル+rename なし・lock なし・fsync なし）。
-- 5 秒毎保存と各コマンド末尾の随時保存が並走し得る → クラッシュ時破損・同時書込破損のリスク（→ §10 懸念 C-07）。
-- **複数レプリカは禁止**（`AGENTS.md` / `README.md:79-81` が単一レプリカ運用を明示）。複数プロセスで同一 `user.json` を書くと破損する。
+- `save_users` は `_save_lock` 下で**深いスナップショット + 一時ファイル + `fsync` + `os.replace`** により原子的に書込（**C-07 解決**）。保存中に状態が変更されても一貫したスナップショットを書き出す。
+- 5 秒毎保存と各コマンド末尾の随時保存は `_save_lock` で直列化される。
+- **複数レプリカは禁止**（`AGENTS.md` / `README.md:79-81` が単一レプリカ運用を明示）。加えて `acquire_state_lock` が起動時に多重起動を拒否する（**U-09 解決**）。
 
 ### 9.3 保持・停止
 
@@ -427,34 +425,34 @@ flowchart LR
 
 ### 10.2 既知の懸念（機能カタログ §5 より引き継ぎ・データ関連分）
 
-| ID | 懸念 | 確定根拠 | 影響 |
-|---|---|---|---|
-| C-02 | `admin_give` の負数剥奪が**加算**になる | `cogs/admin_give.py:45` → `core/utils.py:135,138`（`count = min(count, ...)` が負数を維持し `count -= 負数` で加算） | 負の `amount` でアイテムが増える |
-| C-03 | `list.pop(辞書)` TypeError と `remove_item_stacked(required=True)` の部分消費 | `core/utils.py:212`、`core/utils.py:147-171` | クラフトでツール破損時に Interaction Failed。在庫不足時に実インベントリが部分消費されたまま空を返す |
-| C-04 | アクセサリー stats が反映されない | `core/utils.py:352-362`（ローカル変数に加算するのみ） | アクセサリー 27 種の効果が無効 |
-| C-05 | `/settings`・`/leaderboard` が未登録ユーザーで失敗 | `cogs/settings.py:31`、`cogs/leaderboard.py:97`（`new_user` 呼び出しなし） | 初回利用で `KeyError` / `ValueError` |
-| C-06 | advancement の欠落参照 | 3 件が存在しない `craft_drill_engine` を `previous_advancement` に参照（§8）。`complete_advancement` と `setup_hook` の null 前提の扱いが食い違う | 3 進捗が永久解放不可。前提判定の曖昧さ |
-| C-07 | 非 atomic・無 lock 永続化 | `core/utils.py:454-457` | クラッシュ・同時書込で破損リスク（§9） |
-| C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時に全ユーザーデータを `{}` で上書き |
-| C-16 | `/use` の `count` 非正数ガードなし | `cogs/use.py:21`、`core/utils.py:172-185` | 負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 |
-| C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`、`cogs/admin_transit.py:33-36` | `RuntimeError` でデーモンスレッド終了（C-07 のファイル書込 race とは別。頻度は U-13） |
-| C-18 | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18` | Discord API 障害時に新規登録経路が失敗する（例外が未捕捉のまま伝播。例外型・UI は U-14） |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `cogs/use.py:21`, `cogs/gather.py:21`, `cogs/fishing.py:23` | 入力境界の未定義（挙動は推測しない） |
-| C-21 | stale shop choice の `shop_content.index` `ValueError` | `views/shop_view.py:27`、`core/background.py:29-35` | 表示済み購入 View の選択が interaction failed |
-| C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | `views/craft_view.py:12-19` | 未使用のグローバル注入フック |
-| C-D01 | **デッドフィールド群**（本稿で整理） | `level_combat` / `xp_combat`（`core/utils.py:35-36`）、`news`（`cogs/status.py:38`）、装備スロット `weapon` / `armor` / `armor_secondary`（`core/utils.py:50-52`）、item の `stamina_reduce_chance`、`unique_behavior` タグ（2 件） | データモデル上存在するが未使用。誤解を招く・拡張時に事故りやすい |
+| ID | 懸念 | 確定根拠 | 影響 | 状態 |
+|---|---|---|---|---|
+| C-02 | `admin_give` の負数剥奪が**加算**になる | `cogs/admin_give.py:45` → `core/utils.py:135,138`（`count = min(count, ...)` が負数を維持し `count -= 負数` で加算） | 負の `amount` でアイテムが増える | **解決済**（`abs(amount)` で剥奪 + 非正数ガード） |
+| C-03 | `list.pop(辞書)` TypeError と `remove_item_stacked(required=True)` の部分消費 | `core/utils.py:212`、`core/utils.py:147-171` | クラフトでツール破損時に Interaction Failed。在庫不足時に実インベントリが部分消費されたまま空を返す | **解決済**（`pop(index)` + トランザクション化） |
+| C-04 | アクセサリー stats が反映されない | `core/utils.py:352-362`（ローカル変数に加算するのみ） | アクセサリー 27 種の効果が無効 | **解決済**（`user_stats` へ書戻し） |
+| C-05 | `/settings`・`/leaderboard` が未登録ユーザーで失敗 | `cogs/settings.py:31`、`cogs/leaderboard.py:97`（`new_user` 呼び出しなし） | 初回利用で `KeyError` / `ValueError` | **解決済**（両コマンドで `new_user` 呼び出し） |
+| C-06 | advancement の欠落参照 | 3 件が存在しない `craft_drill_engine` を `previous_advancement` に参照（§8）。`complete_advancement` と `setup_hook` の null 前提の扱いが食い違う | 3 進捗が永久解放不可。前提判定の曖昧さ | **解決済**（`gather_mythical_mines` へ修正 + null 前提は初期付与専用と決定） |
+| C-07 | 非 atomic・無 lock 永続化 | `core/utils.py:454-457` | クラッシュ・同時書込で破損リスク（§9） | **解決済**（atomic 化 + `_save_lock` + 単一プロセスロック） |
+| C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時に全ユーザーデータを `{}` で上書き | **解決済**（fail-closed: 隔離 + exit 1） |
+| C-16 | `/use` の `count` 非正数ガードなし | `cogs/use.py:21`、`core/utils.py:172-185` | 負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | **解決済**（`valid_count` で 1〜100 に制限） |
+| C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`、`cogs/admin_transit.py:33-36` | `RuntimeError` でデーモンスレッド終了（C-07 のファイル書込 race とは別。頻度は U-13） | **解決済**（スナップショット反復 + `_users_lock`） |
+| C-18 | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18` | Discord API 障害時に新規登録経路が失敗する（例外が未捕捉のまま伝播。例外型・UI は U-14） | **解決済**（フォールバック名で登録継続） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `cogs/use.py:21`, `cogs/gather.py:21`, `cogs/fishing.py:23` | 入力境界の未定義（挙動は推測しない） | **解決済**（1〜100 に制限） |
+| C-21 | stale shop choice の `shop_content.index` `ValueError` | `views/shop_view.py:27`、`core/background.py:29-35` | 表示済み購入 View の選択が interaction failed | **解決済**（`item_id not in shop_content` ガード） |
+| C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | `views/craft_view.py:12-19` | 未使用のグローバル注入フック | **解決済**（削除） |
+| C-D01 | **デッドフィールド群**（本稿で整理） | `level_combat` / `xp_combat`（`core/utils.py:35-36`）、`news`（`cogs/status.py:38`）、装備スロット `weapon` / `armor` / `armor_secondary`（`core/utils.py:50-52`）、item の `stamina_reduce_chance`、`unique_behavior` タグ（2 件） | データモデル上存在するが未使用。誤解を招く・拡張時に事故りやすい | 未解決（変更なし） |
 
 ### 10.3 未確定（検証が必要な事項）
 
-| ID | 項目 | 内容 | 確定に必要な確認 |
-|---|---|---|---|
-| U-02 | inventory pop bug の発火条件 | C-03 が実ユーザーに影響するか（耐久 0 到達クラフトが実際に起こるか） | 実機でのクラフト実行 |
-| U-06 | ショップ再抽選の重複 | `random.sample(shop_data, 10)`（`core/background.py:34`）は `shop_list` 31 件から 10 枠の整合 | ローテーション観察 |
-| U-09 | 複数インスタンス同時実行 | §9 の単一レプリカ要請に対する実挙動 | 多重起動テスト |
-| U-12 | ゲームバランス数値 | 回復速度・XP 曲線・`value*4` 等はコード既定であり意図は未確定 | Phase2 での定義 |
-| U-13 | C-17 の race 発生頻度 | `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation が重なる頻度 | 新規登録・`admin_transit` 実行下での観察 |
-| U-14 | C-18 の `fetch_user` 失敗の例外型・UI | `new_user` の `bot.fetch_user` 失敗時の例外型・ユーザー表示は未検証（断定しない） | Discord API 障害時の新規登録実行 |
-| U-D01 | `get_items` 条件分岐のデッドコード | gather / fishing / craft / use は `get_items`（複数アイテム条件）分岐を持つが、advancement データには `get_items` が 0 件 | 仕様として複合条件を許容するか確認 |
+| ID | 項目 | 内容 | 確定に必要な確認 | 状態 |
+|---|---|---|---|---|
+| U-02 | inventory pop bug の発火条件 | C-03 が実ユーザーに影響するか（耐久 0 到達クラフトが実際に起こるか） | 実機でのクラフト実行 | コード解決済（pop 修正）。実機確認は**延期** |
+| U-06 | ショップ再抽選の重複 | `random.sample(shop_data, 10)`（`core/background.py:34`）は `shop_list` 31 件から 10 枠の整合 | ローテーション観察 | コード解決済（`rotate_shop` で候補不足も安全処理）。実機確認は**延期** |
+| U-09 | 複数インスタンス同時実行 | §9 の単一レプリカ要請に対する実挙動 | 多重起動テスト | コード解決済（`acquire_state_lock`）。実機確認は**延期** |
+| U-12 | ゲームバランス数値 | 回復速度・XP 曲線・`value*4` 等はコード既定であり意図は未確定 | Phase2 での定義 | **解決済（決定）**（文書化された契約として維持） |
+| U-13 | C-17 の race 発生頻度 | `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation が重なる頻度 | 新規登録・`admin_transit` 実行下での観察 | コード解決済（スナップショット反復）。実機観察は**延期** |
+| U-14 | C-18 の `fetch_user` 失敗の例外型・UI | `new_user` の `bot.fetch_user` 失敗時の例外型・ユーザー表示は未検証（断定しない） | Discord API 障害時の新規登録実行 | コード解決済（フォールバック名で継続）。実機確認は**延期** |
+| U-D01 | `get_items` 条件分岐のデッドコード | gather / fishing / craft / use は `get_items`（複数アイテム条件）分岐を持つが、advancement データには `get_items` が 0 件 | 仕様として複合条件を許容するか確認 | 未解決（変更なし） |
 
 ---
 

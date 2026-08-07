@@ -26,7 +26,7 @@ class BuyCog(commands.Cog):
             await interaction.response.send_message('ショップにアクセスするにはレベルが**7**以上でなければなりません。')
             return
         
-        view = shop_choice()
+        view = shop_choice(owner_id=user_id)
         shop_content = user_data['shop_content']
         shop_choices = []
         for item_id in shop_content:
@@ -38,6 +38,7 @@ class BuyCog(commands.Cog):
             )
         view.shop_buy_select.options = shop_choices
         await interaction.response.send_message('商品を選択:', view=view, ephemeral=True)
+        view._message_ref = await interaction.original_response()
 
 
 async def setup(bot: commands.Bot):

@@ -2,11 +2,13 @@
 Leaderboard Cog
 """
 import discord
+import heapq
 from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
 
 from core.state import USERS, ITEMS
+from core.utils import new_user
 
 
 class LeaderboardCog(commands.Cog):
@@ -31,6 +33,7 @@ class LeaderboardCog(commands.Cog):
     ])
     async def leaderboard_command(self, interaction: discord.Interaction, mode: int):
         user_id = interaction.user.id
+        await new_user(user_id)
         embed = discord.Embed()
         embed.description = ""
         board = {}
@@ -93,11 +96,22 @@ class LeaderboardCog(commands.Cog):
             for user_key, user_v in USERS.items():
                 board.setdefault(user_key, user_v['radiation'])
 
-        board = dict(sorted(board.items(), key=lambda item: item[1], reverse=True))
-        embed.description += f'**あなたは__{list(board.keys()).index(str(user_id)) + 1}位__です。**'
-        board = dict(list(board.items())[:10])
+        # 現在ユーザーの順位を単一走査で算出。
+        # 同点は挿入順（USERS の並び）で確定し、上位10件の選択（heapq.nlargest は安定で同点を挿入順に保つ）と同一の順序を使う。
+        my_score = board.get(str(user_id))
+        rank = 1
+        if my_score is not None:
+            my_index = list(board.keys()).index(str(user_id))
+            rank = 1 + sum(
+                1 for i, s in enumerate(board.values())
+                if s > my_score or (s == my_score and i < my_index)
+            )
+        embed.description += f'**あなたは__{rank}位__です。**'
+
+        # 上位10件を境界付きで選択（全件ソートを回避）
+        top10 = heapq.nlargest(10, board.items(), key=lambda item: item[1])
         j = 0
-        for user_key, score in board.items():
+        for user_key, score in top10:
             j += 1
             embed.add_field(name=f'{j}. {USERS[user_key]["name"]}', value=score)
 

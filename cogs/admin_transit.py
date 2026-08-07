@@ -8,6 +8,7 @@ from discord.ext import commands
 from core.state import USERS
 from core.utils import save_users
 from core.config import ADMIN
+from cogs._helpers import admin_check
 
 class AdminTransitCog(commands.Cog):
     """管理者用ユーザーデータ移行コマンド"""
@@ -16,6 +17,7 @@ class AdminTransitCog(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="admin_transit", description="管理者用コマンドです。ユーザーのデータを移行します。")
+    @app_commands.check(admin_check)
     async def admin_transit_command(self, interaction: discord.Interaction, user_datarom: discord.User, user_to: discord.User):
         user_id_from = str(user_datarom.id)
         user_id_to = str(user_to.id)
