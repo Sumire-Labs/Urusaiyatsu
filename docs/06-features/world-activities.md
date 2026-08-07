@@ -82,7 +82,7 @@
 11. **ツール耐久**（`required_gathering_power > 0` かつ `max_damage` 定義あり）:
     - `tool_damage = equipment['gathering_tool']['meta']['damage'] + 1` を書き戻す。
     - `tool_damage >= max_damage`（破損）:
-      - `broken_tool[tool_id] -= 1`（**負値で集計。現行バグ C-15**、§13）。
+      - `broken_tool[tool_id] -= 1`（**負値で集計。期待仕様**: 破損ツールは結果に負数で表示される）。
       - **交換**: `gathering_tool_replacement == 0` ならインベントリに同 `tool_id` があれば `remove_item` して装備へ。`== 1` ならインベントリから `stats.gathering_power` の `amount >= required_gathering_power` を持つ最初のアイテムへ交換。
       - 交換成功時 `stats = get_stats(user_id)` で再計算、失敗時 `equipment['gathering_tool'] = {}` にして `break`。
 
@@ -166,7 +166,7 @@
     - `process_count += 1`。
     - **ツール耐久**（`tool_tag` かつ `max_damage` 定義あり）: `meta['damage'] += 1`。
       - `damage < max_damage`: `modify_item(user_id, tool_index, meta)` で更新（スタック化されたツールの耐久を個別管理）。
-      - `damage >= max_damage`（破損）: `remove_item_from_index(user_id, tool_index)` で破棄し、`broken_tool[tool_id] += 1`（**正値で集計。gather と符号が不一致: 現行バグ C-15**）。※`remove_item_from_index` は現行実装が `list.pop(辞書)` で `TypeError` を投げる（**現行バグ C-03**）。
+      - `damage >= max_damage`（破損）: `remove_item_from_index(user_id, tool_index)` で破棄し、`broken_tool[tool_id] += 1`（**正値で集計。期待仕様**: クラフトは破損ツールを正数で集計・表示する）。※`remove_item_from_index` は現行実装が `list.pop(辞書)` で `TypeError` を投げる（**現行バグ C-03**）。
         - 交換設定 0（同種）: `tool_index = get_item_index(user_id, tool_id)`。`None` なら `break`。
         - 交換設定 1（使用可能）: インベントリの `tool_tag` 付きアイテムへ更新。無ければ `break`。
         - 交換設定 2（続行しない）: **break が無く、壊れたツールの index を引き継いでループが続く（観測事項、§13）**。
@@ -282,7 +282,6 @@
 | ID | 内容 | 種別 |
 |---|---|---|
 | C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` → クラフトのツール破損経路で interaction failed。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ |
-| C-15 | 採集のツール破損集計は `broken_tool[tool_id] -= 1`（負値）、クラフトは `+= 1`（正値）で符号が不一致。採集は結果マージに負値が入る | 現行バグ |
 | C-16 | `/use` の `count` 負数で在庫増加・効果反転。`con_loot` は `random.choices(..., k=負数)` が空 list のため loot なし（結果 `{}`）で処理継続（詳細は `progression-and-inventory.md` §5.4 参照） | 現行バグ |
 | C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） |
 | C-18 / U-14 | 採集・釣り冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） |
@@ -294,6 +293,5 @@
 | 観測-6 | 餌切れ後も `equipment['fishing_bait']` に `count: 0` の辞書が残る。ステータス表示上は装備中に見え、次回 `/fishing` では `fishing_bait != {}` により餌として扱われ stats が適用され続ける | 現行バグ（要検証） |
 | 観測-7 | `get_fishing_loot_table` の `table_addition` が静的 `FISHING_PLACES` の `weight` を直接加算するため、プロセス生存中に餌使用ごと累積する | 現行バグ（要検証） |
 | 観測-8 | クラフトの交換設定 2（続行しない）に `break` が無く、破損ツールのインデックスを引き継いでループが続く。誤消費・IndexError の可能性 | 現行バグ（要検証） |
-| 観測-9 | 採集の破損ツール集計が負値のため、結果 Embed に負数（例: `-1 ツルハシ`）が表示される（インベントリには影響しない） | 仕様上の表示不整合 |
 | U-12 | `gathering_stamina_uses` 10、`fishing_stamina_uses` 10、`xp`・消費量等の数値はコード既定であり、意図されたバランスか未確定 | 未確定 |
 | 未確定 | `get_item` は meta 不問のため、採集ツール交換設定 0 の「同種交換」は別 meta（耐久違い）スタックを選び得る。仕様意図の確認が必要 | 未確定 |

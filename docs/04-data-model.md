@@ -168,7 +168,7 @@
 
 - 回復間隔 `duration = 3600 / rate`（`stamina_regeneration_rate`=20 → 180 秒/1 回復、`radiation_decrease_rate`=3 → 1200 秒/1、`cold_decrease_rate`=3 → 1200 秒/1）。`rate` は装備 `stats` で変動。
 - `unix_time >= timestamp + duration` なら `int(elapsed // duration)` 分だけ増減させ、`timestamp += duration`（繰り越し）。上限/下限に達したら `-1`。
-- 補足: 起動時 `setup_hook` が全ユーザーの `stamina` を `stamina_max` へ**強制セット**する（`core/state.py:163-164` → 懸念 C-09）。Timestamp の壁時計は保持されない。
+- 補足: 起動時 `setup_hook` が全ユーザーの `stamina` を `stamina_max` へ**強制セット**する（**期待仕様**、`core/state.py:163-164`）。Timestamp の壁時計は保持されない。
 
 ### 4.5 Item（`data/item.json`）
 
@@ -409,7 +409,7 @@ flowchart LR
 
 - `user.json` は再起動・再デプロイを跨いで保持される（Docker は `bot_runtime` volume。`docker compose down -v` でのみ消える）。
 - 停止時: `SIGINT`（`compose.yaml:13`、graceful）だが、定期保存仕様のため**最後の保存から最大 5 秒分の未保存進行が失われる**（`README.md:82-83`）。
-- 再起動時の整合: `setup_hook` が全ユーザーの `stamina` を満タンへ強制し（C-09）、`advancement_now` を再構築する。`timestamp` はそのまま保持される（`stamina` のみ強制回復）。
+- 再起動時の整合: `setup_hook` が全ユーザーの `stamina` を満タン（`stamina_max`）へ強制し（**期待仕様**）、`advancement_now` を再構築する。`timestamp` はそのまま保持される（`stamina` のみ強制回復）。
 
 ---
 
@@ -436,7 +436,6 @@ flowchart LR
 | C-06 | advancement の欠落参照 | 3 件が存在しない `craft_drill_engine` を `previous_advancement` に参照（§8）。`complete_advancement` と `setup_hook` の null 前提の扱いが食い違う | 3 進捗が永久解放不可。前提判定の曖昧さ |
 | C-07 | 非 atomic・無 lock 永続化 | `core/utils.py:454-457` | クラッシュ・同時書込で破損リスク（§9） |
 | C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時に全ユーザーデータを `{}` で上書き |
-| C-09 | 起動時スタミナ全回復 | `core/state.py:163-164` | 再起動のたび全ユーザーがスタミナ満タン |
 | C-16 | `/use` の `count` 非正数ガードなし | `cogs/use.py:21`、`core/utils.py:172-185` | 負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 |
 | C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`、`cogs/admin_transit.py:33-36` | `RuntimeError` でデーモンスレッド終了（C-07 のファイル書込 race とは別。頻度は U-13） |
 | C-18 | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18` | Discord API 障害時に新規登録経路が失敗する（例外が未捕捉のまま伝播。例外型・UI は U-14） |
@@ -469,4 +468,4 @@ flowchart LR
 | [`06-features/economy-and-equipment.md`](06-features/economy-and-equipment.md) | CTX-VALUE（売値導出）と装備・経済の詳細 |
 | [`06-features/world-activities.md`](06-features/world-activities.md) | CTX-LOOT・採集・釣り・クラフトの詳細 |
 | [`07-event-processing/scheduled-and-background-jobs.md`](07-event-processing/scheduled-and-background-jobs.md) | 時間状態更新・保存ジョブの詳細 |
-| [`13-open-questions-and-technical-debt.md`](13-open-questions-and-technical-debt.md) | C-02〜C-09・C-16〜C-22・C-D01・U-13〜U-15 等の引き継ぎ |
+| [`13-open-questions-and-technical-debt.md`](13-open-questions-and-technical-debt.md) | C-02〜C-08・C-10〜C-14・C-16〜C-22・C-D01・U-13〜U-15 等の引き継ぎ |

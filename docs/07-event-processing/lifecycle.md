@@ -108,7 +108,7 @@ sequenceDiagram
 4. **fishing_choices 生成**（`core/state.py:150-153`）: FISHING_PLACES の全エントリを Choice 化。
 5. **place_choices 生成**（`core/state.py:155-158`）: PLACES の全エントリを Choice 化。
 6. **ユーザー状態リフレッシュ**（`core/state.py:160-176`）: 全 USERS について
-   - `stamina = 100 + level_global - 1` に**強制セット**（:163-164、カタログ C-09）。
+   - `stamina = stamina_max`（= `100 + level_global - 1`）に**強制セット**（:163-164、**期待仕様**）。
    - `advancement_now` を再構築（:166-176）: `advancement_completed` に未登録の進捗のうち、`previous_advancement` がすべて完了済み **または None** のものを解放。※ `core/utils.py:389-391` の `complete_advancement`（None を未達成扱い）と判定が食い違う（カタログ C-06）。
 7. **コグロード**（`core/state.py:178-185`）: `from cogs import EXTENSIONS`（`cogs/__init__.py:6-23` の 16 コグ）を順に `await self.load_extension(ext)`。失敗は `print` のみで続行（:184-185）。※ Docker では `requirements.lock` に `deepmerge` が無いため `admin_manage` のロード失敗が想定される（カタログ C-01 / U-01）。
 8. **バックグラウンドループ開始**（`core/state.py:187-189`）: `Thread(target=start_background_loop, daemon=True).start()` でデーモンスレッドを起動。詳細は `07-event-processing/scheduled-and-background-jobs.md`。
@@ -297,7 +297,6 @@ presence 設定失敗（レート制限 / ゲートウェイ状態）は**静か
 | C-06 | advancement 解放判定（None の扱い）を単一化 | LIF-002 ユーザー状態リフレッシュ |
 | C-07 | 保存の atomic 化（一時ファイル + rename）+ シャットダウン時最終保存 | EVT-006 / jobs 文書 |
 | C-08 | `user.json` の裸 except 廃止、例外型限定、破損時バックアップ退避 | LIF-001 |
-| C-09 | 起動時スタミナ全回復を廃止し、オフライン経過を復元計算 | LIF-002 ユーザー状態リフレッシュ |
 | C-10 | ショップ更新を tick 基準でなく壁時計基準へ | jobs 文書 JOB-001 |
 | C-11 | `eval()` フォールバック撤廃、コールバック名は内部定数のみ | EVT-003 |
 | C-12 | `logging` 導入、エラーハンドラ登録、全フェーズの観測性 | 全 LIF/EVT |

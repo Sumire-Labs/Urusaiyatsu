@@ -38,7 +38,7 @@
 | [10-deployment-and-operations.md](10-deployment-and-operations.md) | 詳細仕様 | LIFE-ENTRYPOINT, OPS-CONFIG（運用） | 作成済 |
 | [11-security-and-authorization.md](11-security-and-authorization.md) | 詳細仕様 | OPS-ADMIN, CMD-ADM*（権限） | 作成済 |
 | [12-testable-acceptance-criteria.md](12-testable-acceptance-criteria.md) | 受入条件 | 全 59 機能 ID 追跡 + Given-When-Then 受入条件 | 作成済 |
-| [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) | 負債台帳 | C-01〜C-22 / U-01〜U-15 の集約（根拠・影響範囲・優先度・確認方法） | 作成済 |
+| [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) | 負債台帳 | C-01〜C-08, C-10〜C-14, C-16〜C-22 / U-01〜U-15 の集約（根拠・影響範囲・優先度・確認方法） | 作成済 |
 | [CHANGELOG.md](CHANGELOG.md) | 履歴 | 仕様書群の変更履歴 | 作成済 |
 
 > 全文書が作成済み。詳細仕様の機能 ID 割り当ては `00-feature-catalog.md` §6.1「現行ドキュメント構成」どおり。
@@ -70,7 +70,7 @@
 
 - 根拠はリポジトリ内の**相対パス + symbol**で表記する（例: `core/utils.py:new_user`）。
 - 実行時挙動（Discord ライブ・ビルド）でしか確定できない事項は「未検証」と明示し、コード・静的解析で確定できる事項と明確に区別する。
-- カタログの懸念番号（C-01〜C-22）と未検証番号（U-01〜U-15）は `13-open-questions-and-technical-debt.md` で一意に管理し、他の文書から参照する際はこの番号を使う。
+- カタログの懸念番号（C-01〜C-08, C-10〜C-14, C-16〜C-22）と未検証番号（U-01〜U-15）は `13-open-questions-and-technical-debt.md` で一意に管理し、他の文書から参照する際はこの番号を使う。
 
 ### 2.4 秘密情報の扱い
 

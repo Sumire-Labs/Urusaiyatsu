@@ -125,7 +125,6 @@
 - **C-11**: `item_select` の eval fallback（`interactions-views-and-modals.md` §3.1）
 - **C-12**: エラーハンドラ未登録（全コマンドの「例外」節）
 - **C-14**: `equip` の空判定デッドコード（`commands-gameplay.md` §3.1、`interactions-views-and-modals.md` §3.4）
-- **C-15**: `gather` のツール破損カウント符号（`commands-gameplay.md` §3.3）
 - **C-16**: `/use` の `count` 非正数の入力検証なし（負数で在庫増加・効果反転、`commands-gameplay.md` §3.2）
 - **C-17**: バックグラウンドスレッドの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`commands-gameplay.md` §3.2 ほか、頻度は U-13）
 - **C-18 / U-14**: `new_user` の `fetch_user` 失敗が未捕捉（例外型・UI は U-14）

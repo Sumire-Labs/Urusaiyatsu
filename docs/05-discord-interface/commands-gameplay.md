@@ -87,8 +87,8 @@
 | 読書き状態 | 読：`USERS`/`ITEMS`/`PLACES`/`ADVANCEMENTS`。書：`stamina`/`fuel`/`money`/`radiation`/`equipment.gathering_tool`（耐久・破損・交換）/`inventory`/`level_*`/`xp_*`/`advancement_*`。保存：`save_users()`（`cogs/gather.py:175`） |
 | 成功応答 | **公開** Embed：title `{place}での採集({process_count}回)の結果`（`cogs/gather.py:145`）、アイテム毎に field `{name}: {count}`（`item_count <= 0` の場合は add しないが field には表示、`cogs/gather.py:147-149`）。加えて `adv_message`（XP レベルアップ・進捗達成文、`cogs/gather.py:172`） |
 | 失敗応答 | すべて**公開**テキスト（`cogs/gather.py:35,41,47,53,61`）<br>- `ツールを装備してください。`<br>- `{name}での採集には採集レベルが**{n}**以上必要です。`<br>- `{name}での採集には採集パワーが**{n}**以上必要です。`<br>- `ドリルの燃料が足りません。(**{fuel}/{fuel_uses}{EMOJIS["fuel"]}**)`<br>- `スタミナが足りません。(**{stamina}/{uses}{EMOJIS["stamina"]}**)` |
-| 例外 | - `broken_tool` は負値で集計され、`table_roll` 結果との辞書マージ（`cogs/gather.py:143`）で負の count が結果に混入する（C-15）。負数は `add_item` に渡らない（`item_count > 0` ガード）が、結果表示は負数になる<br>- `count` 引数（`cogs/gather.py:21`）に非正数ガード・上限チェックがなく、負数・高値の挙動は未検証（**C-20**）。負数の具体挙動は推測せず、`../13-open-questions-and-technical-debt.md` を参照のうえ実機確認が必要<br>- 未捕捉例外は「interaction failed」（C-12） |
-| 並行性 | 採集結果の破損ツール集計が正負混在する不整合（C-15）は 1 コマンド内のローカル変数で完結。グローバル状態への書き込みは無ロック・単一レプリカ前提（C-07）。冒頭の `new_user` による `USERS` 追加がバックグラウンドスレッドの `USERS.items()` 反復と重なると `RuntimeError` になり得る（**C-17 / U-13**） |
+| 例外 | - `broken_tool` は負値で集計され、`table_roll` 結果との辞書マージ（`cogs/gather.py:143`）で負の count が結果に混入する（**期待仕様**）。負数は `add_item` に渡らない（`item_count > 0` ガード、`cogs/gather.py:147`）ため在庫には影響しない<br>- `count` 引数（`cogs/gather.py:21`）に非正数ガード・上限チェックがなく、負数・高値の挙動は未検証（**C-20**）。負数の具体挙動は推測せず、`../13-open-questions-and-technical-debt.md` を参照のうえ実機確認が必要<br>- 未捕捉例外は「interaction failed」（C-12） |
+| 並行性 | 採集結果の破損ツール集計（負数、**期待仕様**）は 1 コマンド内のローカル変数で完結。グローバル状態への書き込みは無ロック・単一レプリカ前提（C-07）。冒頭の `new_user` による `USERS` 追加がバックグラウンドスレッドの `USERS.items()` 反復と重なると `RuntimeError` になり得る（**C-17 / U-13**） |
 | 受入基準 | ① 前提（ツール/レベル/パワー/燃料/スタミナ）違反で対応する失敗応答が出る。② ループはスタミナ・燃料不足で途中終了し、実行回数が Embed に反映される。③ ツール耐久が `max_damage` に達すると破損し、設定（`gathering_tool_replacement`）に応じた交換/中断が起きる。④ XP は `place_data['xp'] * process_count` で付与される |
 
 ### 3.4 CMD-006 `/fishing` — 釣り

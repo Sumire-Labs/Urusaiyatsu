@@ -192,7 +192,7 @@
 - `previous_advancement` は文字列リスト（`[null]` を含む場合がある。`gather_forest` が null 前提で、新規ユーザーに初期付与される）。
 
 **起動時再構築（`core/state.py:Bot.setup_hook`）**
-- 起動時、全ユーザーの `stamina` を `100 + level_global - 1` に強制設定する（**現行バグ C-09**、§13）。
+- 起動時、全ユーザーの `stamina` を `stamina_max`（= `100 + level_global - 1`）に強制設定する（**期待仕様**）。
 - `advancement_now` を再構築: `completed` に無い各目標について、`previous_advancement` が全て `completed` に含まれるか `null` なら `advancement_now` へ追加（**complete_advancement の null 扱いと判定が食い違う: 現行バグ C-06**）。
 
 ## 6. 状態・永続化
@@ -288,7 +288,6 @@
 | C-06 | `complete_advancement` は `previous_advancement` の `null` を未達成扱い（アンロックされない）。setup_hook は `null` を達成扱いするため判定が食い違う | 現行バグ |
 | C-07 | `save_users` が直接 `json.dump`（一時ファイル+rename 無し・lock 無し）。5 秒毎保存とコマンド随時保存が並走 | 現行バグ |
 | C-08 | `user.json` 読込が裸 `except:` で破損を握りつぶし `{}` で初期化 | 現行バグ |
-| C-09 | 起動時（setup_hook）に全ユーザーのスタミナを満タンへ強制設定 | 現行バグ |
 | C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` を投げる（クラフトのツール破損経路）。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ |
 | C-16 | `/use` の `count` 非正数ガードなし。負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | 現行バグ |
 | C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation の race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） |

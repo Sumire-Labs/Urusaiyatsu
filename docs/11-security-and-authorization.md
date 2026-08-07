@@ -21,7 +21,7 @@
 ### 2.2 境界
 
 - **含む**: 設定秘密の取り扱い、ADMIN 許可リスト、ユーザー入力の処理（`ast.literal_eval` / `eval` / `int`）、`user.json` のデータ整合性、コマンド・View コンポーネントのアクセス制御、Bot 権限、監査。
-- **含まない**: ログ・監視・秘密非出力の詳細（[09-error-handling-and-observability.md](09-error-handling-and-observability.md)）、デプロイ・ボリューム・バックアップ（[10-deployment-and-operations.md](10-deployment-and-operations.md)）、ゲームロジックのバグ修正全体（機能カタログ §5.1 の C-03〜C-06, C-09, C-10, C-14, C-15 はゲーム契約の文書が担当）。
+- **含まない**: ログ・監視・秘密非出力の詳細（[09-error-handling-and-observability.md](09-error-handling-and-observability.md)）、デプロイ・ボリューム・バックアップ（[10-deployment-and-operations.md](10-deployment-and-operations.md)）、ゲームロジックのバグ修正全体（機能カタログ §5.1 の C-03〜C-06, C-10, C-14 はゲーム契約の文書が担当）。
 
 ---
 

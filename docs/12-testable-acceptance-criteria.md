@@ -4,7 +4,7 @@
 >
 > - 対象コミット: `ca0dc10b78d252e4803e2a25a010290c39c339bb`（2026-08-06）
 > - 本文書は「現行実装のコード一次根拠から導出した、テスト可能な期待動作」を記す。コード・静的解析で確定できるものは**確定**、Discord ライブ・ビルド・実機操作が必要なものは**未検証**として明示する。
-> - 既知の欠陥（C-01〜C-22）は現行挙動として受入条件に記録し、**現状は未達**であることを明示する（解決方針は [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) 参照、本文書では断定しない）。
+> - 既知の欠陥（C-01〜C-08, C-10〜C-14, C-16〜C-22）は現行挙動として受入条件に記録し、**現状は未達**であることを明示する（解決方針は [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) 参照、本文書では断定しない）。
 > - 秘密実値・個人情報は記載しない。
 > - 本文書の「詳細仕様リンク」は [00-feature-catalog.md](00-feature-catalog.md) §2 の割り当てどおりの実ファイル（01〜11 の詳細仕様書群）を指す。
 
@@ -169,7 +169,7 @@ ACR-XXX — <タイトル>
 - **When**: そのユーザーが `/gather`（`place` 指定、`count` 任意）を実行する
 - **Then**: 各回でスタミナ（`gathering_stamina_uses + radiation × radiation_effect`）・燃料（`fuel_uses`）が消費され、`money_bonus` が加算され、重み付き loot がインベントリに追加され、XP が付与され、`save_users()` が呼ばれる
 - **状態**: 確定（`cogs/gather.py:21-175`）。抽選結果・表示は未検証
-- **補足**: ツール破損時の結果集計は現行で負数表示の不整合あり（C-15 → ACR-K-08）
+- **補足**: ツール破損時、採集の結果集計は破損ツールを負数で表示する（**期待仕様**、ACR-K-08。`item_count > 0` ガードにより在庫は減らない）
 
 ### E2E-03 — 釣りフロー（餌消費・時刻ボーナス・餌切れ続行）【CMD-FISHING, CTX-LOOT】
 
@@ -241,7 +241,7 @@ ACR-XXX — <タイトル>
 - **Given**: ゲーム操作で何らかの状態（money・inventory 等）を変更したユーザーがいる
 - **When**: 5 秒待機 / コマンド実行 / プロセス再起動を行う
 - **Then**: バックグラウンドループが 5 秒毎に `save_users()` を実行し、再起動後もユーザー状態が `user.json` から復元される
-- **状態**: 一部確定（保存周期と `save_users` 呼び出しはコードで確定: `core/background.py:95-97`, 各コグ）。再起動後の復元・スタミナ全回復（C-09）・非 atomic 書込（C-07）は既知挙動として ACR-R/S に詳細化
+- **状態**: 確定（保存周期と `save_users` 呼び出しはコードで確定: `core/background.py:95-97`, 各コグ。再起動後の復元は `core/state.py:43-49`、スタミナ全回復は ACR-R-02、非 atomic 書込は ACR-S-03 を参照）
 
 ### E2E-13 — 障害時（外部/設定/依存欠落）【LIFE-EMOJI, OPS-CONFIG, LIFE-EXTLOAD】
 
@@ -319,7 +319,7 @@ ACR-XXX — <タイトル>
 ### 6.4 再起動（Restart）
 
 - **ACR-R-01 データ復元【確定・実測未検証】** Given: 保存済みの `user.json` がある / When: プロセスを再起動 / Then: `core.state` の読込（`core/state.py:43-49`）により money・inventory・level 等が復元される / 機能: DATA-USER, LIFE-IMPORT
-- **ACR-R-02 起動時スタミナ全回復【確定・現行仕様】Given: スタミナを消費した状態で再起動 / When: `setup_hook` が実行 / Then: 全ユーザーの `stamina` が `100 + level_global - 1` に強制セットされる / 根拠: `core/state.py:163-164`（C-09） / 機能: LIFE-CHOICES / 補足: 仕様としての是正は U-12/C-09 で判断
+- **ACR-R-02 起動時スタミナ全回復【確定・期待仕様】Given: スタミナを消費した状態で再起動 / When: `setup_hook` が実行 / Then: 全ユーザーの `stamina` が `stamina_max`（= `100 + level_global - 1`）に強制セットされる / 根拠: `core/state.py:163-164` / 機能: LIFE-CHOICES / 補足: 期待仕様として確定（起動時スタミナ全回復は意図された動作）。スタミナ数値のバランス調整は U-12 で検討
 - **ACR-R-03 進捗リスト再構築【確定】** Given: 達成済み・進行中の進捗がある / When: 再起動 / Then: `advancement_now` が `previous_advancement` 判定で再構築される / 根拠: `core/state.py:167-176` / 機能: LIFE-CHOICES
 - **ACR-R-04 ショップローテーションのずれ【確定・現行仕様】Given: プロセスを再起動 / When: 再起動後 3600 tick が経過 / Then: ショップ更新が起動時点基準の tick で走るため壁時計とは非同期になる / 根拠: `core/background.py:29`（C-10） / 機能: JOB-TIMESTATE / 補足: 是正は C-10 で判断
 - **ACR-R-05 user.json 破損時のリセット【確定・欠陥】Given: `user.json` が破損（JSON 不正・I/O エラー）/ When: 起動 / Then: 裸 `except` により `{}` で上書きされ、既存ユーザーデータが失われる / 根拠: `core/state.py:43-49`（C-08） / 機能: DATA-USER, LIFE-IMPORT
@@ -345,7 +345,7 @@ ACR-XXX — <タイトル>
 
 ---
 
-## 7. 既知の欠陥（C-01〜C-22）と受入条件の対応
+## 7. 既知の欠陥（C-01〜C-08, C-10〜C-14, C-16〜C-22）と受入条件の対応
 
 下表は現行実装で**受入条件を満たさない**既知の欠陥と、その影響を受ける受入条件・機能 ID の対応表である。現状は「未達」として記録し、解決方針は [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) で管理する。
 
@@ -359,13 +359,11 @@ ACR-XXX — <タイトル>
 | C-06 | 3 進捗が前提参照欠落で永久に解放されない。前提 `null` の扱いも判定が食い違う | ACR-K-05 | DATA-ADVANCEMENT, CTX-XP, LIFE-CHOICES |
 | C-07 | 非 atomic・無 lock 保存（破損リスク） | ACR-S-03 | JOB-PERSIST, DATA-USER |
 | C-08 | user.json 破損時に全データを `{}` でリセット | ACR-R-05 | LIFE-IMPORT, DATA-USER |
-| C-09 | 再起動でスタミナ全回復 | ACR-R-02 | LIFE-CHOICES |
 | C-10 | ショップ更新が tick 基準（壁時計と非同期） | ACR-R-04 | JOB-TIMESTATE, CMD-BUY |
 | C-11 | `eval` fallback（任意コード実行の余地） | ACR-K-06 | VIEW-ITEMSELECT, CMD-ITEMDATA |
 | C-12 | エラーハンドラ・logging なし（観測不可） | ACR-A-20, ACR-E-06 | 全機能 |
 | C-13 | テスト・CI なし（回帰検知不可） | 検証制約 §2 | 検証工程 |
 | C-14 | 未装備時の空 View 送信（デッドコード） | ACR-K-07 | CMD-EQUIP, VIEW-EQUIPREMOVE |
-| C-15 | 採集の破損ツール集計が負数で表示される不整合 | ACR-K-08 | CMD-GATHER, MODAL-CRAFTQTY |
 | C-16 | `/use` の負数 `count` で在庫増加・効果反転 | ACR-K-09 | CMD-USE, CTX-INV-CRUD |
 | C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race（`RuntimeError` でスレッド終了） | ACR-K-10 | JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT |
 | C-18 | `new_user` の `fetch_user` 失敗が未捕捉 | ACR-K-11 | CTX-USER-INIT, 全ゲーム系 CMD |
@@ -383,7 +381,7 @@ ACR-XXX — <タイトル>
 - **ACR-K-05 進捗解放不能【確定・欠陥（C-06）】** Given: `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` の前提を達成 / When: `complete_advancement`（`core/utils.py:386-394`）実行 / Then: 存在しない `craft_drill_engine` を参照し常に false のため解放されない。期待: データ修正または解放条件の仕様確定 / 機能: DATA-ADVANCEMENT, CTX-XP
 - **ACR-K-06 eval fallback【確定・欠陥（C-11）】** Given: 未登録のコールバック名 / When: `_get_callback` 実行 / Then: `eval(name)` が走る。期待: 登録済み名のみ解決し、未知名は安全に拒否 / 機能: VIEW-ITEMSELECT, CMD-ITEMDATA
 - **ACR-K-07 equip 空判定【確定・欠陥（C-14）】** Given: 未装備ユーザー / When: `/equip` → 「装備品を外す」 / Then: `len(equip_choices) < 0` が常に false のため空セレクト付き View が送信される。期待: 「アイテムを装備していません。」表示 / 機能: CMD-EQUIP, VIEW-EQUIPREMOVE
-- **ACR-K-08 採集破損ツール集計【確定・欠陥（C-15）】** Given: 採集中にツールが破損 / When: 結果集計（`cogs/gather.py:112-115, 143`） / Then: `broken_tool` が負数で結果辞書に合成され Embed に負数表示される（craft は正数）。期待: 符号の統一と表示の整合 / 機能: CMD-GATHER, MODAL-CRAFTQTY
+- **ACR-K-08 採集破損ツール集計【確定・期待仕様】** Given: 採集中にツールが破損 / When: 結果集計（`cogs/gather.py:112-115, 143`） / Then: `broken_tool` が負数で結果辞書に合成され Embed に負数表示される（craft は正数で集計・表示）。負数は `item_count > 0` ガード（`cogs/gather.py:147`）により `add_item` に渡らず在庫は減らない / 機能: CMD-GATHER, MODAL-CRAFTQTY / 補足: 文脈別の期待仕様として確定（採集＝破損ツールを負数表示、クラフト＝破損ツールを正数で集計・表示）
 - **ACR-K-09 `/use` 負数 count【確定・欠陥（C-16）】** Given: `/use` に負の `count` を指定 / When: 実行 / Then: `remove_item_stacked` の負数 `remove_count`（`core/utils.py:172-185`）により**在庫が増え**、効果（`con_stamina` / `con_fuel` / `con_radiation`）が**反転**する。`con_loot` は `random.choices(..., k=負数)` が空 list を返すため結果 `{}` となり、loot なしで処理が継続する。期待: 非正数の拒否 / 機能: CMD-USE / 未検証（実機確認）
 - **ACR-K-10 背景ループ race【確定・欠陥（C-17）】** Given: 背景ループが `USERS.items()` を反復中 / When: `new_user`（`core/utils.py:17`）または `admin_transit`（`cogs/admin_transit.py:33-36`）がトップレベルキーを追加/削除 / Then: `RuntimeError: dictionary changed size during iteration` が起き、try/except がないためデーモンスレッドが終了し JOB-TIMESTATE / JOB-PERSIST が停止し得る。期待: 反復中サイズ変更の防御・ループの生存 / 機能: JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT / 頻度は U-13（未検証）
 - **ACR-K-11 `fetch_user` 失敗【確定・欠陥（C-18）】** Given: Discord API 障害等で `bot.fetch_user` が失敗 / When: 新規登録を伴うコマンド/View 実行 / Then: `core/utils.py:18` に try/except がなく例外が未捕捉のまま呼び出し元ハンドラへ伝播する。期待: 失敗時の安全な登録/応答 / 機能: CTX-USER-INIT / 例外型・UI は U-14（未検証、断定しない）
@@ -408,6 +406,6 @@ ACR-XXX — <タイトル>
 ## 9. トレーサビリティ
 
 - 本文書の受入条件番号（ACR-*）は機能 ID 追跡表（§4）から参照できる。
-- 既知の欠陥は `13-open-questions-and-technical-debt.md` の C-01〜C-22 と対応し、未検証事項は U-01〜U-15 と対応する。
+- 既知の欠陥は `13-open-questions-and-technical-debt.md` の C-01〜C-08, C-10〜C-14, C-16〜C-22 と対応し、未検証事項は U-01〜U-15 と対応する。
 - 詳細仕様書群（01〜11）は既存であり、各機能 ID の「詳細仕様リンク」から仕様と受入条件の突合が可能である。
 - 受入条件の実行結果は §4 追跡表の「検証済み」に反映し、[00-feature-catalog.md](00-feature-catalog.md) §6.2 の追跡表と同期する。

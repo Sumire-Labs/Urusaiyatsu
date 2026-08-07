@@ -297,13 +297,11 @@ Modal は **timeout を明示宣言していない**（`__init__` に `timeout=`
 | C-06 | **advancement 参照欠落** | `data/advancement.json` の `craft_drill_c1` / `craft_drill_i1` / `gather_ore_hallow` が**存在しない** `craft_drill_engine` を `previous_advancement` に参照（スクリプトで検出） | この 3 件は前提達成判定（`core/utils.py:386-394`）で常に false となり**永久に解放されない**。加えて `complete_advancement` は `prev_adv is None` を未達成扱いにする（`core/utils.py:389-391`）一方、`setup_hook` は達成扱い（`core/state.py:171-173`）と判定が食い違う（現状 null 前提は `gather_forest` のみで初期付与済みのため顕在化していない） |
 | C-07 | **非 atomic・無 lock 永続化** | `core/utils.py:454-457` `save_users` は `user.json` へ直接 `json.dump`（一時ファイル + rename なし・lock なし）。`core/background.py:96-97` の 5 秒毎保存と、各コマンドハンドラの随時 `save_users` が並走 | クラッシュ時・同時書き込み時に破損リスク。`AGENTS.md` も単一レプリカ運用を明示 |
 | C-08 | **user.json 読込の裸 `except`** | `core/state.py:43-49` の `except:`（例外型指定なし）が JSON 破損・I/O エラー等をすべて握りつぶし、`{}` で上書き | `user.json` が破損している場合に全ユーザーデータをリセットしてしまう |
-| C-09 | **起動時スタミナ全回復** | `core/state.py:163-164` `setup_hook` が全ユーザーの `stamina` を `stamina_max` に強制セット | 再起動のたびに全プレイヤーがスタミナ満タンになる（時間進行・課金バランスに影響） |
 | C-10 | **tick 基準ショップ** | `core/background.py:29` `if ticks % 3600 == 0` はプロセス起動からの秒数基準で、壁時計（1 時間ごと）ではない | 再起動でショップ更新周期がずれ、時刻とローテーションが非同期 |
 | C-11 | **eval fallback** | `views/item_select_view.py:140-145` `_get_callback` が未登録名を `eval(name)` で解決 | コールバック名が不正なら任意コード実行に至り得る（現状は内部定数 `'item_data'` のみ渡される）。`AGENTS.md` も名前の内部保持を要請 |
 | C-12 | **エラー/観測不足** | `logging` 不使用（print のみ、例: `core/state.py:94,148,193`）。エラーハンドラ未登録（`on_command_error` / `tree.error` / `add_error_handler` が grep 0 件）。拡張ロード失敗も `core/state.py:184-185` で print のみ | 例外は Discord 側で「interaction failed」となるだけで、原因・内部状態の観測手段がない。運用監視・障害解析が困難 |
 | C-13 | **tests / CI 欠如** | テストファイル・pytest/unittest 設定・CI 設定（`.github` 等）が存在しない（ファイルシステム確認）。`AGENTS.md` も自動テストなしを明記 | 回帰検知手段なし。検証は `compileall` のみ |
 | C-14 | **equip の空判定デッドコード** | `cogs/equip.py:34` `if len(equip_choices) < 0:` は常に false | 「アイテムを装備していません」は到達不能。未装備時に空セレクト付き View を送信する |
-| C-15 | **gather と craft のツール破損カウント符号不一致** | `cogs/gather.py:112-115` は `broken_tool` を負値で加算（`-= 1` / `setdefault(tool_id, -1)`）し、`cogs/gather.py:143` で結果辞書へ合成（`table_roll(...)` と dict マージ）。負値エントリは `item_count > 0` ガード（`cogs/gather.py:147`）で `add_item` されないため在庫は減算されないが、結果 Embed には負数が表示され得る。`modals/craft_modal.py:127-130` は正値（`+= 1`） | 採集でツールが破損した場合の結果表示が不整合になる（在庫への影響なし） |
 | C-16 | **`/use` 非正数 count の入力検証なし** | `cogs/use.py:21` の `count: int = 1` に正数ガードがない。負数を `remove_item_stacked`（`core/utils.py:172-185`）へ渡すと `remove_count = min(count - removed, ...)` が負数になり在庫が**増え**、効果（スタミナ/燃料回復・放射線除去）が**反転**する（`cogs/use.py:38-93`）。`con_loot` は `table_roll` の `random.choices(..., k=負数)` が空 list を返すため結果 `{}` になり、loot なしで処理が継続する | 負数指定で在庫増加・効果反転・`con_loot` は loot なしの応答になる。`count=0` は 0 効果の応答になる |
 | C-17 | **background の `USERS.items()` 反復とトップレベル mutation の race** | `core/background.py:22` が `USERS.items()` を反復走査する最中に、イベントループ側の `new_user`（`core/utils.py:17` `USERS.setdefault`）や `admin_transit`（`cogs/admin_transit.py:33-36` `USERS.pop`/`USERS.setdefault`）が**トップレベルキーを追加/削除**すると `RuntimeError: dictionary changed size during iteration` になり得る。ループに try/except がない（`core/background.py:14-99`）ため、発生するとデーモンスレッドが終了し JOB-TIMESTATE / JOB-PERSIST が以後停止 | 時間状態更新・5 秒保存のサイレント停止。必発・頻度は未検証（U-13）。※C-07 のファイル書込 race とは別のメモリミューテーション race |
 | C-18 | **`new_user` の `bot.fetch_user` が未捕捉** | `core/utils.py:18` `user = await bot.fetch_user(user_id)` に try/except がない。失敗時は例外が呼び出し元ハンドラへそのまま伝播する（未捕捉である事実のみ確定） | 新規登録経路（全ゲーム系コマンド冒頭）で Discord API 障害時に登録・処理が失敗する。例外型・ユーザーへの UI は未検証（U-14） |
@@ -471,7 +469,7 @@ Modal は **timeout を明示宣言していない**（`__init__` に `timeout=`
 ### 6.3 Phase2 着手チェックリスト（最終統合照合時点）
 
 - [x] §2.2-2.4 の全 59 機能 ID を対象に、各「詳細仕様先」ファイルを作成・整備（`01-system-overview.md` → `13-open-questions-and-technical-debt.md` すべて実在）
-- [x] 各仕様書にて §5.1 の懸念（C-01〜C-22）を「再実装時の契約 / 現行挙動」として記述・リンク
+- [x] 各仕様書にて §5.1 の懸念（C-01〜C-08, C-10〜C-14, C-16〜C-22）を「再実装時の契約 / 現行挙動」として記述・リンク
 - [x] §5.2 の未検証事項（U-01〜U-15）を集約（`13-open-questions-and-technical-debt.md` に anchor 付きで一意管理）
 - [x] 全 59 機能 ID の追跡状態を「調査済 = 済 / 詳細仕様化済 = 済 / 静的照合 = 済 / 実環境検証 = 未」へ更新
 - [ ] 「実環境検証」への更新は、受入条件（`12-testable-acceptance-criteria.md`）を実機/ビルドで満たし、根拠を記録した時のみ行う

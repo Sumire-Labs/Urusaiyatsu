@@ -21,7 +21,7 @@
 ### 2.2 境界
 
 - **含む**: 例外の分類規約、ユーザー向けエラー応答、グローバルエラーハンドラ、ログ出力規約（秘密非含有）、監査・メトリクスの有無の決定、監視・手動介入の手順、バックグラウンドループの耐障害性。
-- **含まない**: デプロイ・コンテナ運用の詳細（[10-deployment-and-operations.md](10-deployment-and-operations.md) に委譲）、認可・入力検証・eval の詳細（[11-security-and-authorization.md](11-security-and-authorization.md) に委譲）、ゲームロジック個別の不具合修正の判定（C-01〜C-22 のうちゲーム契約に属するものは機能カタログ §5 参照）。
+- **含まない**: デプロイ・コンテナ運用の詳細（[10-deployment-and-operations.md](10-deployment-and-operations.md) に委譲）、認可・入力検証・eval の詳細（[11-security-and-authorization.md](11-security-and-authorization.md) に委譲）、ゲームロジック個別の不具合修正の判定（C-01〜C-08, C-10〜C-14, C-16〜C-22 のうちゲーム契約に属するものは機能カタログ §5 参照）。
 
 ---
 

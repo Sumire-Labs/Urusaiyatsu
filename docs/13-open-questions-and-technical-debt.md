@@ -1,6 +1,6 @@
 # Urusaiyatsu 未解決事項・技術負債（13-open-questions-and-technical-debt）
 
-> **Phase2 成果物** — `00-feature-catalog.md` §5 の確認済み懸念（C-01〜C-22）と未検証事項（U-01〜U-15）を、根拠・影響範囲・優先度・確認方法・関連仕様リンク付きで集約する。
+> **Phase2 成果物** — `00-feature-catalog.md` §5 の確認済み懸念（C-01〜C-08, C-10〜C-14, C-16〜C-22）と未検証事項（U-01〜U-15）を、根拠・影響範囲・優先度・確認方法・関連仕様リンク付きで集約する。
 >
 > - 対象コミット: `ca0dc10b78d252e4803e2a25a010290c39c339bb`（2026-08-06）
 > - 本文書は「問題の所在」を整理するものであり、**解決策を仕様として断定しない**。解決方針の決定は詳細仕様書（§6.3 参照先）で行う。
@@ -20,7 +20,7 @@
   - **P1** — 機能不達・データ不整合・セキュリティ・再起動時の状態不正
   - **P2** — 観測性・運用・テスト・バランス・UX 改善
 
-## 2. 確認済みの技術負債（C-01〜C-22）
+## 2. 確認済みの技術負債（C-01〜C-08, C-10〜C-14, C-16〜C-22）
 
 ### 2.1 一覧
 
@@ -34,13 +34,11 @@
 | [C-06](#c-06) | advancement 参照欠落 | `data/advancement.json`（`craft_drill_c1` 等 3 件の `previous_advancement`） | DATA-ADVANCEMENT, CTX-XP, LIFE-CHOICES | P1 | 確認済 |
 | [C-07](#c-07) | 非 atomic・無 lock 永続化 | `core/utils.py:454-457`（`json.dump` 直接書込）, `core/background.py:96-97` | JOB-PERSIST, DATA-USER, OPS-CONFIG | P0 | 確認済 |
 | [C-08](#c-08) | user.json 読込の裸 `except` | `core/state.py:43-49` | LIFE-IMPORT, DATA-USER | P0 | 確認済 |
-| [C-09](#c-09) | 起動時スタミナ全回復 | `core/state.py:163-164` | LIFE-CHOICES, CTX-STATS, JOB-TIMESTATE | P1 | 確認済 |
 | [C-10](#c-10) | tick 基準ショップ更新 | `core/background.py:29`（`ticks % 3600 == 0`） | JOB-TIMESTATE, CMD-BUY, VIEW-SHOP, CTX-XP | P1 | 確認済 |
 | [C-11](#c-11) | eval fallback | `views/item_select_view.py:140-145` | VIEW-ITEMSELECT, CMD-ITEMDATA | P1 | 確認済 |
 | [C-12](#c-12) | エラー/観測不足 | エラーハンドラ未登録（grep 0 件）、`logging` 不使用、拡張ロード失敗は print のみ（`core/state.py:184-185`） | 全 CMD/VIEW/MODAL/LIFE/JOB/OPS | P2 | 確認済 |
 | [C-13](#c-13) | tests / CI 欠如 | テストファイル・CI 設定なし（ファイルシステム確認） | 全体（検証工程） | P2 | 確認済 |
 | [C-14](#c-14) | equip の空判定デッドコード | `cogs/equip.py:34`（`len(equip_choices) < 0` は常に false） | CMD-EQUIP, VIEW-EQUIPREMOVE | P2 | 確認済 |
-| [C-15](#c-15) | gather と craft のツール破損カウント符号不一致 | `cogs/gather.py:112-115,143`（負値 `-1`）、`modals/craft_modal.py:127-130`（正値 `+1`） | CMD-GATHER, MODAL-CRAFTQTY, CTX-INV-CRUD | P1 | 確認済 |
 | [C-16](#c-16) | `/use` の `count` 非正数で在庫増加・効果反転 | `cogs/use.py:21`（ガードなし）、`core/utils.py:172-185`（負数 remove_count） | CMD-USE, CTX-INV-CRUD, CTX-LOOT | P0 | 確認済 |
 | [C-17](#c-17) | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`（`setdefault`）、`cogs/admin_transit.py:33-36`（`pop`/`setdefault`） | JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT | P1 | 確認済（発生頻度は U-13） |
 | [C-18](#c-18) | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18`（`await bot.fetch_user(user_id)` に try/except なし） | CTX-USER-INIT, 全ゲーム系 CMD/VIEW | P1 | 確認済（例外型・UI は U-14） |
@@ -117,14 +115,6 @@
 - **確認方法**: 破損 JSON を配置して起動し、読み込み結果とログ・上書きの有無を確認する。
 - **関連仕様リンク**: `07-event-processing/lifecycle.md`, `04-data-model.md`, `09-error-handling-and-observability.md`。
 
-#### <a name="c-09"></a>C-09 — 起動時スタミナ全回復【P1】
-
-- **根拠**: `core/state.py:163-164` `setup_hook` が全ユーザーの `stamina` を `stamina_max` に強制セット。
-- **影響範囲**: 再起動のたびに全プレイヤーがスタミナ満タンになる（時間進行・バランスに影響）。対象: LIFE-CHOICES / CTX-STATS / JOB-TIMESTATE。
-- **優先度**: P1（バランス・進行の仕様判断が必要）。
-- **確認方法**: スタミナを消費した状態で再起動し、起動後のスタミナ値を確認する。
-- **関連仕様リンク**: `07-event-processing/lifecycle.md`, `06-features/progression-and-inventory.md`。
-
 #### <a name="c-10"></a>C-10 — tick 基準ショップ更新【P1】
 
 - **根拠**: `core/background.py:29` `if ticks % 3600 == 0` はプロセス起動からの秒数基準で、壁時計（1 時間ごと）ではない。レベル 7 達成時（`core/utils.py:427-429`）も即時付与。
@@ -164,14 +154,6 @@
 - **優先度**: P2（UX 改善）。
 - **確認方法**: 未装備ユーザーで `/equip` → 外す操作を実行し、空 View が表示されることを確認。
 - **関連仕様リンク**: `05-discord-interface/interactions-views-and-modals.md`, `06-features/economy-and-equipment.md`。
-
-#### <a name="c-15"></a>C-15 — gather と craft のツール破損カウント符号不一致【P1】
-
-- **根拠**: `cogs/gather.py:112-115` は `broken_tool` を負値で加算（`-= 1` / `setdefault(tool_id, -1)`）し、`cogs/gather.py:143` で `table_roll(...)` の結果辞書へ合成する。負値エントリは `item_count > 0` ガード（`cogs/gather.py:147`）で `add_item` はされないが、結果 Embed には負数が表示される。`modals/craft_modal.py:127-130` は正値（`+= 1`）で集計する。
-- **影響範囲**: 採集でツールが破損した場合の結果集計・表示が不整合になる（負数の表示、実在庫との食い違い）。対象: CMD-GATHER / MODAL-CRAFTQTY / CTX-INV-CRUD。
-- **優先度**: P1（表示・集計の不整合。在庫破壊ではないが混乱を招く）。
-- **確認方法**: 採集でツールを破損させ、結果 Embed の表示とインベントリ実態を突合する。
-- **関連仕様リンク**: `06-features/world-activities.md`, `06-features/progression-and-inventory.md`。
 
 #### <a name="c-16"></a>C-16 — `/use` の `count` 非正数で在庫増加・効果反転【P0】
 
@@ -374,7 +356,6 @@
 
 | 論点 | 内容 | 関連 ID | 優先度 |
 |---|---|---|---|
-| スタミナの再起動時挙動 | 起動時スタミナ全回復（現行）を維持するか、時間経過に応じた復元にするか | C-09, U-12 | P1 |
 | ショップ更新の時刻基準 | tick 基準（現行）か壁時計基準か。再起動時のずれの許容 | C-10, U-06 | P1 |
 | ゲームバランス数値の正式定義 | 回復速度・経験値曲線・価格・放射線/冷気の数値の意図 | U-12 | P2 |
 | 釣り時刻ボーナスの数式仕様 | `int((20 - abs(hour-6)) / 3)` の意図・境界 | U-11 | P2 |
@@ -395,9 +376,9 @@
 - 実行時確認: U-01
 
 ### P1（機能不達・データ不整合・セキュリティ・再起動時の状態不正）
-- C-04 / C-06 / C-09 / C-10 / C-11 / C-15 / C-17 / C-18 / C-21
+- C-04 / C-06 / C-10 / C-11 / C-17 / C-18 / C-21
 - 実行時確認: U-02 / U-04 / U-05 / U-09 / U-13（C-17 の頻度） / U-14
-- 仕様決定待ち: C-09 / C-10
+- 仕様決定待ち: C-10
 
 ### P2（観測性・運用・テスト・バランス・UX）
 - C-12 / C-13 / C-14 / C-19 / C-20 / C-22
@@ -408,6 +389,6 @@
 
 ## 6. 追跡と更新方法
 
-- 本ファイルの項目番号（C-01〜C-22 / U-01〜U-15）はカタログ §5 と 1:1 に対応する。番号の再利用・振り直しはしない（新規は採番を追加する）。
+- 本ファイルの項目番号（C-01〜C-08, C-10〜C-14, C-16〜C-22 / U-01〜U-15）はカタログ §5 と 1:1 に対応する。番号の再利用・振り直しはしない（新規は採番を追加する）。
 - 実機/ビルドで確認が完了した U 項目は「検証済み」に更新し、`12-testable-acceptance-criteria.md` の該当受入条件と `00-feature-catalog.md` §6.2 の追跡表へ反映する。
 - 解決方針が詳細仕様書で確定した項目は、本ファイルに解決先リンクを追記し、解決済み状態へ移す（本ファイル自体に仕様を書かない）。

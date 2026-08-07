@@ -20,7 +20,7 @@
 
 - コンポーネント責務・依存方向・起動シーケンス・データフロー・非同期構造を**仕様として**記述する。
 - §8 で「再実装で維持すべき必須契約」、§9 で「現行実装上の選択（置換・修正が可能なもの）」を区別して列挙する。
-- バグ・未検証事項（`C-01`〜`C-22`、`U-01`〜`U-15`）は [00-feature-catalog.md](00-feature-catalog.md) §5 を継承し、本文書では契約判定の材料として引用する。
+- バグ・未検証事項（`C-01`〜`C-08`、`C-10`〜`C-14`、`C-16`〜`C-22`、`U-01`〜`U-15`）は [00-feature-catalog.md](00-feature-catalog.md) §5 を継承し、本文書では契約判定の材料として引用する。
 
 ---
 
@@ -155,7 +155,7 @@ sequenceDiagram
 
 ### 4.3 起動時に行われる重要副作用
 
-- `setup_hook` は**全ユーザーの `stamina` を `stamina_max` に強制セット**する（再起動のたびにスタミナ満タン。`C-09`）。根拠: `core/state.py:163-164`
+- `setup_hook` は**全ユーザーの `stamina` を `stamina_max` に強制セット**する（再起動のたびにスタミナ満タン。**期待仕様**）。根拠: `core/state.py:163-164`
 - Choice リスト（`place_choices` 等）はモジュールレベルで空リストとして宣言され、`setup_hook` で追記される。**再起動なしで変わるデータ（item.json 等）への追従はできない**。根拠: `core/state.py:17-24`、`core/state.py:104-158`
 - `tree.sync()` は guild 指定なしのグローバル同期。根拠: `core/state.py:192`
 
@@ -323,14 +323,14 @@ sequenceDiagram
 | ログ / 観測 | （契約なし）エラーハンドラ・ロギング基盤は未実装 | `print` のみ。`logging` 導入・`tree.error` 登録が推奨 | `C-12` |
 | 永続化の安全性 | 5 秒周期で保存され、単一レプリカで運用 | `json.dump` 直接書込（非 atomic・無 lock） | `core/utils.py:454-457`、`C-07` |
 | user.json 読込の例外処理 | 起動時に読込む | 裸 `except` で `{}` 上書き（例外種別の限定・リネーム保存等に改善可） | `core/state.py:43-49`、`C-08` |
-| 起動時スタミナ | （ゲーム仕様としては未定義） | 起動時に全ユーザーのスタミナを満タンへ強制セット | `core/state.py:163-164`、`C-09` |
+| 起動時スタミナ | 起動時に全ユーザーのスタミナを `stamina_max` へ強制セットする | （変更不要・現行実装がそのまま期待仕様） | `core/state.py:163-164` |
 | ショップ回転の基準 | 一定間隔で再抽選される | プロセス起動からの tick 基準（壁時計 1 時間ではない） | `core/background.py:29`、`C-10` |
 | コールバック解決 | 内部登録名のみを渡す | `_get_callback` の `eval(name)` フォールバック（除去・辞書解決のみに変更可） | `views/item_select_view.py:140-145`、`C-11` |
 | アクセサリー stats | `CTX-STATS` が装備 stats を反映する | アクセサリー分岐がローカルコピーのまま書戻さない（バグ） | `core/utils.py:352-362`、`C-04` |
 | インベントリ削除 | 指定 index のアイテムを削除する | `list.pop(dict)` による TypeError の可能性（`C-03`）と `remove_item_stacked(required=True)` の部分消費 | `core/utils.py:212`、`modals/craft_modal.py:126`、`C-03` |
 | `admin_give` の剥奪 | 負数でアイテムを減らす（意図） | 負数が `remove_item` で加算になる（バグ） | `cogs/admin_give.py:45`、`core/utils.py:135-138`、`C-02` |
 | 依存パッケージ | `deepmerge` を `admin_manage` が import | `requirements.lock` に `deepmerge` が未記載（Docker 環境差） | `cogs/admin_manage.py:8`、`requirements.lock`、`C-01` |
-| ツール破損カウント | 破損ツールを結果に含める | gather は負値・craft は正値で符号が不一致 | `cogs/gather.py:112-115`、`modals/craft_modal.py:127-130`、`C-15` |
+| ツール破損カウント | 破損ツールを結果に含める。**採集は破損ツールを結果に負数で表示**（`item_count > 0` ガードで在庫は減らない）、**クラフトは破損ツールを正数で集計・表示**（文脈別の期待仕様） | （変更不要・現行実装がそのまま期待仕様） | `cogs/gather.py:112-115`、`modals/craft_modal.py:127-130` |
 | コマンド接頭辞 | （ゲーム操作はスラッシュのみ） | `command_prefix="!"` は設定のみで未使用 | `core/state.py:90`、[00-feature-catalog.md](00-feature-catalog.md) §3.4 |
 | 関数注入 | View はコグ実処理を呼べる | `set_equip_func` / `set_sell_func` によるグローバル注入（DI 等へ置換可）。`set_craft_func` は未使用デッドコード（`C-22`） | `views/equip_view.py:15-18`、`views/sell_view.py:14-17`、`views/craft_view.py:16-18` |
 | 装備の空判定 | 未装備時に適切な応答 | `if len(equip_choices) < 0:` は常に false（到達不能デッドコード） | `cogs/equip.py:34`、`C-14` |
@@ -363,4 +363,4 @@ sequenceDiagram
 | §6 Discord event / 非同期 | `EXT-DISCORD`、`JOB-TIMESTATE` |
 | §7 ゲーム契約 | `CTX-*` 全 6 |
 | §8 必須契約 | 上記すべて |
-| §9 選択 vs 契約 | `C-01`〜`C-22`、`U-01`〜`U-15`（[00-feature-catalog.md](00-feature-catalog.md) §5 との対応） |
+| §9 選択 vs 契約 | `C-01`〜`C-08`、`C-10`〜`C-14`、`C-16`〜`C-22`、`U-01`〜`U-15`（[00-feature-catalog.md](00-feature-catalog.md) §5 との対応） |

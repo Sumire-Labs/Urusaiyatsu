@@ -112,7 +112,7 @@
 | 絵文字取得 | `fetch_application_emojis()` で取得し、`ITEMS` の `emoji` / `EMOJIS` に反映 | `core/state.py:97-102` |
 | 選択リスト生成 | `item_choices`（25 件/ページ × 4 ページ分の `SelectOption` 群）、`consumable_choices`（17 件）、`equippable_choices`（69 件+「装備品を外す」）、`equip_slot`、`shop_list`（31 件）、`place_choices`（13 件）、`fishing_choices`（7 件）を生成 | `core/state.py:104-158` |
 | 価格導出 | `value` 未定義アイテムへ `set_item_value()` で再帰導出、`spawnable_in_shop` で `price` 未定義なら `value*4` を setdefault | `core/state.py:117-119,128-132`、`core/state.py:64-78` |
-| ユーザー状態リフレッシュ | 全ユーザーの `stamina` を `stamina_max` に**強制セット**（懸念 C-09）、`advancement_now` を前提条件（`previous_advancement`）から再構築 | `core/state.py:160-176` |
+| ユーザー状態リフレッシュ | 全ユーザーの `stamina` を `stamina_max` に**強制セット**（**期待仕様**）、`advancement_now` を前提条件（`previous_advancement`）から再構築 | `core/state.py:160-176` |
 | 拡張ロード | `cogs.EXTENSIONS`（16 コグ）を順次 `load_extension`、失敗は print のみ | `cogs/__init__.py:6-23`、`core/state.py:179-185` |
 | 背景ループ | `start_background_loop` をデーモンスレッドで開始（1 秒 tick・5 秒毎保存） | `core/state.py:187-189`、`core/background.py:11-12` |
 | コマンド同期 | グローバルコマンドツリー同期 `self.tree.sync()`（guild 指定なし） | `core/state.py:192` |
@@ -246,7 +246,6 @@
 |---|---|---|---|
 | C-01 | lock に deepmerge 欠落（§3.3, §8） | `requirements.lock` vs `requirements.txt:8` vs `cogs/admin_manage.py:8`、`Dockerfile:19` | Docker で `/admin_manage` 欠落の可能性。環境差 |
 | C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時全ユーザーデータが `{}` で上書き |
-| C-09 | 起動時スタミナ全回復 | `core/state.py:163-164` | 再起動のたび全ユーザーがスタミナ満タン |
 | C-R01 | **Intent 要求過多の疑い**（本稿で新規整理） | `core/state.py:85-89` で要求する `message_content` / `members` / `messages` / `reactions` に対し、使用するイベントハンドラ（`on_message` / `on_member_*` / `on_reaction_*`）が grep で 0 件 | 特権 Intent（message_content / members）の要求が不要なら Portal で許可が必要な面を増やし、起動失敗のリスクを高めている。`command_prefix="!"` も未使用（`core/state.py:90`） |
 
 ### 9.3 未確定（検証が必要な事項）
