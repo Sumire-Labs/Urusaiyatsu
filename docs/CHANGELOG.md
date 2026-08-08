@@ -8,6 +8,21 @@
 
 ---
 
+## 2026-08-08 — 手動 Discord ライブ検証ガイドの追加（docs-only）
+
+### 概要
+
+デプロイ済み Discord Bot に対する**手動ライブ検証の手順書** `14-manual-discord-verification.md` を新規追加した。`13-open-questions-and-technical-debt.md` で「手動のライブ検証として延期」とされた U 項目・C 項目の実行時確認を、安全な手順で実施するためのガイド。**実行時テストの完了は主張しない**（手順書の追加のみ。ライブ検証は未実施）。
+
+### 反映内容
+
+- **`14-manual-discord-verification.md` を新規追加**: 安全な前提条件（秘密不コミット・隔離テストユーザー・状態バックアップ・単一インスタンス・デプロイ/リビルド）と、V-01〜V-08 の再現可能な検証ケース（起動/`admin_manage` 依存、`fetch_user` フォールバック、View/Modal 所有権・タイムアウト・二重応答、売却 stale/ページクランプ/永続化先行、ショップ stale 操作、絵文字フォールバック、複数インスタンス起動拒否、cooldown/admin check 応答）を、期待されるユーザー表示・ログ/状態・記録すべきエビデンス付きで記載。隔離必須ケース（V-07 ほか）を明示。
+- **`13-open-questions-and-technical-debt.md`**: 冒頭注記と §6 追跡・更新方法に、手動ライブ検証手順の参照先（`14-manual-discord-verification.md`）を追記。
+- **`README.md`**: 文書構成表と目的別ナビゲーションに `14-manual-discord-verification.md` を追加。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
 ## 2026-08-07 — リメディエーション反映の仕様更新（docs-only）
 
 ### 概要

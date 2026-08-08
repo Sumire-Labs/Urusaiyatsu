@@ -39,6 +39,7 @@
 | [11-security-and-authorization.md](11-security-and-authorization.md) | 詳細仕様 | OPS-ADMIN, CMD-ADM*（権限） | 作成済 |
 | [12-testable-acceptance-criteria.md](12-testable-acceptance-criteria.md) | 受入条件 | 全 59 機能 ID 追跡 + Given-When-Then 受入条件 | 作成済 |
 | [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) | 負債台帳 | C-01〜C-08, C-10〜C-14, C-16〜C-22 / U-01〜U-15 の集約（根拠・影響範囲・優先度・確認方法） | 作成済 |
+| [14-manual-discord-verification.md](14-manual-discord-verification.md) | 検証手順 | デプロイ済み Bot に対する手動 Discord ライブ検証ガイド（U-01〜U-15 の実機確認手順） | 作成済 |
 | [CHANGELOG.md](CHANGELOG.md) | 履歴 | 仕様書群の変更履歴 | 作成済 |
 
 > 全文書が作成済み。詳細仕様の機能 ID 割り当ては `00-feature-catalog.md` §6.1「現行ドキュメント構成」どおり。
@@ -95,6 +96,7 @@
 | 各機能の仕様を詳しく読む | 詳細仕様書（§1 の表。機能 ID → 文書の対応は §5 を参照） |
 | テスト・受入条件・検証対象を知る | [12-testable-acceptance-criteria.md](12-testable-acceptance-criteria.md) |
 | 既知のバグ・技術負債・未検証事項を確認する | [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) |
+| デプロイ済み Bot の手動ライブ検証を実行する | [14-manual-discord-verification.md](14-manual-discord-verification.md) |
 | 仕様書群の変更履歴を確認する | [CHANGELOG.md](CHANGELOG.md) |
 | 起動・設定・デプロイの運用を知る | `03-runtime-and-configuration.md` / `10-deployment-and-operations.md`（運用メモはルート `README.md` と `AGENTS.md` も参照） |
 
