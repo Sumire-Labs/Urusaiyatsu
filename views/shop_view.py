@@ -7,6 +7,7 @@ import discord
 
 from core.state import USERS, ITEMS, EMOJIS
 from core.utils import save_users, add_item
+from ._timeout import disable_on_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -42,17 +43,8 @@ class shop_choice(discord.ui.View):
             logger.exception('エラー応答の送信に失敗しました')
 
     async def on_timeout(self):
-        # タイムアウト時は全子要素を無効化し、元のメッセージを更新（ベストエフォート）
-        for child in self.children:
-            child.disabled = True
-        message = self._message_ref or self.message
-        if message is None:
-            # メッセージが無い通常のタイムアウトは例外・ログ対象にしない
-            return
-        try:
-            await message.edit(view=self)
-        except Exception:
-            logger.exception('タイムアウト時のメッセージ更新に失敗しました')
+        # タイムアウト時は全子要素を無効化し、元メッセージを更新（ベストエフォート）
+        await disable_on_timeout(self)
 
     @discord.ui.select(placeholder='購入するアイテムを選択', options=[])
     async def shop_buy_select(self, interaction: discord.Interaction, select: discord.ui.Select):

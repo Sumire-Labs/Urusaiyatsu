@@ -8,6 +8,7 @@ import math
 
 from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
 from core.utils import new_user, save_users, get_stats
+from ._timeout import disable_on_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -50,16 +51,7 @@ class status_paging(discord.ui.View):
             logger.exception('エラー応答の送信に失敗しました')
 
     async def on_timeout(self):
-        for child in self.children:
-            child.disabled = True
-        message = self._message_ref or self.message
-        if message is None:
-            # メッセージが無い通常のタイムアウトは例外・ログ対象にしない
-            return
-        try:
-            await message.edit(view=self)
-        except Exception:
-            logger.exception('タイムアウト時のメッセージ更新に失敗しました')
+        await disable_on_timeout(self)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.primary)
     async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):

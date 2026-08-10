@@ -8,6 +8,7 @@ import ast
 
 from core.state import equippable_choices, USERS, ITEMS
 from core.utils import save_users, add_item_from_dict
+from ._timeout import disable_on_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -32,16 +33,7 @@ async def _safe_error_response(interaction: discord.Interaction, error):
 
 async def _disable_on_timeout(view):
     """タイムアウト時に操作を無効化し、元メッセージをベストエフォートで更新する。"""
-    for child in view.children:
-        child.disabled = True
-    message = view._message_ref or view.message
-    if message is None:
-        # メッセージが無い通常のタイムアウトは例外・ログ対象にしない
-        return
-    try:
-        await message.edit(view=view)
-    except Exception:
-        logger.exception('タイムアウト時のメッセージ更新に失敗しました')
+    await disable_on_timeout(view)
 
 
 # equip関数への参照（循環import回避のため遅延設定）
