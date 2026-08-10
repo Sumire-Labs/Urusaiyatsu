@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from core.state import USERS, ITEMS, FISHING_PLACES, ADVANCEMENTS, EMOJIS, fishing_choices
 from core.utils import new_user, xp, complete_advancement, save_users, get_stats, get_item, add_item, table_roll
-from cogs._helpers import valid_count, user_cooldown_key
+from cogs._helpers import valid_count, normalize_count, cap_notice, user_cooldown_key
 
 
 class FishingCog(commands.Cog):
@@ -26,8 +26,12 @@ class FishingCog(commands.Cog):
 
         # 入力検証（状態変更前に拒否）
         if not valid_count(count):
-            await interaction.response.send_message('釣り回数は1〜100の範囲で指定してください。', ephemeral=True)
+            await interaction.response.send_message('釣り回数は1以上で指定してください。', ephemeral=True)
             return
+
+        # 100 超の指定は 100 にキャップして実行（ユーザーへ通知）
+        notice = cap_notice(count)
+        count = normalize_count(count)
 
         # データ読み込み
         user_id = interaction.user.id
@@ -162,7 +166,7 @@ class FishingCog(commands.Cog):
                     adv_message += complete_advancement(user_id, adv_id)
 
         # 送信
-        await interaction.response.send_message(adv_message, embed=embed)
+        await interaction.response.send_message(notice + adv_message, embed=embed)
 
         # ファイル更新
         save_users()

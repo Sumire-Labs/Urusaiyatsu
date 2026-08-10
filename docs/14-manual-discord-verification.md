@@ -15,12 +15,12 @@
 - 対象とする確認事項（対応する U / C / ACR）:
   - 起動・`admin_manage` 依存（U-01 / C-01 / ACR-E-02, ACR-E-06）
   - ユーザー初期化・`fetch_user` フォールバック（U-14 / C-18 / ACR-K-11）
-  - View / Modal の所有権・タイムアウト・二重応答（U-04 / U-05 / ACR-N-20〜N-23, ACR-N-26）
-  - 売却フロー（stale 同一性・ページクランプ・永続化先行）（U-05 / ACR-N-20〜N-22）
+  - View / Modal の所有権・タイムアウト・二重応答（U-04 / U-05 / ACR-N-20〜N-23, ACR-N-26）※ **V-03 実測反映**: ephemeral View のタイムアウトは保持メッセージ編集を行わずメモリ内で無効化・静かに完了。所有権チェックは非 ephemeral View でのみ検証
+  - 売却フロー（stale 同一性・ページクランプ・永続化先行）（U-05 / ACR-N-20〜N-22）※ **V-04 実測反映**: stale 保護は安定した同一性と所持数を検証。同一スタックからの連続売却は許可
   - ショップ stale 操作（C-21 / U-06 / ACR-K-14, ACR-R-04）
   - 絵文字フォールバック（U-08 / ACR-E-02 周辺）
   - 複数インスタンス起動拒否（U-09 / C-07 / ACR-S-04）
-  - cooldown / admin check の期待応答（C-19 / U-15 / ACR-N-24, ACR-N-25）
+  - cooldown / admin check / count 境界の期待応答（C-19 / U-15 / ACR-N-24, ACR-N-25, ACR-K-09, ACR-K-13）※ **V-08 実測反映**: count は非正数のみ拒否・100 超は 100 にキャップし明示通知。クールダウンは 3 秒のまま
 
 ## 2. 前提条件（安全な検証環境）
 
@@ -62,12 +62,12 @@
 |---|---|---|---|
 | V-01 | U-01 / C-01 / ACR-E-02, E-06 | 起動と `admin_manage` 拡張ロード | 否 |
 | V-02 | U-14 / C-18 / ACR-K-11 | ユーザー初期化と `fetch_user` フォールバック | 否（障害誘発は隔離必須） |
-| V-03 | U-04 / ACR-N-23, N-26 | View 所有権・タイムアウト・二重応答 | 否 |
-| V-04 | U-05 / ACR-N-20〜N-22 | 売却フロー（stale 同一性・ページクランプ・永続化先行） | 否 |
+| V-03 | U-04 / ACR-N-23, N-26 | View 所有権・タイムアウト・二重応答（ephemeral タイムアウトはメモリ内無効化・静かに完了。所有権は非 ephemeral View で検証） | 否 |
+| V-04 | U-05 / ACR-N-20〜N-22 | 売却フロー（stale 同一性・ページクランプ・永続化先行。同一スタックからの連続売却は許可） | 否 |
 | V-05 | C-21 / U-06 / ACR-K-14, R-04 | ショップ stale 操作（ローテーション跨ぎ） | 否 |
 | V-06 | U-08 | 絵文字フォールバック表示 | 否 |
 | V-07 | U-09 / C-07 / ACR-S-04 | 複数インスタンス起動拒否 | **必須** |
-| V-08 | C-19 / U-15 / ACR-N-24, N-25 | cooldown / admin check の期待応答 | 否 |
+| V-08 | C-19 / U-15 / ACR-N-24, N-25, K-09, K-13 | cooldown / admin check / count 境界の期待応答（非正数のみ拒否・100 超は 100 にキャップ） | 否 |
 
 ## 4. 個別ケース詳細
 
@@ -140,22 +140,24 @@
 
 - **対象**: U-04 / ACR-N-23, ACR-N-26
 - **根拠**: `views/*.py`（`interaction_check`・`on_timeout`・`on_error`・`_disable_on_timeout`）, `cogs/equip.py`, `cogs/buy.py`（`owner_id` 事前バインド）
+- **V-03 実測反映（2026-08-10）**: ① **ephemeral View のタイムアウト**は、保持メッセージ（ephemeral）への編集を**試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。② **所有権のクロスユーザー操作**は **ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。
 
 **準備**
 - 隔離テストユーザー A・B を用意する。`data/user.json` をバックアップする（§2.3）。
 
-**手順（所有権）**
-1. テストユーザー A で `/equip` を実行し、装備選択 View を表示する。
-2. テストユーザー B で同じ View のボタン/セレクトを操作する。
+**手順（所有権・非 ephemeral View）**
+1. テストユーザー A で `/status` を実行し、公開（非 ephemeral）のページング View を表示する。
+2. テストユーザー B で同じ View のページボタンを操作する。
 
 **期待されるユーザー表示（所有権）**
-- B には各 View の DENY 文言（例: `他のユーザーの装備は操作できません。`）が ephemeral で返り、操作が拒否される（`views/*.py:interaction_check`）。
+- B には各 View の DENY 文言（例: `他のユーザーのステータスです。`）が ephemeral で返り、操作が拒否される（`views/status_view.py:interaction_check`）。
+- **補足**: `/equip` 等の ephemeral View は発火者以外に露出しないため、クロスユーザー操作の検証対象としない（所有権チェック自体は非 ephemeral View で検証する）。
 
-**手順（タイムアウト）**
-3. テストユーザー A で `/equip` を実行し、View を表示したまま 180 秒放置する。
+**手順（タイムアウト・ephemeral View）**
+3. テストユーザー A で `/equip` を実行し、ephemeral の装備選択 View を表示したまま 180 秒放置する。
 
-**期待されるユーザー表示（タイムアウト）**
-- 180 秒後に View の子要素が無効化（グレーアウト）され、元メッセージが更新される（`_disable_on_timeout`）。
+**期待されるユーザー表示（タイムアウト・ephemeral View）**
+- 180 秒後に View の子要素が**メモリ内で無効化**される。ephemeral メッセージへの編集は**試みず**、タイムアウトは**静かに完了**する（Interaction Failed・エラー表示なし。`_disable_on_timeout`）。
 
 **手順（二重応答）**
 4. タイムアウト後に、同じ View のボタンを操作する。
@@ -164,11 +166,12 @@
 - 二重応答・Interaction Failed にならず、安全に処理される（`on_error` / `interaction_check` により内部情報を漏らさない）。
 
 **期待されるログ/状態**
-- タイムアウト時のメッセージ更新失敗は、メッセージ未保持の正常系ではログ対象にしない（`_disable_on_timeout`）。
+- ephemeral View のタイムアウトはメッセージ編集を試みないため、編集失敗のログ・例外は発生しない（正常系）。
+- 非 ephemeral View（例: `/status`）のタイムアウトは保持メッセージを編集・無効化する。メッセージ未保持の通常タイムアウトは例外・ログ対象にしない（`_disable_on_timeout`）。
 - 予期しない例外は `on_error` でログ記録 + 安全応答。
 
 **記録すべきエビデンス**
-- 所有権拒否・タイムアウト無効化・二重応答のスクリーンショット、関連ログ。
+- 所有権拒否（非 ephemeral View）・タイムアウト無効化・二重応答のスクリーンショット、関連ログ。
 
 ---
 
@@ -176,6 +179,7 @@
 
 - **対象**: U-05 / ACR-N-20〜N-22
 - **根拠**: `modals/sell_modal.py:sell_item`（`expected_item` 照合・`save_users()` 先行）, `views/sell_view.py:sell_selecting`（ページクランプ）
+- **V-04 実測反映（2026-08-10）**: stale 売却保護は、開封時点の**安定した同一性**（`index` の範囲内・`id`/`meta` の一致）と**所持数**を検証する。ただし**同一スタックからの連続売却は意図的に許可**される（例: 10 個所持のスタックから 5 個売却 → 再度 5 個売却は stale 拒否されない）。stale 拒否は「index 範囲外」「`id`/`meta` 不一致」「要求個数が所持数を超える」場合に限定される。
 
 **準備**
 - 隔離テストユーザーに売却可能なアイテムを複数（100 超でページング確認可）付与する（`admin_give` 等）。`data/user.json` をバックアップする（§2.3）。
@@ -196,6 +200,7 @@
 
 **期待されるユーザー表示（stale）**
 - 「アイテム情報が変更されたため、売却をキャンセルしました。」等が返り、**ミューテーションしない**（ACR-N-20）。
+- **補足**: 同一スタックからの**連続売却**（例: 10 個所持 → 5 個売却 → 再度 5 個売却）は**意図的に許可**される。stale 拒否は index 範囲外・`id`/`meta` 不一致・要求個数が所持数を超える場合に限定される。
 
 **手順（ページクランプ）**
 5. 売却後にページが空になる状況（最終ページの全アイテムを売却）を作り、ページ送りを実行する。
@@ -283,10 +288,11 @@
 
 ---
 
-### V-08 — cooldown / admin check の期待応答【隔離不要】
+### V-08 — cooldown / admin check / count 境界の期待応答【隔離不要】
 
-- **対象**: C-19 / U-15 / ACR-N-24, ACR-N-25
-- **根拠**: `cogs/_helpers.py`（`user_cooldown_key`・`admin_check`）, `cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py`（`@app_commands.checks.cooldown(1, 3.0, ...)`）, `core/state.py:BotTree.on_error`
+- **対象**: C-19 / U-15 / ACR-N-24, ACR-N-25, ACR-K-09, ACR-K-13
+- **根拠**: `cogs/_helpers.py`（`user_cooldown_key`・`admin_check`・`valid_count`）, `cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py`（`@app_commands.checks.cooldown(1, 3.0, ...)`）, `core/state.py:BotTree.on_error`
+- **V-08 実測反映（2026-08-10）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**。
 
 **準備**
 - 隔離テストユーザー（非 ADMIN）と、管理者テストユーザーを用意する。
@@ -296,19 +302,28 @@
 2. 3 秒以内に同じコマンドを再実行する。
 
 **期待されるユーザー表示（cooldown）**
-- `BotTree.on_error` が `CommandOnCooldown` を捕捉し、「コマンドの使用が制限されています。{秒}秒後にもう一度お試しください。」が返る（ACR-N-24）。
+- `BotTree.on_error` が `CommandOnCooldown` を捕捉し、「コマンドの使用が制限されています。{秒}秒後にもう一度お試しください。」が返る（ACR-N-24）。クールダウンは 3 秒のまま。
+
+**手順（count 境界）**
+3. `/use`（または `/gather` `/fishing`）に `count = 0` または負数を指定する。
+4. `/use`（または `/gather` `/fishing`）に `count = 100 超`（例: 200）を指定する。
+
+**期待されるユーザー表示（count 境界）**
+- 非正数（`count <= 0`）: 「使用回数は1〜100の範囲で指定してください。」等が返り、状態変更前に**拒否**される（ACR-K-09 / ACR-K-13）。
+- 100 超: **100 にキャップ**され、ユーザーへ**明示の通知**（例: 100 に丸められた旨）が返る。**拒否ではない**（ACR-K-09 / ACR-K-13）。
 
 **手順（admin check）**
-3. 非 ADMIN テストユーザーで `/admin_give`（または `/admin_transit` `/admin_manage`）を実行する。
+5. 非 ADMIN テストユーザーで `/admin_give`（または `/admin_transit` `/admin_manage`）を実行する。
 
 **期待されるユーザー表示（admin check）**
 - `admin_check` が `CheckFailure` を送出し、`BotTree.on_error` が「このコマンドを実行する権限がありません。」を返す（ACR-N-25）。
 
 **期待されるログ/状態**
 - cooldown / check 失敗は ERROR ログを出さない（期待される制御フローとして `BotTree.on_error` が簡潔に応答）。
+- count 100 超のキャップ時は、キャップされた旨の通知がログ・応答に反映される。
 
 **記録すべきエビデンス**
-- cooldown 応答・権限不足応答のスクリーンショット、関連ログ。
+- cooldown 応答・権限不足応答・count 非正数拒否・count 100 超キャップ通知のスクリーンショット、関連ログ。
 
 ---
 

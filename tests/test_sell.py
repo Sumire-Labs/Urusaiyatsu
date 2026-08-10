@@ -147,6 +147,49 @@ assert len(ud['inventory']) == 1
 assert ud['inventory'][0]['count'] == 3
 ''')
 
+    def test_consecutive_sales_same_stack(self):
+        run_ok('''
+import asyncio
+from modals.sell_modal import sell_item
+_new_user(1)
+ud = USERS['1']
+u.add_item(1, 'wood', 5)
+ITEMS['wood']['value'] = 5
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append(content)
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+        self.message = None
+    async def original_response(self):
+        return None
+
+# First sale from the stack: modal opened when count was 5, sells 2.
+asyncio.run(sell_item(FakeInteraction(1), 0, 2, 1, {'id': 'wood', 'meta': {}, 'count': 5}))
+assert ud['money'] == 10, ud['money']
+assert ud['inventory'][0]['count'] == 3, ud['inventory']
+
+# Second consecutive sale from the SAME stack: current count (3) no longer
+# equals the count captured when the second modal opened (3 -> sells 2).
+# Must NOT be rejected just because the count changed since the earlier sale.
+asyncio.run(sell_item(FakeInteraction(1), 0, 2, 1, {'id': 'wood', 'meta': {}, 'count': 3}))
+assert ud['money'] == 20, ud['money']
+assert ud['inventory'][0]['count'] == 1, ud['inventory']
+''')
+
     def test_sale_persisted_before_rerender_error(self):
         run_ok('''
 import asyncio, json

@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from core.state import USERS, ITEMS, LOOTS, ADVANCEMENTS, EMOJIS, consumable_choices
 from core.utils import new_user, complete_advancement, save_users, get_item, remove_item_stacked, table_roll, add_item, get_stats
-from cogs._helpers import valid_count, user_cooldown_key
+from cogs._helpers import valid_count, normalize_count, cap_notice, user_cooldown_key
 
 
 class UseCog(commands.Cog):
@@ -23,8 +23,12 @@ class UseCog(commands.Cog):
     async def use_command(self, interaction: discord.Interaction, item_id: str, count: int = 1):
         # 入力検証（状態変更前に拒否）
         if not valid_count(count):
-            await interaction.response.send_message('使用回数は1〜100の範囲で指定してください。', ephemeral=True)
+            await interaction.response.send_message('使用回数は1以上で指定してください。', ephemeral=True)
             return
+
+        # 100 超の指定は 100 にキャップして実行（ユーザーへ通知）
+        notice = cap_notice(count)
+        count = normalize_count(count)
 
         # データ読み込み
         user_id = interaction.user.id
@@ -52,7 +56,7 @@ class UseCog(commands.Cog):
                 user_data['stamina'] = stats['stamina_max']
 
             # 送信
-            await interaction.response.send_message(f'スタミナが**{stamina}**{EMOJIS["stamina"]}回復しました！')
+            await interaction.response.send_message(notice + f'スタミナが**{stamina}**{EMOJIS["stamina"]}回復しました！')
 
         elif 'con_loot' in item_tag:
             # ランダムにアイテムを取得
@@ -78,7 +82,7 @@ class UseCog(commands.Cog):
                         adv_message += complete_advancement(user_id, adv_id)
 
             # 送信
-            await interaction.response.send_message(adv_message, embed=embed)
+            await interaction.response.send_message(notice + adv_message, embed=embed)
 
         elif 'con_fuel' in item_tag:
             # 燃料回復
@@ -86,7 +90,7 @@ class UseCog(commands.Cog):
             user_data['fuel'] += fuel
 
             # 送信
-            await interaction.response.send_message(f'燃料が**{fuel}**{EMOJIS["fuel"]}回復しました！')
+            await interaction.response.send_message(notice + f'燃料が**{fuel}**{EMOJIS["fuel"]}回復しました！')
 
         elif 'con_radiation' in item_tag:
             # 放射線除去
@@ -97,7 +101,7 @@ class UseCog(commands.Cog):
                 user_data['radiation'] = 0
 
             # 送信
-            await interaction.response.send_message(f'放射線が**{rad}**{EMOJIS["radiation"]}除染されました！')
+            await interaction.response.send_message(notice + f'放射線が**{rad}**{EMOJIS["radiation"]}除染されました！')
 
         # ファイル更新
         save_users()

@@ -8,6 +8,23 @@
 
 ---
 
+## 2026-08-10 — V-03 / V-04 / V-08 実測反映の仕様更新（docs-only）
+
+### 概要
+
+手動 Discord ライブ検証（`14-manual-discord-verification.md`）の実測結果（V-03 / V-04 / V-08）と、その修正を各仕様書へ反映した。**修正後の再ライブ検証は未実施**（手順・期待表示の更新のみ。実行時テストの完了は主張しない）。
+
+### 反映内容
+
+- **ephemeral View のタイムアウト（V-03 / U-04 / ACR-N-23）**: ephemeral View のタイムアウトは保持メッセージ（ephemeral）への編集を**試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。
+- **所有権チェックの適用範囲（V-03 / ACR-N-26）**: 所有権の**クロスユーザー操作は ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。
+- **stale 売却保護（V-04 / U-05 / ACR-N-20）**: stale 保護は**安定した同一性**（`index` 範囲内・`id`/`meta` 一致）と**所持数**を検証する。**同一スタックからの連続売却は意図的に許可**される（stale 拒否は index 範囲外・`id`/`meta` 不一致・要求個数が所持数を超える場合に限定）。
+- **count 境界（V-08 / C-16 / C-20 / ACR-K-09, K-13）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**（ACR-N-24 / U-15）。
+- 反映先: `14-manual-discord-verification.md`（V-03 / V-04 / V-08 の手順・期待表示・§3 表）、`13-open-questions-and-technical-debt.md`（U-04 / U-05 / C-16 / C-20 / U-15 / §4 / §6）、`12-testable-acceptance-criteria.md`（ACR-N-20 / N-23 / N-24 / N-26 / K-09 / K-13）、`05-discord-interface/interactions-views-and-modals.md`（§2.3 / §2.5 / sell UI 遷移 / U-04・C-16・C-20 表）、`05-discord-interface/commands-gameplay.md`（use / gather / fishing の count 注記、売却フロー・受入基準）。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
 ## 2026-08-08 — 手動 Discord ライブ検証ガイドの追加（docs-only）
 
 ### 概要

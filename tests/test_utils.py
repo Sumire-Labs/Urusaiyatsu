@@ -176,5 +176,228 @@ assert 'last_rotation_hour' not in ud
 ''')
 
 
+class TestCountNormalization(unittest.TestCase):
+    """Input-policy change: non-positive rejected, >100 capped to 100."""
+
+    def test_non_positive_still_rejected(self):
+        run_ok('''
+from cogs._helpers import valid_count
+assert not valid_count(0)
+assert not valid_count(-1)
+assert not valid_count(-100)
+assert not valid_count(-10**9)
+''')
+
+    def test_in_range_valid_unchanged(self):
+        run_ok('''
+from cogs._helpers import valid_count, normalize_count, MAX_COUNT
+for n in (1, 50, 100):
+    assert valid_count(n)
+    assert normalize_count(n) == n
+assert MAX_COUNT == 100
+''')
+
+    def test_101_normalizes_to_100(self):
+        run_ok('''
+from cogs._helpers import valid_count, normalize_count, MAX_COUNT
+assert valid_count(101)
+assert normalize_count(101) == 100
+assert normalize_count(101) == MAX_COUNT
+''')
+
+    def test_very_large_value_normalizes_to_100(self):
+        run_ok('''
+from cogs._helpers import valid_count, normalize_count, MAX_COUNT
+big = 10**9
+assert valid_count(big)
+assert normalize_count(big) == 100
+assert normalize_count(big) == MAX_COUNT
+''')
+
+    def test_cap_notice_only_for_over_100(self):
+        run_ok('''
+from cogs._helpers import cap_notice, MAX_COUNT
+assert cap_notice(1) == ''
+assert cap_notice(50) == ''
+assert cap_notice(100) == ''
+n101 = cap_notice(101)
+assert '100' in n101
+assert str(MAX_COUNT) in n101
+assert '100' in cap_notice(10**9)
+''')
+
+
+class TestUseCommandCap(unittest.TestCase):
+    def test_use_non_positive_rejected_before_mutation(self):
+        run_ok('''
+import asyncio
+from cogs.use import UseCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 50
+u.add_item(1, 'small_energy_drink', 5)
+
+cog = UseCog.__new__(UseCog)
+interaction = FakeInteraction(1)
+for bad in (0, -1, -100):
+    interaction = FakeInteraction(1)
+    asyncio.run(cog.use_command.callback(cog, interaction, 'small_energy_drink', bad))
+    # single ephemeral rejection, no notice, no mutation
+    assert len(interaction.response.sent) == 1
+    content, kw = interaction.response.sent[0]
+    assert kw.get('ephemeral') is True
+    assert '上限' not in content
+assert ud['inventory'][0]['count'] == 5
+assert ud['stamina'] == 50
+''')
+
+    def test_use_101_caps_to_100(self):
+        run_ok('''
+import asyncio
+from cogs.use import UseCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 0
+u.add_item(1, 'small_energy_drink', 150)
+
+cog = UseCog.__new__(UseCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.use_command.callback(cog, interaction, 'small_energy_drink', 101))
+
+# exactly 100 consumed (150 -> 50 remain)
+assert ud['inventory'][0]['count'] == 50
+# stamina restored for 100 uses (10 * 100 = 1000, capped at max 100)
+assert ud['stamina'] == 100
+# single response with an unambiguous cap notice
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+assert '上限' in content and '100' in content
+''')
+
+
+class TestGatherCommandCap(unittest.TestCase):
+    def test_gather_101_caps_to_100(self):
+        run_ok('''
+import asyncio
+from cogs.gather import GatherCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 2000  # enough for 100 iterations of 10 stamina
+
+cog = GatherCog.__new__(GatherCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.gather_command.callback(cog, interaction, 'forest', 101))
+
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+assert '上限' in content and '100' in content
+embed = kw['embed']
+# process_count capped to 100, reflected in the result title
+assert '(100回)' in embed.title
+''')
+
+
+class TestFishingCommandCap(unittest.TestCase):
+    def test_fishing_101_caps_to_100(self):
+        run_ok('''
+import asyncio
+from cogs.fishing import FishingCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 2000
+ud['equipment']['fishing_rod'] = {'id': 'fishing_rod'}
+
+cog = FishingCog.__new__(FishingCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.fishing_command.callback(cog, interaction, 'pond', 101))
+
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+assert '上限' in content and '100' in content
+embed = kw['embed']
+assert '(100回)' in embed.title
+''')
+
+
 if __name__ == '__main__':
     unittest.main()

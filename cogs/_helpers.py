@@ -11,8 +11,23 @@ MAX_COUNT = 100
 
 
 def valid_count(count: int) -> bool:
-    """count が 1..MAX_COUNT の範囲かどうかを返す"""
-    return 1 <= count <= MAX_COUNT
+    """count が正数（1 以上）かどうかを返す。
+
+    100 超はエラーにせず normalize_count で 100 にキャップして実行する。
+    """
+    return count >= 1
+
+
+def normalize_count(count: int) -> int:
+    """count を 1..MAX_COUNT に正規化する（100 超は 100 にキャップ）"""
+    return min(count, MAX_COUNT)
+
+
+def cap_notice(count: int) -> str:
+    """100 超の指定時に「100回として実行した」ことを伝える通知文（100 以下は空文字）"""
+    if count > MAX_COUNT:
+        return f'**{count}**回の指定は上限の**{MAX_COUNT}**回として実行しました。\n'
+    return ''
 
 
 def user_cooldown_key(interaction: discord.Interaction):

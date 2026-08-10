@@ -45,8 +45,11 @@ async def sell_item(interaction: discord.Interaction, index: int, count: int, pa
     user_id = interaction.user.id
     user_data = USERS[str(user_id)]
 
-    # 開封時点のアイテム同一性と現在のインベントリを照合し、古い送信を拒否する
-    # （他の操作でインベントリが並び替え・変更された場合に、誤ったアイテムを売却しない）
+    # 開封時点のアイテム同一性（stable identity: id + meta）と現在のインベントリを照合し、
+    # 古い送信を拒否する（他の操作でインベントリが並び替え・変更され index が別アイテムを
+    # 指すようになった場合に、誤ったアイテムを売却しない）。
+    # 注意: expected_item['count'] は同一性評価に使わない。同じスタックの連続売却（前回売却後）
+    # を許すため、現在の所持数が開封時点の所持数と一致する必要はない（V-04 live-test 修正）。
     if expected_item is not None:
         if index < 0 or index >= len(user_data['inventory']):
             await respond(interaction, 'アイテム情報が変更されたため、売却をキャンセルしました。')
