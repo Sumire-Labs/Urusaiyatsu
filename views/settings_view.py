@@ -6,7 +6,7 @@ import logging
 import discord
 from core.state import USERS
 from core.utils import save_users
-from ._timeout import disable_on_timeout
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,10 @@ class status_setting_select(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:
@@ -87,6 +91,7 @@ async def status_setting_view(interaction: discord.Interaction):
         discord.SelectOption(label="非短縮",value="normal")
     ]
     view._message_ref = await interaction.response.send_message(view=view, ephemeral=True)
+    store_editor(view, view._message_ref, interaction)
 
 
 class crafting_tool_replacement_setting_select(discord.ui.View):
@@ -97,6 +102,10 @@ class crafting_tool_replacement_setting_select(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:
@@ -142,6 +151,7 @@ async def crafting_tool_replacement_setting_view(interaction: discord.Interactio
         discord.SelectOption(label="続行しない",value="never")
     ]
     view._message_ref = await interaction.response.send_message(view=view, ephemeral=True)
+    store_editor(view, view._message_ref, interaction)
 
 
 class gathering_tool_replacement_setting_select(discord.ui.View):
@@ -152,6 +162,10 @@ class gathering_tool_replacement_setting_select(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:
@@ -197,3 +211,4 @@ async def gathering_tool_replacement_setting_view(interaction: discord.Interacti
         discord.SelectOption(label="続行しない",value="never")
     ]
     view._message_ref = await interaction.response.send_message(view=view, ephemeral=True)
+    store_editor(view, view._message_ref, interaction)

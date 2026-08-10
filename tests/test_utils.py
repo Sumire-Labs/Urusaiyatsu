@@ -314,6 +314,51 @@ content, kw = interaction.response.sent[0]
 assert '上限' in content and '100' in content
 ''')
 
+    def test_use_partial_inventory_caps_but_uses_available(self):
+        run_ok('''
+import asyncio
+from cogs.use import UseCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 0
+u.add_item(1, 'small_energy_drink', 50)  # fewer than the capped 100
+
+cog = UseCog.__new__(UseCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.use_command.callback(cog, interaction, 'small_energy_drink', 101))
+
+# only the 50 available were actually used (inventory now empty)
+assert ud['inventory'] == []
+# stamina restored for 50 uses (10 * 50 = 500, capped at max 100)
+assert ud['stamina'] == 100
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+# notice says the request was capped to 100, never that 100 were performed
+assert '上限' in content and '100' in content
+assert '調整' in content
+assert '実行しました' not in content
+''')
+
 
 class TestGatherCommandCap(unittest.TestCase):
     def test_gather_101_caps_to_100(self):
@@ -356,6 +401,49 @@ embed = kw['embed']
 assert '(100回)' in embed.title
 ''')
 
+    def test_gather_early_stop_caps_but_reports_actual(self):
+        run_ok('''
+import asyncio
+from cogs.gather import GatherCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 30  # only 3 iterations of 10 stamina before early stop
+
+cog = GatherCog.__new__(GatherCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.gather_command.callback(cog, interaction, 'forest', 101))
+
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+# notice says the request was capped to 100, never that 100 were performed
+assert '上限' in content and '100' in content
+assert '調整' in content
+assert '実行しました' not in content
+# actual result reflects the early stop (3 iterations), not 100
+embed = kw['embed']
+assert '(3回)' in embed.title
+''')
+
 
 class TestFishingCommandCap(unittest.TestCase):
     def test_fishing_101_caps_to_100(self):
@@ -396,6 +484,50 @@ content, kw = interaction.response.sent[0]
 assert '上限' in content and '100' in content
 embed = kw['embed']
 assert '(100回)' in embed.title
+''')
+
+    def test_fishing_early_stop_caps_but_reports_actual(self):
+        run_ok('''
+import asyncio
+from cogs.fishing import FishingCog
+from core.state import USERS
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append((content, kw))
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+_new_user(1)
+ud = USERS['1']
+ud['stamina'] = 30  # only 3 iterations of 10 stamina before early stop
+ud['equipment']['fishing_rod'] = {'id': 'fishing_rod'}
+
+cog = FishingCog.__new__(FishingCog)
+interaction = FakeInteraction(1)
+asyncio.run(cog.fishing_command.callback(cog, interaction, 'pond', 101))
+
+assert len(interaction.response.sent) == 1
+content, kw = interaction.response.sent[0]
+# notice says the request was capped to 100, never that 100 were performed
+assert '上限' in content and '100' in content
+assert '調整' in content
+assert '実行しました' not in content
+# actual result reflects the early stop (3 iterations), not 100
+embed = kw['embed']
+assert '(3回)' in embed.title
 ''')
 
 

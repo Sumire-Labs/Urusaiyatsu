@@ -177,28 +177,65 @@ assert i2.followup.sent == [('followup', 'world')]
 ''')
 
 
-class TestTimeoutEphemeral(unittest.TestCase):
-    """View タイムアウト時、ephemeral メッセージは編集せず静かに戻ることを検証。
+class TestTimeoutStrategy(unittest.TestCase):
+    """View タイムアウト時の共通戦略を検証する。
 
-    discord.py 2.6 では ``interaction.response.send_message`` は
-    ``InteractionCallbackResponse``（``is_ephemeral()`` を持つ）を返し、
-    ``original_response()`` / ``followup`` は ``Message``（``flags.ephemeral``）
-    を返す。両形式について編集されないことを非ライブで検証する。
+    - ephemeral メッセージは ``Interaction.edit_original_response`` で更新する
+      （Discord 側に描画されたコントロールも無効化される）。
+    - 非 ephemeral メッセージは ``Message.edit`` で更新する。
+    - ソース editor は送信・置換時のみ保持し、``interaction_check`` では上書きしない。
+    - トークン期限切れ（``is_expired()`` / 想定内 HTTP 403/404）は静かに no-op する。
+    - 想定外の例外はログに記録し、呼び出し元へ伝播させない。
     """
 
-    def test_ephemeral_timeout_never_edits(self):
+    def test_ephemeral_timeout_invokes_original_response_editor(self):
         run_ok('''
-import asyncio, logging
-from views.craft_view import craft_select
-from views.item_select_view import item_select
-from views.shop_view import shop_choice
-from views.status_view import status_paging
-from views.equip_view import equip_select, remove_equip_choice
-from views.settings_view import (
-    status_setting_select,
-    crafting_tool_replacement_setting_select,
-    gathering_tool_replacement_setting_select,
-)
+import asyncio
+from views.equip_view import equip_select
+from views._timeout import store_editor
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeMessage:
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
+        self.edited = False
+    async def edit(self, **kw):
+        self.edited = True
+
+class FakeInteraction:
+    def __init__(self):
+        self.expired = False
+        self.edited_original = False
+        self.edit_kwargs = None
+    def is_expired(self):
+        return self.expired
+    async def edit_original_response(self, **kw):
+        self.edited_original = True
+        self.edit_kwargs = kw
+
+async def main():
+    view = equip_select(owner_id=1)
+    msg = FakeMessage(ephemeral=True)
+    interaction = FakeInteraction()
+    store_editor(view, msg, interaction)
+    await view.on_timeout()
+    # ephemeral は original_response 編集 API が呼ばれる
+    assert interaction.edited_original
+    assert interaction.edit_kwargs.get('view') is view
+    for child in view.children:
+        assert child.disabled
+
+asyncio.run(main())
+''')
+
+    def test_ephemeral_callback_response_invokes_original_response_editor(self):
+        run_ok('''
+import asyncio
+from views.equip_view import equip_select
+from views._timeout import store_editor
 
 class FakeFlags:
     def __init__(self, ephemeral):
@@ -212,62 +249,45 @@ class FakeMessage:
         self.edited = True
 
 class FakeCallbackResponse:
-    def __init__(self, ephemeral):
+    def __init__(self, ephemeral, resource):
         self._ephemeral = ephemeral
+        self.resource = resource
         self.edited = False
     def is_ephemeral(self):
         return self._ephemeral
     async def edit(self, **kw):
         self.edited = True
 
-VIEW_CLASSES = [
-    craft_select, item_select, shop_choice, status_paging,
-    equip_select, remove_equip_choice,
-    status_setting_select, crafting_tool_replacement_setting_select,
-    gathering_tool_replacement_setting_select,
-]
-
-class CaptureHandler(logging.Handler):
+class FakeInteraction:
     def __init__(self):
-        super().__init__()
-        self.records = []
-    def emit(self, record):
-        self.records.append(record)
+        self.expired = False
+        self.edited_original = False
+    def is_expired(self):
+        return self.expired
+    async def edit_original_response(self, **kw):
+        self.edited_original = True
 
 async def main():
-    handler = CaptureHandler()
-    logging.getLogger().addHandler(handler)
-    try:
-        for cls in VIEW_CLASSES:
-            # Message 形式（flags.ephemeral=True）
-            view = cls()
-            msg = FakeMessage(ephemeral=True)
-            view._message_ref = msg
-            await view.on_timeout()
-            assert not msg.edited, cls.__name__
-            for child in view.children:
-                assert child.disabled, cls.__name__
-
-            # InteractionCallbackResponse 形式（is_ephemeral() -> True）
-            view2 = cls()
-            resp = FakeCallbackResponse(ephemeral=True)
-            view2._message_ref = resp
-            await view2.on_timeout()
-            assert not resp.edited, cls.__name__
-            for child in view2.children:
-                assert child.disabled, cls.__name__
-    finally:
-        logging.getLogger().removeHandler(handler)
-    # 通常の ephemeral タイムアウトはエラーログを出さない
-    assert not handler.records
+    view = equip_select(owner_id=1)
+    resource = FakeMessage(ephemeral=True)
+    resp = FakeCallbackResponse(ephemeral=True, resource=resource)
+    interaction = FakeInteraction()
+    store_editor(view, resp, interaction)
+    await view.on_timeout()
+    # InteractionCallbackResponse 形式でも original_response 編集 API が呼ばれる
+    assert interaction.edited_original
+    assert not resp.edited
+    for child in view.children:
+        assert child.disabled
 
 asyncio.run(main())
 ''')
 
-    def test_non_ephemeral_timeout_still_edits(self):
+    def test_public_timeout_edits_message(self):
         run_ok('''
 import asyncio
 from views.equip_view import equip_select
+from views._timeout import store_editor
 
 class FakeFlags:
     def __init__(self, ephemeral):
@@ -283,8 +303,9 @@ class FakeMessage:
 async def main():
     view = equip_select(owner_id=1)
     msg = FakeMessage(ephemeral=False)
-    view._message_ref = msg
+    store_editor(view, msg, None)
     await view.on_timeout()
+    # 公開メッセージは Message.edit で更新される
     assert msg.edited
     for child in view.children:
         assert child.disabled
@@ -292,35 +313,234 @@ async def main():
 asyncio.run(main())
 ''')
 
-    def test_non_ephemeral_callback_response_edits_resource(self):
+    def test_sell_view_uses_shared_strategy(self):
         run_ok('''
 import asyncio
-from views.equip_view import equip_select
+import views.sell_view as sv
+from views._timeout import disable_on_timeout, store_editor
+
+# sell_view は共通戦略（views._timeout.disable_on_timeout）を利用している
+assert sv.disable_on_timeout is disable_on_timeout
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
 
 class FakeMessage:
-    def __init__(self):
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
         self.edited = False
     async def edit(self, **kw):
         self.edited = True
 
-class FakeCallbackResponse:
-    def __init__(self, resource):
-        self.resource = resource
+class FakeInteraction:
+    def __init__(self):
+        self.expired = False
+        self.edited_original = False
+    def is_expired(self):
+        return self.expired
+    async def edit_original_response(self, **kw):
+        self.edited_original = True
+
+async def main():
+    view = sv.sell_select(owner_id=1)
+    msg = FakeMessage(ephemeral=True)
+    interaction = FakeInteraction()
+    store_editor(view, msg, interaction)
+    await view.on_timeout()
+    # sell View でも共通戦略どおり ephemeral は original_response 編集 API が呼ばれる
+    assert interaction.edited_original
+    for child in view.children:
+        assert child.disabled
+
+asyncio.run(main())
+''')
+
+    def test_component_interaction_does_not_overwrite_source_editor(self):
+        run_ok('''
+import asyncio
+from views.equip_view import equip_select
+from views._timeout import store_editor
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeMessage:
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
         self.edited = False
-    def is_ephemeral(self):
-        return False
+    async def edit(self, **kw):
+        self.edited = True
+
+class FakeResponse:
+    def __init__(self):
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        pass
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+        self.expired = False
+        self.edited_original = False
+    def is_expired(self):
+        return self.expired
+    async def edit_original_response(self, **kw):
+        self.edited_original = True
+
+async def main():
+    view = equip_select(owner_id=1)
+    source_interaction = FakeInteraction(1)
+    msg = FakeMessage(ephemeral=True)
+    store_editor(view, msg, source_interaction)
+
+    # コンポーネント interaction のコールバックが別応答を送るケースを模擬。
+    # interaction_check はソース editor を上書きしてはならない。
+    component_interaction = FakeInteraction(1)
+    ok = await view.interaction_check(component_interaction)
+    assert ok is True
+
+    await view.on_timeout()
+    # タイムアウトはソース View の editor のみを対象とする
+    assert source_interaction.edited_original
+    assert not component_interaction.edited_original
+    for child in view.children:
+        assert child.disabled
+
+asyncio.run(main())
+''')
+
+    def test_expired_interaction_noops_without_error(self):
+        run_ok('''
+import asyncio, logging
+from views.equip_view import equip_select
+from views._timeout import store_editor
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeMessage:
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
+        self.edited = False
+    async def edit(self, **kw):
+        self.edited = True
+
+class FakeInteraction:
+    def __init__(self):
+        self.expired = True
+        self.edited_original = False
+    def is_expired(self):
+        return self.expired
+    async def edit_original_response(self, **kw):
+        self.edited_original = True
+
+class CaptureHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.records = []
+    def emit(self, record):
+        self.records.append(record)
+
+async def main():
+    handler = CaptureHandler()
+    logging.getLogger().addHandler(handler)
+    try:
+        view = equip_select(owner_id=1)
+        expired = FakeInteraction()
+        msg = FakeMessage(ephemeral=True)
+        store_editor(view, msg, expired)
+        await view.on_timeout()
+        # 期限切れ interaction では editor は呼ばれない
+        assert not expired.edited_original
+        for child in view.children:
+            assert child.disabled
+    finally:
+        logging.getLogger().removeHandler(handler)
+    # 期限切れは ERROR ログを出さない
+    assert not handler.records
+
+asyncio.run(main())
+''')
+
+    def test_expected_http_expiry_noops_without_error(self):
+        run_ok('''
+import asyncio, logging
+from views.equip_view import equip_select
+from views._timeout import store_editor
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeHTTPError(Exception):
+    def __init__(self, status):
+        self.status = status
+
+class ExpiryMessage:
+    def __init__(self):
+        self.flags = FakeFlags(False)
+    async def edit(self, **kw):
+        raise FakeHTTPError(404)
+
+class CaptureHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.records = []
+    def emit(self, record):
+        self.records.append(record)
+
+async def main():
+    handler = CaptureHandler()
+    logging.getLogger().addHandler(handler)
+    try:
+        view = equip_select(owner_id=1)
+        msg = ExpiryMessage()
+        store_editor(view, msg, None)
+        await view.on_timeout()
+        for child in view.children:
+            assert child.disabled
+    finally:
+        logging.getLogger().removeHandler(handler)
+    # 想定内 HTTP 404（トークン期限切れ）は ERROR ログを出さない
+    assert not handler.records
+
+asyncio.run(main())
+''')
+
+    def test_ephemeral_without_interaction_falls_back_to_message_edit(self):
+        run_ok('''
+import asyncio
+from views.equip_view import equip_select
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeMessage:
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
+        self.edited = False
     async def edit(self, **kw):
         self.edited = True
 
 async def main():
     view = equip_select(owner_id=1)
-    resource = FakeMessage()
-    resp = FakeCallbackResponse(resource=resource)
-    view._message_ref = resp
+    msg = FakeMessage(ephemeral=True)
+    view._message_ref = msg
+    # editor 未保持（cog 生成 View 等）でも InteractionMessage.edit() が
+    # edit_original_response に委譲するため、ベストエフォートでメッセージ編集を試みる
     await view.on_timeout()
-    # 実際のメッセージ（resource）が編集され、コールバック応答自体は編集されない
-    assert resource.edited
-    assert not resp.edited
+    assert msg.edited
     for child in view.children:
         assert child.disabled
 
@@ -349,8 +569,68 @@ async def main():
             assert child.disabled
     finally:
         logging.getLogger().removeHandler(handler)
-    # メッセージ未保持の通常タイムアウトはエラーログを出さない
+    # メッセージも editor も未保持の通常タイムアウトはエラーログを出さない
     assert not handler.records
+
+asyncio.run(main())
+''')
+
+    def test_timeout_edit_failure_is_logged_not_raised(self):
+        run_ok('''
+import asyncio, logging
+from views.equip_view import equip_select
+from views._timeout import store_editor
+
+class FakeFlags:
+    def __init__(self, ephemeral):
+        self.ephemeral = ephemeral
+
+class FakeMessage:
+    def __init__(self, ephemeral):
+        self.flags = FakeFlags(ephemeral)
+        self.edited = False
+    async def edit(self, **kw):
+        self.edited = True
+
+class BoomMessage:
+    def __init__(self):
+        self.flags = FakeFlags(False)
+    async def edit(self, **kw):
+        raise RuntimeError('edit failed')
+
+class BoomInteraction:
+    def is_expired(self):
+        return False
+    async def edit_original_response(self, **kw):
+        raise RuntimeError('edit failed')
+
+class CaptureHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.records = []
+    def emit(self, record):
+        self.records.append(record)
+
+async def main():
+    handler = CaptureHandler()
+    logging.getLogger().addHandler(handler)
+    try:
+        # 公開メッセージ編集の想定外失敗はログに記録され、例外は伝播しない
+        view = equip_select(owner_id=1)
+        store_editor(view, BoomMessage(), None)
+        await view.on_timeout()
+        for child in view.children:
+            assert child.disabled
+
+        # ephemeral の original_response 編集の想定外失敗もログに記録され、例外は伝播しない
+        view2 = equip_select(owner_id=1)
+        store_editor(view2, FakeMessage(ephemeral=True), BoomInteraction())
+        await view2.on_timeout()
+        for child in view2.children:
+            assert child.disabled
+    finally:
+        logging.getLogger().removeHandler(handler)
+    assert len(handler.records) == 2
 
 asyncio.run(main())
 ''')

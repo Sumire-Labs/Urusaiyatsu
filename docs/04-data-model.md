@@ -434,10 +434,10 @@ flowchart LR
 | C-06 | advancement の欠落参照 | 3 件が存在しない `craft_drill_engine` を `previous_advancement` に参照（§8）。`complete_advancement` と `setup_hook` の null 前提の扱いが食い違う | 3 進捗が永久解放不可。前提判定の曖昧さ | **解決済**（`gather_mythical_mines` へ修正 + null 前提は初期付与専用と決定） |
 | C-07 | 非 atomic・無 lock 永続化 | `core/utils.py:454-457` | クラッシュ・同時書込で破損リスク（§9） | **解決済**（atomic 化 + `_save_lock` + 単一プロセスロック） |
 | C-08 | `user.json` 読込の裸 `except` | `core/state.py:43-49` | 破損時に全ユーザーデータを `{}` で上書き | **解決済**（fail-closed: 隔離 + exit 1） |
-| C-16 | `/use` の `count` 非正数ガードなし | `cogs/use.py:21`、`core/utils.py:172-185` | 負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-16 | `/use` の `count` 非正数ガードなし | `cogs/use.py:21`、`core/utils.py:172-185` | 負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-17 | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`、`cogs/admin_transit.py:33-36` | `RuntimeError` でデーモンスレッド終了（C-07 のファイル書込 race とは別。頻度は U-13） | **解決済**（スナップショット反復 + `_users_lock`） |
 | C-18 | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18` | Discord API 障害時に新規登録経路が失敗する（例外が未捕捉のまま伝播。例外型・UI は U-14） | **解決済**（フォールバック名で登録継続） |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `cogs/use.py:21`, `cogs/gather.py:21`, `cogs/fishing.py:23` | 入力境界の未定義（挙動は推測しない） | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `cogs/use.py:21`, `cogs/gather.py:21`, `cogs/fishing.py:23` | 入力境界の未定義（挙動は推測しない） | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-21 | stale shop choice の `shop_content.index` `ValueError` | `views/shop_view.py:27`、`core/background.py:29-35` | 表示済み購入 View の選択が interaction failed | **解決済**（`item_id not in shop_content` ガード） |
 | C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | `views/craft_view.py:12-19` | 未使用のグローバル注入フック | **解決済**（削除） |
 | C-D01 | **デッドフィールド群**（本稿で整理） | `level_combat` / `xp_combat`（`core/utils.py:35-36`）、`news`（`cogs/status.py:38`）、装備スロット `weapon` / `armor` / `armor_secondary`（`core/utils.py:50-52`）、item の `stamina_reduce_chance`、`unique_behavior` タグ（2 件） | データモデル上存在するが未使用。誤解を招く・拡張時に事故りやすい | 未解決（変更なし） |

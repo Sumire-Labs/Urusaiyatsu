@@ -57,7 +57,7 @@
 | `admin_give` の `item_id` / `amount` | スラッシュ引数 | `item_id in ITEMS` のみ検証。**2026-08-07 修正**: 負の `amount` は `abs(amount)` で剥奪（**C-02 解決**） | 管理者操作の正しさ（剥奪が付与化） | `cogs/admin_give.py:25-48`, `core/utils.py` |
 | `equip_view` の `remove_equip_select` | View select の value | `ast.literal_eval(select.values[0])` で `[slot]` / `['accessory', idx]` を復元。スロット名・インデックス範囲の検証なし | 構造不正なら `KeyError` / `IndexError`（value はサーバー生成だが、信頼前提） | `views/equip_view.py:68-89` |
 | `item_select_view._get_callback` | custom_id 第 4 要素のコールバック名 | **2026-08-07 修正**: `eval` を廃止し、`_callbacks.get(name)` で登録済み名のみ解決。未登録名は `None` を返し安全に拒否（**C-11 解決**） | コールバック名がユーザー由来になり得る場合、任意コード実行（C-11）。`AGENTS.md` も内部名保持を要請 | `views/item_select_view.py:_get_callback` |
-| MODAL-CRAFTQTY / MODAL-SELLQTY の個数 | Modal テキスト入力（`max_length=8`） | `int()` + `ValueError` 捕捉、正数チェック | 低（数値化のみ）。スラッシュ側の `count`（`/use` `/gather` `/fishing`）は **2026-08-07 修正**: `valid_count`（1〜100）で**非正数のみ拒否**・**100 超は 100 にキャップし明示通知**（**C-16 / C-20 解決**。V-08 実測反映） | `modals/craft_modal.py:16-33`, `modals/sell_modal.py:16-36`, `cogs/_helpers.py:valid_count` |
+| MODAL-CRAFTQTY / MODAL-SELLQTY の個数 | Modal テキスト入力（`max_length=8`） | `int()` + `ValueError` 捕捉、正数チェック | 低（数値化のみ）。スラッシュ側の `count`（`/use` `/gather` `/fishing`）は **2026-08-07 修正**: `valid_count`（1〜100）で**1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**（**C-16 / C-20 解決**。V-08 実測反映） | `modals/craft_modal.py:16-33`, `modals/sell_modal.py:16-36`, `cogs/_helpers.py:valid_count` |
 | MODAL-NAME の名前 | Modal テキスト入力（`max_length=32`） | `user_data['name']` へ直接代入 | 個人データ（ニックネーム）の扱い。秘密ログ規約は 09 章 §4.7 | `modals/settings_modal.py:14-21` |
 | `new_user` の `fetch_user` | コマンド/View 冒頭 | **2026-08-07 修正**: 失敗を捕捉しフォールバック名 `user_{id}` で登録継続（**C-18 解決**。例外型・UI は U-14） | Discord API 障害時に新規登録経路が失敗する（旧実装は未捕捉のまま伝播） | `core/utils.py:new_user` |
 
@@ -124,7 +124,7 @@
 - **`admin_give` の `amount`**: `amount > 0` の場合は付与、`amount < 0` の場合は `abs(amount)` として剥奪を呼ぶ **符号セマンティクスを明文化**し、負数がそのまま `remove_item` に渡らないようにする（C-02 解消）。`amount == 0` は拒否（現行維持）。**実装済み**（`abs(amount)` で剥奪。**C-02 解決**）。
 - **`equip_view` の select value**: `ast.literal_eval` 後の構造（slot 名が既知の装備スロットに含まれる・`accessory` のインデックスが範囲内）を検証し、不正時は処理せず汎用エラー応答にする。`eval` は使わない。**未実装**。
 - **`item_select_view._get_callback`**: `eval` fallback を**削除**し、`register_callback` で登録済みの名前のみ解決する。未登録名はフェイルクローズ（汎用エラー応答）とする（C-11 解消）。**実装済み**（`_callbacks.get(name)`、未登録名は `None`。**C-11 解決**）。
-- Modal の数値入力（`int` / 正数 / `max_length`）は現行どおり検証を維持する。**実装済み**。加えて `/use` `/gather` `/fishing` の `count` は `valid_count`（1〜100）で**非正数のみ拒否**・**100 超は 100 にキャップし明示通知**（**C-16 / C-20 解決**。V-08 実測反映）。
+- Modal の数値入力（`int` / 正数 / `max_length`）は現行どおり検証を維持する。**実装済み**。加えて `/use` `/gather` `/fishing` の `count` は `valid_count`（1〜100）で**1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**（**C-16 / C-20 解決**。V-08 実測反映）。
 
 ### 4.4 データ整合性（SEC-04）
 

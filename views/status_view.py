@@ -8,7 +8,7 @@ import math
 
 from core.state import USERS, ITEMS, EMOJIS, ADVANCEMENTS
 from core.utils import new_user, save_users, get_stats
-from ._timeout import disable_on_timeout
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ class status_paging(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # タイムアウト時に元応答を編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         # 所有者が未確定なら最初の操作者を所有者として扱う
@@ -264,6 +268,7 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
             view._message_ref = await interaction.followup.edit_message(interaction.message.id, embeds=embeds, view=view)
         else:
             view._message_ref = await interaction.response.edit_message(embeds=embeds, view=view)
+    store_editor(view, view._message_ref, interaction)
 
     # ファイル更新
     save_users()

@@ -8,6 +8,7 @@ import math
 
 from core.state import USERS, ITEMS
 from core.utils import new_user
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,9 @@ async def _send_or_edit(interaction: discord.Interaction, content=None, *, view=
     """未応答なら初期応答、応答済みならフォローアップで安全に送信/編集する。
 
     View を渡した場合は、送信/編集した InteractionMessage を view.message に保持し、
-    タイムアウト時に無効化・編集できるようにする。
+    タイムアウト時に無効化・編集できるようにする。ephemeral メッセージは
+    ``Interaction.edit_original_response`` でしか更新できないため、ソース editor も
+    View に保持する（送信・置換時のみ。``interaction_check`` では上書きしない）。
     """
     if interaction.message is None:
         if interaction.response.is_done():
@@ -52,6 +55,8 @@ async def _send_or_edit(interaction: discord.Interaction, content=None, *, view=
             await interaction.response.edit_message(content=content, view=view)
         if view is not None:
             view.message = interaction.message
+    if view is not None:
+        store_editor(view, view.message, interaction)
 
 
 async def _safe_error_response(interaction: discord.Interaction, error):
@@ -69,17 +74,10 @@ async def _safe_error_response(interaction: discord.Interaction, error):
 async def _disable_on_timeout(view):
     """タイムアウト時に操作を無効化し、元メッセージをベストエフォートで更新する。
 
+    共通戦略（``views._timeout.disable_on_timeout``）に委譲する。
     メッセージが保持されていない場合は編集できない（正常系）ため、エラーログは出さない。
     """
-    for child in view.children:
-        child.disabled = True
-    message = getattr(view, 'message', None)
-    if message is None:
-        return
-    try:
-        await message.edit(view=view)
-    except Exception:
-        logger.exception('タイムアウト時のメッセージ更新に失敗しました')
+    await disable_on_timeout(view)
 
 
 class sell_select(discord.ui.View):
@@ -88,6 +86,12 @@ class sell_select(discord.ui.View):
     def __init__(self, timeout=180, owner_id=None):
         super().__init__(timeout=timeout)
         self.owner_id = owner_id
+        # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
+        self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:
@@ -103,7 +107,7 @@ class sell_select(discord.ui.View):
         await _safe_error_response(interaction, error)
 
     async def on_timeout(self):
-        await _disable_on_timeout(self)
+        await disable_on_timeout(self)
 
     @discord.ui.select()
     async def sell_page_1(self, interaction: discord.Interaction, select: discord.ui.Select):

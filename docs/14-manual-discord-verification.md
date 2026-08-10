@@ -2,7 +2,7 @@
 
 > **Phase2 成果物** — デプロイ済み Discord Bot に対して、チームメンバーが手動で実行するライブ検証の手順書。
 >
-> - 対象: コミット `1308f8d`（`fix: remediate documented technical debt`）以降の実装。`13-open-questions-and-technical-debt.md` で「**手動のライブ検証として延期**」とされた U 項目・C 項目の実行時確認を、安全な手順で実施するためのガイド。
+> - 対象: コミット `fb62008`（`fix: apply live verification feedback`。**ランタイムコード・テスト・docs を含む**）以降の実装。`13-open-questions-and-technical-debt.md` で「**手動のライブ検証として延期**」とされた U 項目・C 項目の実行時確認を、安全な手順で実施するためのガイド。
 > - 一次根拠はリポジトリ内のソースコード + データ + 運用ファイル（相対パス + symbol で表記）。
 > - 秘密実値・個人情報（Discord token 実値、個人 ID、`data/config.json` の実値）は**一切記載しない**。`config.json` の構造のみ `data/config.json.example` を根拠とする。
 > - 本ガイドは**手動・ライブ検証の手順**であり、自動テスト（`tests/`）や CI の代替ではない。実行結果は `13-open-questions-and-technical-debt.md` の該当 U 項目と `12-testable-acceptance-criteria.md` の該当受入条件へ反映する。
@@ -15,12 +15,12 @@
 - 対象とする確認事項（対応する U / C / ACR）:
   - 起動・`admin_manage` 依存（U-01 / C-01 / ACR-E-02, ACR-E-06）
   - ユーザー初期化・`fetch_user` フォールバック（U-14 / C-18 / ACR-K-11）
-  - View / Modal の所有権・タイムアウト・二重応答（U-04 / U-05 / ACR-N-20〜N-23, ACR-N-26）※ **V-03 実測反映**: ephemeral View のタイムアウトは保持メッセージ編集を行わずメモリ内で無効化・静かに完了。所有権チェックは非 ephemeral View でのみ検証
-  - 売却フロー（stale 同一性・ページクランプ・永続化先行）（U-05 / ACR-N-20〜N-22）※ **V-04 実測反映**: stale 保護は安定した同一性と所持数を検証。同一スタックからの連続売却は許可
+  - View / Modal の所有権・タイムアウト・二重応答（U-04 / U-05 / ACR-N-20〜N-23, ACR-N-26）※ **V-03 実測反映**: ephemeral View のタイムアウトは保持した元の送信 interaction/token で元応答をベストエフォートで編集して無効化表示。公開 View は保持した Message editor。トークン期限切れ（`is_expired` / 403/404）は静かに no-op・想定外の失敗のみログ。所有権チェックは非 ephemeral View でのみ検証
+  - 売却フロー（stale 同一性・ページクランプ・永続化先行）（U-05 / ACR-N-20〜N-22）※ **V-04 実測反映**: stale 送信は開封時点の id/meta/count 不一致で拒否。新しいモーダル（更新後スタック）は成功
   - ショップ stale 操作（C-21 / U-06 / ACR-K-14, ACR-R-04）
   - 絵文字フォールバック（U-08 / ACR-E-02 周辺）
   - 複数インスタンス起動拒否（U-09 / C-07 / ACR-S-04）
-  - cooldown / admin check / count 境界の期待応答（C-19 / U-15 / ACR-N-24, ACR-N-25, ACR-K-09, ACR-K-13）※ **V-08 実測反映**: count は非正数のみ拒否・100 超は 100 にキャップし明示通知。クールダウンは 3 秒のまま
+  - cooldown / admin check / count 境界の期待応答（C-19 / U-15 / ACR-N-24, ACR-N-25, ACR-K-09, ACR-K-13）※ **V-08 実測反映**: count は 1 以上のみ許可（非正数のみ拒否）・100 超は 100 に正規化し通知文を応答に付加。実際の実行回数は在庫・スタミナ等により少なくなり得る。クールダウンは 3 秒のまま
 
 ## 2. 前提条件（安全な検証環境）
 
@@ -48,7 +48,7 @@
 
 ### 2.5 デプロイ / リビルド
 
-- 検証対象のコード（コミット `1308f8d` 以降）を反映したイメージで起動する。コード変更後は**必ずリビルド**する（`docker compose build && docker compose up -d --force-recreate`。ホットリロードは不可）。
+- 検証対象のコード（コミット `fb62008` 以降）を反映したイメージで起動する。コード変更後は**必ずリビルド**する（`docker compose build && docker compose up -d --force-recreate`。ホットリロードは不可）。
 - 設定変更後も `docker compose up -d --force-recreate` で再作成する。
 
 ### 2.6 検証環境のラベル
@@ -62,12 +62,12 @@
 |---|---|---|---|
 | V-01 | U-01 / C-01 / ACR-E-02, E-06 | 起動と `admin_manage` 拡張ロード | 否 |
 | V-02 | U-14 / C-18 / ACR-K-11 | ユーザー初期化と `fetch_user` フォールバック | 否（障害誘発は隔離必須） |
-| V-03 | U-04 / ACR-N-23, N-26 | View 所有権・タイムアウト・二重応答（ephemeral タイムアウトはメモリ内無効化・静かに完了。所有権は非 ephemeral View で検証） | 否 |
-| V-04 | U-05 / ACR-N-20〜N-22 | 売却フロー（stale 同一性・ページクランプ・永続化先行。同一スタックからの連続売却は許可） | 否 |
+| V-03 | U-04 / ACR-N-23, N-26 | View 所有権・タイムアウト・二重応答（ephemeral タイムアウトは保持した元の送信 interaction/token で元応答を編集し無効化表示。公開 View は保持した Message editor。トークン期限切れは静かに no-op。所有権は非 ephemeral View で検証） | 否 |
+| V-04 | U-05 / ACR-N-20〜N-22 | 売却フロー（stale 同一性・ページクランプ・永続化先行。stale 送信は id/meta/count 不一致で拒否・新しいモーダルは成功） | 否 |
 | V-05 | C-21 / U-06 / ACR-K-14, R-04 | ショップ stale 操作（ローテーション跨ぎ） | 否 |
 | V-06 | U-08 | 絵文字フォールバック表示 | 否 |
 | V-07 | U-09 / C-07 / ACR-S-04 | 複数インスタンス起動拒否 | **必須** |
-| V-08 | C-19 / U-15 / ACR-N-24, N-25, K-09, K-13 | cooldown / admin check / count 境界の期待応答（非正数のみ拒否・100 超は 100 にキャップ） | 否 |
+| V-08 | C-19 / U-15 / ACR-N-24, N-25, K-09, K-13 | cooldown / admin check / count 境界の期待応答（1 以上のみ許可・100 超は 100 に正規化） | 否 |
 
 ## 4. 個別ケース詳細
 
@@ -81,7 +81,7 @@
 - **根拠**: `requirements.lock`（deepmerge あり）, `Dockerfile:19`, `core/state.py:setup_hook`（`load_extension`）, `cogs/__init__.py:EXTENSIONS`
 
 **準備**
-- コミット `1308f8d` 以降のコードでイメージをリビルドし、単一インスタンスで起動する（§2.5）。
+- コミット `fb62008` 以降のコードでイメージをリビルドし、単一インスタンスで起動する（§2.5）。
 
 **手順**
 1. `docker compose build` を実行し、ビルドが成功することを確認する。
@@ -139,8 +139,8 @@
 ### V-03 — View 所有権・タイムアウト・二重応答【隔離不要】
 
 - **対象**: U-04 / ACR-N-23, ACR-N-26
-- **根拠**: `views/*.py`（`interaction_check`・`on_timeout`・`on_error`・`_disable_on_timeout`）, `cogs/equip.py`, `cogs/buy.py`（`owner_id` 事前バインド）
-- **V-03 実測反映（2026-08-10）**: ① **ephemeral View のタイムアウト**は、保持メッセージ（ephemeral）への編集を**試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。② **所有権のクロスユーザー操作**は **ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。
+- **根拠**: `views/_timeout.py`（`disable_on_timeout`・`store_editor`・`store_interaction`・`is_ephemeral`）, `views/*.py`（`interaction_check`・`on_timeout`・`on_error`）, `cogs/equip.py`, `cogs/buy.py`（`owner_id` 事前バインド）
+- **V-03 実測反映（2026-08-10）**: ① **ephemeral View のタイムアウト**は、表示時に保持した**元の送信 interaction/token**（`store_editor` / `store_interaction`）の `edit_original_response` で元応答（original response）を**ベストエフォートで編集**し、無効化されたコントロールを描画する。**公開 View** は保持した **Message editor**（`Message.edit`）で更新する。editor は View の送信・置換時点でのみ設定され、**汎用の `interaction_check` 等がソース editor を置き換えることはない**。`interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op しログを出さない**。**想定外の editor 失敗のみ** `logger.exception` で記録され、呼び出し元へ伝播しない（安全に処理）。② **所有権のクロスユーザー操作**は **ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。
 
 **準備**
 - 隔離テストユーザー A・B を用意する。`data/user.json` をバックアップする（§2.3）。
@@ -157,7 +157,7 @@
 3. テストユーザー A で `/equip` を実行し、ephemeral の装備選択 View を表示したまま 180 秒放置する。
 
 **期待されるユーザー表示（タイムアウト・ephemeral View）**
-- 180 秒後に View の子要素が**メモリ内で無効化**される。ephemeral メッセージへの編集は**試みず**、タイムアウトは**静かに完了**する（Interaction Failed・エラー表示なし。`_disable_on_timeout`）。
+- 180 秒後に View の子要素が無効化され、保持した元の送信 interaction で元応答（ephemeral）が**ベストエフォートで編集**され、無効化されたコントロールが描画される（`edit_original_response`）。トークン期限切れ等で編集できない場合は**静かに no-op** され、Interaction Failed・エラー表示・ログにならない。
 
 **手順（二重応答）**
 4. タイムアウト後に、同じ View のボタンを操作する。
@@ -166,8 +166,11 @@
 - 二重応答・Interaction Failed にならず、安全に処理される（`on_error` / `interaction_check` により内部情報を漏らさない）。
 
 **期待されるログ/状態**
-- ephemeral View のタイムアウトはメッセージ編集を試みないため、編集失敗のログ・例外は発生しない（正常系）。
-- 非 ephemeral View（例: `/status`）のタイムアウトは保持メッセージを編集・無効化する。メッセージ未保持の通常タイムアウトは例外・ログ対象にしない（`_disable_on_timeout`）。
+- ephemeral View のタイムアウトは保持した元の送信 interaction の `edit_original_response` で元応答を編集する。公開 View（例: `/status`）は保持した Message editor（`Message.edit`）で更新する。
+- editor は View の送信・置換時点でのみ設定され、汎用の `interaction_check` 等がソース editor を置き換えることはない（`views/_timeout.py:store_editor`）。
+- `interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op し、ログを出さない**。
+- **想定外の editor 失敗のみ** `logger.exception` で記録され、呼び出し元へ伝播しない（`views/_timeout.py:disable_on_timeout`）。
+- メッセージも editor も未保持の通常タイムアウトは静かに戻り、例外・ログ対象にしない。
 - 予期しない例外は `on_error` でログ記録 + 安全応答。
 
 **記録すべきエビデンス**
@@ -179,7 +182,7 @@
 
 - **対象**: U-05 / ACR-N-20〜N-22
 - **根拠**: `modals/sell_modal.py:sell_item`（`expected_item` 照合・`save_users()` 先行）, `views/sell_view.py:sell_selecting`（ページクランプ）
-- **V-04 実測反映（2026-08-10）**: stale 売却保護は、開封時点の**安定した同一性**（`index` の範囲内・`id`/`meta` の一致）と**所持数**を検証する。ただし**同一スタックからの連続売却は意図的に許可**される（例: 10 個所持のスタックから 5 個売却 → 再度 5 個売却は stale 拒否されない）。stale 拒否は「index 範囲外」「`id`/`meta` 不一致」「要求個数が所持数を超える」場合に限定される。
+- **V-04 実測反映（2026-08-10）**: stale 売却保護は、開封時点の**安定した同一性**（`index` の範囲内・`id`/`meta`/`count` の一致）を照合する。**不一致・範囲外・所持数不足はミューテーションせず拒否**。ただし**新しいモーダル**（更新後のスタックを開封時点として捕捉したもの）は**成功**する。同一スタックからの連続売却は、2 回目のモーダルが開封時点の所持数を捕捉するため引き続き許可される。**制限**: 同一 `id`/`meta`/`count` でスタックが完全に入れ替わった場合（例: 全売却後に同数再入手）は区別できない（完全な区別にはスタックごとの revision が必要。本スコープ外）。
 
 **準備**
 - 隔離テストユーザーに売却可能なアイテムを複数（100 超でページング確認可）付与する（`admin_give` 等）。`data/user.json` をバックアップする（§2.3）。
@@ -200,7 +203,7 @@
 
 **期待されるユーザー表示（stale）**
 - 「アイテム情報が変更されたため、売却をキャンセルしました。」等が返り、**ミューテーションしない**（ACR-N-20）。
-- **補足**: 同一スタックからの**連続売却**（例: 10 個所持 → 5 個売却 → 再度 5 個売却）は**意図的に許可**される。stale 拒否は index 範囲外・`id`/`meta` 不一致・要求個数が所持数を超える場合に限定される。
+- **補足**: 開封後にスタック数が変わった古い Modal は拒否される。**新しいモーダル**（更新後のスタックを開封時点として捕捉）は**成功**する。同一スタックからの連続売却（例: 10 個所持 → 5 個売却 → 再度 5 個売却）は、2 回目のモーダルが開封時点の所持数を捕捉するため許可される。
 
 **手順（ページクランプ）**
 5. 売却後にページが空になる状況（最終ページの全アイテムを売却）を作り、ページ送りを実行する。
@@ -291,8 +294,8 @@
 ### V-08 — cooldown / admin check / count 境界の期待応答【隔離不要】
 
 - **対象**: C-19 / U-15 / ACR-N-24, ACR-N-25, ACR-K-09, ACR-K-13
-- **根拠**: `cogs/_helpers.py`（`user_cooldown_key`・`admin_check`・`valid_count`）, `cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py`（`@app_commands.checks.cooldown(1, 3.0, ...)`）, `core/state.py:BotTree.on_error`
-- **V-08 実測反映（2026-08-10）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**。
+- **根拠**: `cogs/_helpers.py`（`user_cooldown_key`・`admin_check`・`valid_count`・`normalize_count`・`cap_notice`）, `cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py`（`@app_commands.checks.cooldown(1, 3.0, ...)`）, `core/state.py:BotTree.on_error`
+- **V-08 実測反映（2026-08-10）**: `/use` `/gather` `/fishing` の `count` は**1 以上のみ許可**（非正数のみ拒否）。**100 超の値は 100 に正規化（キャップ）**され、ユーザーへ通知文が応答に付加される（拒否ではない）。**実際に実行される回数は在庫・スタミナ等により少なくなり得る**。クールダウンは**3 秒のまま**。
 
 **準備**
 - 隔離テストユーザー（非 ADMIN）と、管理者テストユーザーを用意する。
@@ -309,8 +312,8 @@
 4. `/use`（または `/gather` `/fishing`）に `count = 100 超`（例: 200）を指定する。
 
 **期待されるユーザー表示（count 境界）**
-- 非正数（`count <= 0`）: 「使用回数は1〜100の範囲で指定してください。」等が返り、状態変更前に**拒否**される（ACR-K-09 / ACR-K-13）。
-- 100 超: **100 にキャップ**され、ユーザーへ**明示の通知**（例: 100 に丸められた旨）が返る。**拒否ではない**（ACR-K-09 / ACR-K-13）。
+- 非正数（`count <= 0`）: 「使用回数は1以上で指定してください。」等が返り、状態変更前に**拒否**される（ACR-K-09 / ACR-K-13）。
+- 100 超: **100 に正規化**され、ユーザーへ通知文（例: `**200**回の指定は上限の**100**回に調整されました。`）が応答に付加される。**拒否ではない**。実際の実行回数は在庫・スタミナ等により少なくなり得る（ACR-K-09 / ACR-K-13）。
 
 **手順（admin check）**
 5. 非 ADMIN テストユーザーで `/admin_give`（または `/admin_transit` `/admin_manage`）を実行する。
@@ -320,10 +323,10 @@
 
 **期待されるログ/状態**
 - cooldown / check 失敗は ERROR ログを出さない（期待される制御フローとして `BotTree.on_error` が簡潔に応答）。
-- count 100 超のキャップ時は、キャップされた旨の通知がログ・応答に反映される。
+- count 100 超の正規化は**応答メッセージの通知文**としてユーザーへ伝わる（**ログ記録はない**）。
 
 **記録すべきエビデンス**
-- cooldown 応答・権限不足応答・count 非正数拒否・count 100 超キャップ通知のスクリーンショット、関連ログ。
+- cooldown 応答・権限不足応答・count 非正数拒否・count 100 超正規化通知のスクリーンショット、関連ログ。
 
 ---
 

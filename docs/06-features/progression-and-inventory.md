@@ -148,7 +148,7 @@
 1. `new_user(user_id)` 実行、`user_data = USERS[str(user_id)]` を取得。
 2. `remove_item_stacked(user_id, item_id, count)`（`required=False`）でインベントリから消費。
    - 結果が `[]` なら `**{name_e}**は持っていません。` を応答して終了（保存はしない）。
-   - **`count` の検証（2026-08-07 修正）**: 冒頭で `valid_count(count)`（`cogs/_helpers.py`、1〜100）を判定し、範囲外なら「使用回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否（**C-16 / C-20 解決**）。**2026-08-10 実測反映（V-08）**: **非正数のみ拒否**・**100 超は 100 にキャップし明示通知**。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md)。
+   - **`count` の検証（2026-08-07 修正）**: 冒頭で `valid_count(count)`（`cogs/_helpers.py`、1〜100）を判定し、範囲外なら「使用回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否（**C-16 / C-20 解決**）。※ **2026-08-10（V-08）で訂正**: 最終契約は**1 以上のみ許可（非正数のみ拒否）**・**100 超は 100 に正規化**。**2026-08-10 実測反映（V-08）**: **1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**・実際の実行回数は在庫・スタミナ等により少なくなり得る。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。追跡は [`../13-open-questions-and-technical-debt.md`](../13-open-questions-and-technical-debt.md)。
 3. 実際の消費数 `count` を結果リストの合計で再計算する。
 4. `ITEMS[item_id]['tag']` の種別で分岐：
 
@@ -289,10 +289,10 @@
 | C-07 | `save_users` が直接 `json.dump`（一時ファイル+rename 無し・lock 無し）。5 秒毎保存とコマンド随時保存が並走 | 現行バグ | **解決済**（atomic 化 + `_save_lock`） |
 | C-08 | `user.json` 読込が裸 `except:` で破損を握りつぶし `{}` で初期化 | 現行バグ | **解決済**（fail-closed: 隔離 + exit 1） |
 | C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` を投げる（クラフトのツール破損経路）。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ | **解決済**（`pop(index)` + トランザクション化） |
-| C-16 | `/use` の `count` 非正数ガードなし。負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | 現行バグ | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-16 | `/use` の `count` 非正数ガードなし。負数で在庫増加・効果反転、`con_loot` は loot なし（空結果）で処理継続 | 現行バグ | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation の race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） | **解決済**（スナップショット反復 + `_users_lock`。実機観察は延期） |
 | C-18 / U-14 | `new_user` の `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） | **解決済**（フォールバック名で登録継続。実機確認は延期） |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在（導入要否・値は U-15） | 現行バグ（制御不在） | 一部解決（use/gather/fishing 3 秒・admin check・View interaction_check。残りは延期） |
 | C-12 | エラーハンドラ未登録。例外時は「interaction failed」のみ | 現行バグ | **解決済**（`BotTree.on_error` / Modal `safe_on_error` / View `on_error`） |
 | 観測-2 | チュートリアル文（`gather_forest` の complete_message）は「スタミナは1時間ごとに10回復」と記すが、実装の `stamina_regeneration_rate` は 20/時（1 ポイント 180 秒） | 仕様不整合 | 未解決（変更なし） |

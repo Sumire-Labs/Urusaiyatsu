@@ -45,17 +45,23 @@ async def sell_item(interaction: discord.Interaction, index: int, count: int, pa
     user_id = interaction.user.id
     user_data = USERS[str(user_id)]
 
-    # 開封時点のアイテム同一性（stable identity: id + meta）と現在のインベントリを照合し、
+    # 開封時点のアイテム同一性（stable identity: id + meta + count）と現在のインベントリを照合し、
     # 古い送信を拒否する（他の操作でインベントリが並び替え・変更され index が別アイテムを
-    # 指すようになった場合に、誤ったアイテムを売却しない）。
-    # 注意: expected_item['count'] は同一性評価に使わない。同じスタックの連続売却（前回売却後）
-    # を許すため、現在の所持数が開封時点の所持数と一致する必要はない（V-04 live-test 修正）。
+    # 指すようになった場合や、開封後にスタック数が変わった場合に、誤ったアイテムを売却しない）。
+    # 所持数（count）も照合する（V-04 Oracle 修正）: モーダル開封後に別操作でスタック数が
+    # 変わった古い送信は拒否する。同一スタックからの連続売却は、2回目のモーダルが開封時点の
+    # 所持数を捕捉するため引き続き許可される（expected=3, current=3 は成功）。
+    # 制限: 同一 id/meta/count でスタックが完全に入れ替わった場合（例: 全売却後に同数再入手）
+    # は区別できない。完全な区別にはスタックごとの revision が必要だが、本スコープ外。
     if expected_item is not None:
         if index < 0 or index >= len(user_data['inventory']):
             await respond(interaction, 'アイテム情報が変更されたため、売却をキャンセルしました。')
             return
         current = user_data['inventory'][index]
         if current['id'] != expected_item['id'] or current.get('meta', {}) != expected_item['meta']:
+            await respond(interaction, 'アイテム情報が変更されたため、売却をキャンセルしました。')
+            return
+        if current['count'] != expected_item['count']:
             await respond(interaction, 'アイテム情報が変更されたため、売却をキャンセルしました。')
             return
         if current['count'] < count:

@@ -9,7 +9,7 @@ import math
 from core.state import USERS, ITEMS, RECIPES
 from core.utils import new_user, get_item
 from modals.craft_modal import craft
-from ._timeout import disable_on_timeout
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,10 @@ class craft_select(discord.ui.View):
         self.owner_id = None
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         # 実行したユーザーのみ操作可能（未設定時は最初の操作者を所有者とする）
@@ -153,3 +157,4 @@ async def craft_selecting(interaction: discord.Interaction, page: int):
         view._message_ref = await interaction.response.send_message(f'レシピを選択: ({page}/{page_max})', view=view, ephemeral=True)
     else:
         view._message_ref = await interaction.response.edit_message(content=f'レシピを選択: ({page}/{page_max})', view=view)
+    store_editor(view, view._message_ref, interaction)

@@ -79,6 +79,83 @@ assert len(ud['inventory']) == 1
 assert interaction.response.sent and 'キャンセル' in interaction.response.sent[0]
 ''')
 
+    def test_stale_modal_count_mismatch_rejected(self):
+        run_ok('''
+import asyncio
+from modals.sell_modal import sell_item
+_new_user(1)
+ud = USERS['1']
+u.add_item(1, 'wood', 5)
+ITEMS['wood']['value'] = 5
+# モーダル開封後に別操作でスタック数が 5 -> 3 に変わった
+ud['inventory'][0]['count'] = 3
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append(content)
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+
+# 開封時点 expected=5 の古いモーダル送信（現在 current=3, request=2）-> 拒否
+interaction = FakeInteraction(1)
+asyncio.run(sell_item(interaction, 0, 2, 1, {'id': 'wood', 'meta': {}, 'count': 5}))
+assert ud['money'] == 0
+assert len(ud['inventory']) == 1
+assert ud['inventory'][0]['count'] == 3
+assert interaction.response.sent and 'キャンセル' in interaction.response.sent[0]
+''')
+
+    def test_fresh_modal_matching_count_succeeds(self):
+        run_ok('''
+import asyncio
+from modals.sell_modal import sell_item
+_new_user(1)
+ud = USERS['1']
+u.add_item(1, 'wood', 5)
+ITEMS['wood']['value'] = 5
+# 開封時点の所持数が 3 の新しいモーダル（expected=3, current=3, request=2）-> 成功
+ud['inventory'][0]['count'] = 3
+
+class FakeResponse:
+    def __init__(self):
+        self.sent = []
+        self.done = False
+    def is_done(self):
+        return self.done
+    async def send_message(self, content, **kw):
+        self.sent.append(content)
+
+class FakeUser:
+    def __init__(self, uid):
+        self.id = uid
+
+class FakeInteraction:
+    def __init__(self, uid):
+        self.user = FakeUser(uid)
+        self.response = FakeResponse()
+        self.message = None
+    async def original_response(self):
+        return None
+
+interaction = FakeInteraction(1)
+asyncio.run(sell_item(interaction, 0, 2, 1, {'id': 'wood', 'meta': {}, 'count': 3}))
+assert ud['money'] == 10
+assert len(ud['inventory']) == 1
+assert ud['inventory'][0]['count'] == 1
+''')
+
     def test_sell_captures_expected_identity(self):
         run_ok('''
 import asyncio

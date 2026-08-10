@@ -33,7 +33,7 @@
 
 | # | 分類 | 代表例 | 現行の扱い | 一次根拠 |
 |---|---|---|---|---|
-| E-1 | ユーザー入力値の妥当性 | `admin_give` の存在しない `item_id`、`admin_manage` の非 dict 入力、Modal の非整数入力、`/use` `/gather` `/fishing` の `count` 範囲外 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照）。`count` は `valid_count`（1〜100）で**非正数のみ拒否**・**100 超は 100 にキャップし明示通知**（**C-16/C-20 解決**。V-08 実測反映） | `cogs/admin_give.py:25-30`, `cogs/admin_manage.py:33-35`, `modals/craft_modal.py:20-33`, `cogs/_helpers.py:valid_count` |
+| E-1 | ユーザー入力値の妥当性 | `admin_give` の存在しない `item_id`、`admin_manage` の非 dict 入力、Modal の非整数入力、`/use` `/gather` `/fishing` の `count` 範囲外 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照）。`count` は `valid_count`（1〜100）で**1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**（**C-16/C-20 解決**。V-08 実測反映） | `cogs/admin_give.py:25-30`, `cogs/admin_manage.py:33-35`, `modals/craft_modal.py:20-33`, `cogs/_helpers.py:valid_count` |
 | E-2 | ゲーム状態由来（資源不足・未所持・未装備） | スタミナ不足、燃料不足、素材不足、レベル不足、未装備 | ハンドラ内で判定し通常メッセージで応答（§3.2 参照） | `cogs/gather.py:34-64`, `cogs/fishing.py:34-52`, `modals/craft_modal.py:56-93` |
 | E-3 | データ変換由来 | `ast.literal_eval` の構文エラー、`int()` の `ValueError` | 一部のみ `try/except` で捕捉（§3.3 参照） | `cogs/admin_manage.py:28-31`, `modals/craft_modal.py:20-22`, `modals/sell_modal.py:23-25` |
 | E-4 | 実装バグ由来（未捕捉） | `core/utils.py:212` の `list.pop(dict)` による `TypeError`（C-03）、未登録ユーザーの `KeyError`（C-05）、admin_give 負数剥奪（C-02） | **2026-08-07 修正**: C-03（`pop(index)`）・C-05（`new_user` 呼び出し）・C-02（`abs(amount)`）は解決。残る未捕捉例外は `BotTree.on_error` / Modal `safe_on_error` / View `on_error` で捕捉・ログ + 安全応答（**C-12 解決**） | `core/utils.py`, `cogs/settings.py`, `cogs/leaderboard.py`, `core/state.py:BotTree` |

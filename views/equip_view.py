@@ -8,7 +8,7 @@ import ast
 
 from core.state import equippable_choices, USERS, ITEMS
 from core.utils import save_users, add_item_from_dict
-from ._timeout import disable_on_timeout
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,10 @@ class equip_select(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:
@@ -91,6 +95,7 @@ class equip_select(discord.ui.View):
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max)
         page += 1
         view._message_ref = await interaction.response.edit_message(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+        store_editor(view, view._message_ref, interaction)
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.primary)
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -104,6 +109,7 @@ class equip_select(discord.ui.View):
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max)
         page += 1
         view._message_ref = await interaction.response.edit_message(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+        store_editor(view, view._message_ref, interaction)
 
 
 class remove_equip_choice(discord.ui.View):
@@ -114,6 +120,10 @@ class remove_equip_choice(discord.ui.View):
         self.owner_id = owner_id
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.owner_id is None:

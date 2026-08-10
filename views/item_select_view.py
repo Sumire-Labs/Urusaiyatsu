@@ -8,7 +8,7 @@ import math
 
 from core.state import ITEMS, item_choices
 from core.utils import new_user
-from ._timeout import disable_on_timeout
+from ._timeout import disable_on_timeout, store_editor
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,10 @@ class item_select(discord.ui.View):
         self.owner_id = None
         # 表示中メッセージの参照（on_timeoutで無効化したViewを編集するために保持）
         self._message_ref = None
+        # ソースメッセージを編集する editor（送信・置換時のみ設定）
+        self._editor = None
+        # ephemeral メッセージをタイムアウト時に編集するための Interaction
+        self._interaction = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         # 実行したユーザーのみ操作可能（未設定時は最初の操作者を所有者とする）
@@ -123,6 +127,7 @@ class item_select(discord.ui.View):
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max) + '/' + data[3]
         page += 1
         view._message_ref = await interaction.response.edit_message(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+        store_editor(view, view._message_ref, interaction)
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.primary)
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -159,6 +164,7 @@ class item_select(discord.ui.View):
         view.next_page.custom_id = str(interaction.user.id) + '/' + str(page) + '/' + str(page_max) + '/' + data[3]
         page += 1
         view._message_ref = await interaction.response.edit_message(content=f'アイテムを選択: ({page}/{page_max})', view=view)
+        store_editor(view, view._message_ref, interaction)
 
 
 async def item_select_view(interaction: discord.Interaction, func: str):
@@ -174,6 +180,7 @@ async def item_select_view(interaction: discord.Interaction, func: str):
     view.item_page_4.options = item_choices[3]
     view.next_page.custom_id = str(user_id) + '/0/' + str(page_max) + '/' + func
     view._message_ref = await interaction.response.send_message(f'アイテムを選択: (1/{page_max})', view=view, ephemeral=True)
+    store_editor(view, view._message_ref, interaction)
 
 
 # コールバック関数のマッピング（eval()の代替）

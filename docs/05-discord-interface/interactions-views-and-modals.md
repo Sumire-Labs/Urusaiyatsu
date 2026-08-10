@@ -78,8 +78,8 @@
 ### 2.5 期限切れ（timeout）・Discord 側失敗
 
 - **2026-08-07 修正**: 全 View に `on_timeout`（子要素を無効化し元メッセージをベストエフォートで更新）・`on_error`（内部情報を漏らさず安全応答）を実装（**C-12 / U-04 コード解決**）。Modal は `modals/_common.py:respond`（未応答なら初期応答、応答済みならフォローアップ）と `safe_on_error` を共通化。
-- **2026-08-07・後続（実際のタイムアウトメッセージ保持）**: 各 View は表示中メッセージの参照（`_message_ref`、`interaction.original_response()` / `edit_message` の返り値）を保持し、`on_timeout` が保持メッセージを**実際に編集・無効化**する（`_disable_on_timeout`）。メッセージが保持されていない通常のタイムアウトは例外・ログ対象にしない（正常系）。`tests/test_sell.py` の `TestTimeoutMessageRetention` が非ライブでカバー。
-- **2026-08-10 実測反映（V-03）**: **ephemeral View のタイムアウトは保持メッセージ（ephemeral）への編集を試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。
+- **2026-08-07・後続（実際のタイムアウトメッセージ保持）**: 各 View は表示中メッセージの参照（`_message_ref`、`interaction.original_response()` / `edit_message` の返り値）を保持し、`on_timeout` が保持メッセージを**実際に編集・無効化**する（`views/_timeout.py:disable_on_timeout`）。メッセージが保持されていない通常のタイムアウトは例外・ログ対象にしない（正常系）。`tests/test_views.py` が非ライブでカバー。
+- **2026-08-10 実測反映（V-03）**: **ephemeral View のタイムアウトは保持した元の送信 interaction/token の `edit_original_response` で元応答（original response）をベストエフォートで編集**し、無効化されたコントロールを描画する。**公開 View は保持した Message editor（`Message.edit`）** で更新する。editor は View の送信・置換時点でのみ設定され（`store_editor` / `store_interaction`）、**汎用の `interaction_check` 等がソース editor を置き換えることはない**。`interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op しログを出さない**。**想定外の editor 失敗のみ** `logger.exception` で記録され、呼び出し元へ伝播しない（安全に処理）。メッセージも editor も未保持のタイムアウトは静かに戻る。
 - 応答済み Interaction への再編集（U-04/U-05）を含め、期限切れ後の実挙動は実機確認として延期。
 
 ---
@@ -258,7 +258,7 @@
 | timeout | **180 秒を明示宣言**（**U-03 解決**） |
 | 所有者制御 | なし（Modal は発火者にのみ表示される Discord 仕様に依存） |
 | on_submit | ① `int(self.children[0].value)` を検証（`ValueError` / `count <= 0` で `respond`（**公開** `有効な整数を入力してください。`））→ ② `count > 0` なら `sell_item(interaction, self.index, count, self.page, self.expected_item)` |
-| UI 遷移 | 送信 → `sell_item`：**stale 同一性検証**（`expected_item` と現在の `inventory[index]` の `id`/`meta`/`count` を照合。不一致・範囲外・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**）→ `inventory[index]` をコピーし `count = min(count, 所持数)`、`remove_item_from_dict`、`money += value * count` → **永続化先行**: `save_users()` を再描画**前**に実行 → Modal 送信 interaction（未応答）で `sell_selecting` を再描画し、確認は `respond`（フォローアップ）で送る（**U-05 コード解決**）→ **公開** `**{name}×{count}**を**{result}**{money}で売却しました！`（`modals/sell_modal.py`）。**2026-08-10 実測反映（V-04）**: stale 保護は**安定した同一性**（`index` 範囲内・`id`/`meta` 一致）と**所持数**を検証する。**同一スタックからの連続売却は意図的に許可**される（stale 拒否は index 範囲外・`id`/`meta` 不一致・要求個数が所持数を超える場合に限定） |
+| UI 遷移 | 送信 → `sell_item`：**stale 同一性検証**（`expected_item` と現在の `inventory[index]` の `id`/`meta`/`count` を照合。不一致・範囲外・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**）→ `inventory[index]` をコピーし `count = min(count, 所持数)`、`remove_item_from_dict`、`money += value * count` → **永続化先行**: `save_users()` を再描画**前**に実行 → Modal 送信 interaction（未応答）で `sell_selecting` を再描画し、確認は `respond`（フォローアップ）で送る（**U-05 コード解決**）→ **公開** `**{name}×{count}**を**{result}**{money}で売却しました！`（`modals/sell_modal.py`）。**2026-08-10 実測反映（V-04）**: stale 保護は開封時点の**安定した同一性**（`index` 範囲内・`id`/`meta`/`count` 一致）を照合する。**不一致・範囲外・所持数不足は拒否**。ただし**新しいモーダル**（更新後のスタックを開封時点として捕捉）は**成功**する。同一スタックからの連続売却は、2 回目のモーダルが開封時点の所持数を捕捉するため許可される。制限: 同一 `id`/`meta`/`count` でスタックが完全に入れ替わった場合は区別できない |
 | 期限/Discord 失敗 | `on_error`（`safe_on_error`）で安全応答。timeout 後の送信は「interaction failed」 |
 | 既知問題 | **U-05（コード解決済）**: `original_interaction` への再編集をやめ、Modal 送信 interaction で再描画する方式へ変更。**stale 同一性検証**（観測-3 の誤売却対策）・**ページクランプ**・**永続化先行**を実装。`tests/test_sell.py` が非ライブでカバー。実挙動の実機確認は**延期**。**U-04** も併せて実機確認が必要 |
 
@@ -283,15 +283,15 @@
 | ID | 内容 | 対応 | 状態 |
 |---|---|---|---|
 | U-03 | Modal timeout はコードで未宣言 | 明示化 | **解決済**（`timeout=180` を明示） |
-| U-04 | View 破棄後・応答済み Interaction への再編集 | 実機確認 | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期**。**2026-08-10 実測反映（V-03）**: ephemeral View のタイムアウトはメッセージ編集を試みずメモリ内で無効化・静かに完了 |
+| U-04 | View 破棄後・応答済み Interaction への再編集 | 実機確認 | コード解決済（`on_timeout` / `on_error` / `respond`）。実機確認は**延期**。**2026-08-10 実測反映（V-03）**: ephemeral View のタイムアウトは保持した元の送信 interaction/token で元応答をベストエフォートで編集し無効化表示。公開 View は保持した Message editor。トークン期限切れ（`is_expired` / 403/404）は静かに no-op・想定外の失敗のみログ |
 | U-05 | `sell_modal.py` の `sell_selecting(original_interaction, ...)` | 実機確認 | コード解決済（Modal 側で再描画）。実機確認は**延期** |
 | C-03 | `remove_item_from_index` の `pop(dict)` | 耐久 0 到達クラフトの再現で確定 | **解決済**（`pop(index)`） |
 | C-11 | `item_select` の eval fallback | コールバック名の内部保持を継続 | **解決済**（`_get_callback` が `None` を返す） |
 | C-14 | `equip` の空判定デッドコード | 未装備時応答の到達不能 | **解決済**（`if not equip_choices:`） |
-| C-16 | `/use` の `count` 非正数（負数で在庫増加・効果反転） | `commands-gameplay.md` §3.2 参照 | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-16 | `/use` の `count` 非正数（負数で在庫増加・効果反転） | `commands-gameplay.md` §3.2 参照 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-17 / U-13 | バックグラウンドの `USERS.items()` 反復と top-level mutation race（`new_user` / `admin_transit`） | `core/background.py:update_tick`、`commands-gameplay.md` §3.2 ほか参照 | **解決済**（スナップショット反復 + `_users_lock`） |
 | C-18 / U-14 | `new_user` の `fetch_user` 失敗が未捕捉 | `core/utils.py:new_user`（例外型・UI は U-14） | **解決済**（フォールバック名で登録継続） |
 | C-19 / U-15 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` 不在 | `permissions-and-contexts.md` §3、導入要否・値は U-15 | 一部解決（use/gather/fishing 3 秒・admin check・View interaction_check。残りは延期） |
-| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `commands-gameplay.md` §3.2-3.4 | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `commands-gameplay.md` §3.2-3.4 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-21 | stale shop choice の `shop_content.index` `ValueError` | §3.7 参照 |
 | C-22 | `craft_view` の未使用 `set_craft_func` / `_craft_func` デッドコード | §3.5 参照 |

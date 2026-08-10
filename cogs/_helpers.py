@@ -24,9 +24,13 @@ def normalize_count(count: int) -> int:
 
 
 def cap_notice(count: int) -> str:
-    """100 超の指定時に「100回として実行した」ことを伝える通知文（100 以下は空文字）"""
+    """100 超の指定時に「上限 100 回に調整した」ことを伝える通知文（100 以下は空文字）。
+
+    実際に実行される回数は在庫・スタミナ等により少なくなり得るため、
+    実行回数（「100回実行した」等）は明言しない。
+    """
     if count > MAX_COUNT:
-        return f'**{count}**回の指定は上限の**{MAX_COUNT}**回として実行しました。\n'
+        return f'**{count}**回の指定は上限の**{MAX_COUNT}**回に調整されました。\n'
     return ''
 
 

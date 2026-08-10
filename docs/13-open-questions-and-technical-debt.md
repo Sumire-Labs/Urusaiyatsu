@@ -7,7 +7,7 @@
 > - **更新（2026-08-07・後続リメディエーション）**: 売却 stale 同一性検証・ページクランプ・永続化先行、View タイムアウトメッセージ保持、cooldown/admin check の期待ユーザー応答、装備/ショップ View の事前バインド所有者 ID、非ミューテーション釣りテーブル、釣り確率の重複エントリ集計、境界付き leaderboard、売却回帰テスト（`tests/test_sell.py`）を反映。
 > - 秘密実値・個人情報は記載しない。`config.json` の構造のみ `data/config.json.example` を根拠とする。
 > - 一次根拠の表記は「相対パス + symbol」。実行時確認が必要な事項は「未検証」として分離する。
-> - **ユーザー決定（2026-08-07）**: ショップ更新は**壁時計の 1 時間毎**、進捗の前提 `null` は**初期付与専用**、`/use` `/gather` `/fishing` の `count` は **1〜100・ユーザー毎 3 秒クールダウン**、advancement 欠落参照は **`gather_mythical_mines` へ修正**、バランス数値は**文書化された契約として維持**、状態ストアは**単一プロセスロック**、Discord ライブ検証は**手動で延期**。
+> - **ユーザー決定（2026-08-07）**: ショップ更新は**壁時計の 1 時間毎**、進捗の前提 `null` は**初期付与専用**、`/use` `/gather` `/fishing` の `count` は **1 以上のみ許可（100 超は 100 に正規化）・ユーザー毎 3 秒クールダウン**、advancement 欠落参照は **`gather_mythical_mines` へ修正**、バランス数値は**文書化された契約として維持**、状態ストアは**単一プロセスロック**、Discord ライブ検証は**手動で延期**。
 > - **手動ライブ検証**: 本文書で「手動のライブ検証として延期」とされた U 項目・C 項目の実行時確認手順は、[14-manual-discord-verification.md](14-manual-discord-verification.md) に集約する。検証完了後は本文書の該当項目を「検証済み」へ更新する。
 
 ---
@@ -42,11 +42,11 @@
 | [C-12](#c-12) | エラー/観測不足 | エラーハンドラ未登録（grep 0 件）、`logging` 不使用、拡張ロード失敗は print のみ（`core/state.py:184-185`） | 全 CMD/VIEW/MODAL/LIFE/JOB/OPS | P2 | **解決済**（`logging` 導入・`BotTree.on_error`・`on_error`・Modal/View の `on_error`） |
 | [C-13](#c-13) | tests / CI 欠如 | テストファイル・CI 設定なし（ファイルシステム確認） | 全体（検証工程） | P2 | **解決済**（`tests/` に非ライブ単体テスト + `.github/workflows/ci.yml` を追加。売却回帰テスト含む） |
 | [C-14](#c-14) | equip の空判定デッドコード | `cogs/equip.py:34`（`len(equip_choices) < 0` は常に false） | CMD-EQUIP, VIEW-EQUIPREMOVE | P2 | **解決済**（`if not equip_choices:` へ修正） |
-| [C-16](#c-16) | `/use` の `count` 非正数で在庫増加・効果反転 | `cogs/use.py:21`（ガードなし）、`core/utils.py:172-185`（負数 remove_count） | CMD-USE, CTX-INV-CRUD, CTX-LOOT | P0 | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| [C-16](#c-16) | `/use` の `count` 非正数で在庫増加・効果反転 | `cogs/use.py:21`（ガードなし）、`core/utils.py:172-185`（負数 remove_count） | CMD-USE, CTX-INV-CRUD, CTX-LOOT | P0 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | [C-17](#c-17) | 背景ループの `USERS.items()` 反復と top-level mutation race | `core/background.py:22`、`core/utils.py:17`（`setdefault`）、`cogs/admin_transit.py:33-36`（`pop`/`setdefault`） | JOB-TIMESTATE, JOB-PERSIST, CTX-USER-INIT, CMD-ADMTRANSIT | P1 | **解決済**（`list(USERS.keys())` スナップショット反復 + ユーザー単位 try/except + `_users_lock`。発生頻度は U-13） |
 | [C-18](#c-18) | `new_user` の `fetch_user` 未捕捉 | `core/utils.py:18`（`await bot.fetch_user(user_id)` に try/except なし） | CTX-USER-INIT, 全ゲーム系 CMD/VIEW | P1 | **解決済**（失敗時はフォールバック名 `user_{id}` で登録継続。例外型・UI は U-14） |
 | [C-19](#c-19) | cooldown / max_concurrency / framework check / interaction_check 不在 | 全 `cogs/*.py`・`views/*.py`・`modals/*.py` にチェック系 decorator・共通 `interaction_check` が grep 0 件 | 全 CMD/VIEW/MODAL, OPS-GLOBAL | P2 | **解決済（決定範囲）**（use/gather/fishing に 3 秒クールダウン、admin 3 コマンドに `admin_check`、View に `interaction_check`。残りは U-15） |
-| [C-20](#c-20) | use / gather / fishing の count 非正数ガード・上限不在 | `cogs/use.py:21` / `cogs/gather.py:21` / `cogs/fishing.py:23` | CMD-USE, CMD-GATHER, CMD-FISHING | P2 | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| [C-20](#c-20) | use / gather / fishing の count 非正数ガード・上限不在 | `cogs/use.py:21` / `cogs/gather.py:21` / `cogs/fishing.py:23` | CMD-USE, CMD-GATHER, CMD-FISHING | P2 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | [C-21](#c-21) | stale shop choice の `index` ValueError | `views/shop_view.py:27`（`shop_content.index(item_id)`）、`core/background.py:29-35`（再抽選） | VIEW-SHOP, CMD-BUY, JOB-TIMESTATE | P1 | **解決済**（`item_id not in shop_content` ガードで安全応答） |
 | [C-22](#c-22) | 未使用の `set_craft_func` / `_craft_func` デッドコード | `views/craft_view.py:12-19`（登録元・呼び出し元なし） | VIEW-CRAFTSELECT, CMD-CRAFT | P2 | **解決済**（`craft_view` から削除） |
 
@@ -179,8 +179,8 @@
 - **確認方法**: 実機で `/use` に負の `count` を指定し、インベントリ個数とスタミナ等の変化を観測する。
 - **関連仕様リンク**: `05-discord-interface/commands-gameplay.md`, `06-features/progression-and-inventory.md`。
 - **注記**: `/use` の非正数**拒否**は再実装時の確定した将来期待契約（`12-testable-acceptance-criteria.md` ACR-K-09）。上限チェック等の**上限設計は C-20 として未決**であり、C-16 の負数拒否と混同しない。
-- **解決（2026-08-07）**: `cogs/_helpers.py:valid_count` で `count` を **1〜100** に制限（ユーザー決定）。`cogs/use.py` 冒頭で `valid_count(count)` が偽なら「使用回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否。`core/utils.py` の `remove_item_stacked` 等にも非正数ガードを追加。
-- **解決（2026-08-10・V-08 実測反映）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**。**修正後の再ライブ検証は未実施**（V-08 の手順・期待表示を更新したのみ）。
+- **解決（2026-08-07）**: `cogs/_helpers.py:valid_count` で `count` を **1〜100** に制限（ユーザー決定）。`cogs/use.py` 冒頭で `valid_count(count)` が偽なら「使用回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否。`core/utils.py` の `remove_item_stacked` 等にも非正数ガードを追加。※ **2026-08-10（V-08）で訂正**: 最終契約は**1 以上のみ許可（非正数のみ拒否）**・**100 超は 100 に正規化**（下記 2026-08-10 反映を参照）。
+- **解決（2026-08-10・V-08 実測反映）**: `/use` `/gather` `/fishing` の `count` は**1 以上のみ許可**（非正数のみ拒否）。**100 超の値は 100 に正規化（キャップ）**され、ユーザーへ通知文が応答に付加される（拒否ではない）。**実際に実行される回数は在庫・スタミナ等により少なくなり得る**。クールダウンは**3 秒のまま**。**修正後の再ライブ検証は未実施**（V-08 の手順・期待表示を更新したのみ）。
 
 #### <a name="c-17"></a>C-17 — 背景ループの `USERS.items()` 反復と top-level mutation race【P1】
 
@@ -221,8 +221,8 @@
 - **確認方法**: 負数・0・極端な高値を `/use` `/gather` `/fishing` に指定して実機で観測する。
 - **関連仕様リンク**: `05-discord-interface/commands-gameplay.md`, `06-features/world-activities.md`。
 - **注記**: **gather / fishing の非正数・上限の挙動は推測しない**（実機確認）。再実装必須要件にはしない。
-- **解決（2026-08-07）**: `cogs/_helpers.py:valid_count` で `count` を **1〜100** に制限（ユーザー決定）。`cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py` 冒頭で `valid_count(count)` が偽なら「〜回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否。
-- **解決（2026-08-10・V-08 実測反映）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**。**修正後の再ライブ検証は未実施**（V-08 の手順・期待表示を更新したのみ）。
+- **解決（2026-08-07）**: `cogs/_helpers.py:valid_count` で `count` を **1〜100** に制限（ユーザー決定）。`cogs/use.py` / `cogs/gather.py` / `cogs/fishing.py` 冒頭で `valid_count(count)` が偽なら「〜回数は1〜100の範囲で指定してください。」と応答して状態変更前に拒否。※ **2026-08-10（V-08）で訂正**: 最終契約は**1 以上のみ許可（非正数のみ拒否）**・**100 超は 100 に正規化**（下記 2026-08-10 反映を参照）。
+- **解決（2026-08-10・V-08 実測反映）**: `/use` `/gather` `/fishing` の `count` は**1 以上のみ許可**（非正数のみ拒否）。**100 超の値は 100 に正規化（キャップ）**され、ユーザーへ通知文が応答に付加される（拒否ではない）。**実際に実行される回数は在庫・スタミナ等により少なくなり得る**。クールダウンは**3 秒のまま**。**修正後の再ライブ検証は未実施**（V-08 の手順・期待表示を更新したのみ）。
 
 #### <a name="c-21"></a>C-21 — stale shop choice の `index` ValueError【P1】
 
@@ -300,7 +300,7 @@
 - **関連仕様リンク**: `05-discord-interface/interactions-views-and-modals.md`。
 - **解決（2026-08-07）**: 全 View に `on_timeout`（子要素を無効化し元メッセージをベストエフォートで更新）・`on_error`（内部情報を漏らさず安全応答）・`interaction_check`（所有者制御）を実装。Modal は `modals/_common.py:respond`（未応答なら初期応答、応答済みならフォローアップ）と `safe_on_error` を共通化。実機での timeout 超過後操作の確認は**手動のライブ検証として延期**。
 - **解決（2026-08-07・後続）**: **実際の View タイムアウトメッセージ保持**を実装。各 View は表示中メッセージの参照（`_message_ref`、`interaction.original_response()` / `edit_message` の返り値）を保持し、`on_timeout` が保持メッセージを**実際に編集・無効化**する（`_disable_on_timeout`）。メッセージが保持されていない通常のタイムアウトは例外・ログ対象にしない（正常系）。`tests/test_sell.py` の `TestTimeoutMessageRetention` が非ライブでカバー。
-- **解決（2026-08-10・V-03 実測反映）**: **ephemeral View のタイムアウトは保持メッセージ（ephemeral）への編集を試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。**所有権のクロスユーザー操作は ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。**修正後の再ライブ検証は未実施**（V-03 の手順・期待表示を更新したのみ）。
+- **解決（2026-08-10・V-03 実測反映）**: **ephemeral View のタイムアウトは保持した元の送信 interaction/token の `edit_original_response` で元応答（original response）をベストエフォートで編集**し、無効化されたコントロールを描画する。**公開 View は保持した Message editor（`Message.edit`）** で更新する。editor は View の送信・置換時点でのみ設定され（`store_editor` / `store_interaction`）、**汎用の `interaction_check` 等がソース editor を置き換えることはない**。`interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op しログを出さない**。**想定外の editor 失敗のみ** `logger.exception` で記録され、呼び出し元へ伝播しない（安全に処理）。**所有権のクロスユーザー操作は ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。**修正後の再ライブ検証は未実施**（V-03 の手順・期待表示を更新したのみ）。
 
 #### <a name="u-05"></a>U-05 — sell_modal の応答済み Interaction 編集【P1】
 
@@ -310,7 +310,7 @@
 - **関連仕様リンク**: `05-discord-interface/interactions-views-and-modals.md`。
 - **解決（2026-08-07）**: `modals/sell_modal.py` が `original_interaction` への再編集をやめ、**Modal 送信 interaction（未応答）で `sell_selecting` を再描画**し、確認メッセージは `respond`（フォローアップ）で送る方式へ変更。実機での売却フロー確認は**手動のライブ検証として延期**。
 - **解決（2026-08-07・後続）**: **stale 売却 Modal の同一性検証**を実装。`sell_amount` は開封時点の `index` / `page` / `expected_item`（`id`・`meta`・`count`）を内部保持し、`sell_item` が現在のインベントリと照合。index 範囲外・`id`/`meta` 不一致・所持数不足の場合は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**（観測-3 の誤売却対策）。**ページクランプ**: `sell_selecting` が `page_max` を再計算し要求ページを 1..`page_max` へクランプ（空ページでゼロ個セレクトを生成しない）。**永続化先行**: `sell_item` が `save_users()` を再描画**前**に実行（再描画失敗でも売却を永続化）。`tests/test_sell.py` が非ライブでカバー。
-- **解決（2026-08-10・V-04 実測反映）**: stale 売却保護は、開封時点の**安定した同一性**（`index` の範囲内・`id`/`meta` の一致）と**所持数**を検証する。ただし**同一スタックからの連続売却は意図的に許可**される（例: 10 個所持のスタックから 5 個売却 → 再度 5 個売却は stale 拒否されない）。stale 拒否は「index 範囲外」「`id`/`meta` 不一致」「要求個数が所持数を超える」場合に限定される。**修正後の再ライブ検証は未実施**（V-04 の手順・期待表示を更新したのみ）。
+- **解決（2026-08-10・V-04 実測反映）**: stale 売却保護は、開封時点の**安定した同一性**（`index` の範囲内・`id`/`meta`/`count` の一致）を照合する。**不一致・範囲外・所持数不足はミューテーションせず拒否**。ただし**新しいモーダル**（更新後のスタックを開封時点として捕捉したもの）は**成功**する。同一スタックからの連続売却は、2 回目のモーダルが開封時点の所持数を捕捉するため引き続き許可される。**制限**: 同一 `id`/`meta`/`count` でスタックが完全に入れ替わった場合（例: 全売却後に同数再入手）は区別できない（完全な区別にはスタックごとの revision が必要。本スコープ外）。**修正後の再ライブ検証は未実施**（V-04 の手順・期待表示を更新したのみ）。
 
 #### <a name="u-06"></a>U-06 — ショップ抽出の再抽選重複【P2】
 
@@ -411,7 +411,7 @@
 | テスト基盤の導入 | ユニットテスト/CI の要否・範囲 | C-13 | P2 | **決定済**（`tests/` 非ライブ単体テスト + `.github/workflows/ci.yml` を導入。売却回帰テスト含む） |
 | 進捗の前提 `null` 扱い | 前提なし進捗の扱い（達成扱い/未達成扱い）の統一 | C-06 | P1 | **決定済**（null 前提は初期付与専用） |
 | レート/権限チェックの導入 | cooldown / `max_concurrency` / 権限チェック / `interaction_check` を導入するか、値と適用範囲 | C-19, U-15 | P2 | **一部決定済**（use/gather/fishing 3 秒・admin check・View interaction_check）。残りは延期 |
-| `/use` 等の入力境界 | `/use` `/gather` `/fishing` の `count` の**上限**を設けるか（`/use` の非正数拒否は C-16 で契約確定。上限の設計は C-20 として未決） | C-20 | P2 | **決定済**（非正数のみ拒否・100 超は 100 にキャップし明示通知。V-08 実測反映） |
+| `/use` 等の入力境界 | `/use` `/gather` `/fishing` の `count` の**上限**を設けるか（`/use` の非正数拒否は C-16 で契約確定。上限の設計は C-20 として未決） | C-20 | P2 | **決定済**（1 以上のみ許可・100 超は 100 に正規化し通知文を応答に付加。V-08 実測反映） |
 
 > 上記は「検討課題の明示」であり、**いずれも解決策を仕様として断定していない**。決定済みの項目はユーザー決定（2026-08-07）に基づく。
 
@@ -443,4 +443,4 @@
 - 解決方針が詳細仕様書で確定した項目は、本ファイルに解決先リンクを追記し、解決済み状態へ移す（本ファイル自体に仕様を書かない）。
 - **2026-08-07 更新**: 実装（作業ツリー `new-item-system` の未コミット変更）により、C-01〜C-08・C-10〜C-12・C-14・C-16〜C-22 と U-01〜U-07・U-09・U-10・U-12〜U-15（一部）が**解決済**となった。**未解決のまま残るのは** Discord ライブ検証を要する U-08（絵文字表示）・U-11（時刻ボーナス数式）・U-15（残り範囲）および各 U 項目の実機確認（手動のライブ検証として延期）。**実行時テストの完了は主張しない**（コード・静的解析による解決のみ。Docker ビルド・Discord ライブでの検証は未実施）。
 - **2026-08-07 更新（後続・リメディエーション反映）**: 売却 stale 同一性検証・ページクランプ・永続化先行、View タイムアウトメッセージ保持、cooldown/admin check の期待ユーザー応答、装備/ショップ View の事前バインド所有者 ID、非ミューテーション釣りテーブル（観測-7 解決）、釣り確率の重複エントリ集計、境界付き leaderboard、売却回帰テスト（`tests/test_sell.py`）を反映。**C-13 は解決済**（`tests/` + CI を追加。非ライブ単体テスト）。**実行時テストの完了は主張しない**（CI・ローカル実行の成否は未確認。Discord ライブ検証は未実施）。
-- **2026-08-10 更新（V-03 / V-04 / V-08 実測反映）**: 手動ライブ検証の実測結果を反映。① **ephemeral View のタイムアウト**は保持メッセージ（ephemeral）への編集を試みず、メモリ内で無効化し静かに完了。所有権のクロスユーザー操作は ephemeral 装備 View には適用されず、所有権チェックは非 ephemeral View で検証（U-04）。② **stale 売却保護**は安定した同一性と所持数を検証するが、同一スタックからの連続売却は意図的に許可（U-05）。③ `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**・**100 超は 100 にキャップし明示通知**・クールダウンは 3 秒のまま（C-16 / C-20 / U-15）。**修正後の再ライブ検証は未実施**（手順・期待表示の更新のみ。実行時テストの完了は主張しない）。
+- **2026-08-10 更新（V-03 / V-04 / V-08 実測反映）**: 手動ライブ検証の実測結果を反映。① **ephemeral View のタイムアウト**は保持した元の送信 interaction/token で元応答をベストエフォートで編集し無効化表示。公開 View は保持した Message editor。トークン期限切れ（`is_expired` / 403/404）は静かに no-op・想定外の失敗のみログ。所有権のクロスユーザー操作は ephemeral 装備 View には適用されず、所有権チェックは非 ephemeral View で検証（U-04）。② **stale 売却保護**は開封時点の id/meta/count を照合し、不一致・範囲外・所持数不足は拒否。新しいモーダル（更新後スタック）は成功（U-05）。③ `/use` `/gather` `/fishing` の `count` は**1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**・実際の実行回数は在庫・スタミナ等により少なくなり得る・クールダウンは 3 秒のまま（C-16 / C-20 / U-15）。**修正後の再ライブ検証は未実施**（手順・期待表示の更新のみ。実行時テストの完了は主張しない）。

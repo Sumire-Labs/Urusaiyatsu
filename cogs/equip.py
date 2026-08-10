@@ -8,6 +8,7 @@ from discord.ext import commands
 from core.state import USERS, ITEMS, equippable_choices
 from core.utils import new_user, save_users, get_item, remove_item, add_item_from_dict, remove_item_from_dict
 from views.equip_view import equip_select, set_equip_func, remove_equip_choice
+from views._timeout import store_interaction
 
 
 async def equip(interaction: discord.Interaction, item_id: str):
@@ -36,6 +37,8 @@ async def equip(interaction: discord.Interaction, item_id: str):
             return
         
         view = remove_equip_choice(owner_id=user_id)
+        # タイムアウト時に元応答を編集するため、表示生成元の interaction を即時保持
+        store_interaction(view, interaction)
         view.remove_equip_select.options = equip_choices
         await interaction.response.send_message('アイテムを選択:', view=view, ephemeral=True)
         view._message_ref = await interaction.original_response()
@@ -106,6 +109,8 @@ class EquipCog(commands.Cog):
         user_id = interaction.user.id
         await new_user(user_id)
         view = equip_select(owner_id=user_id)
+        # タイムアウト時に元応答を編集するため、表示生成元の interaction を即時保持
+        store_interaction(view, interaction)
         page_max = len(equippable_choices)
         view.item.options = equippable_choices[0]
         view.next_page.custom_id = str(user_id) + '/0/' + str(page_max)

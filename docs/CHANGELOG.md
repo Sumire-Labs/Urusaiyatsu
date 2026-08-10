@@ -8,6 +8,38 @@
 
 ---
 
+## 2026-08-10（微修正）— View タイムアウト editor の最終実装に整合（docs-only）
+
+### 概要
+
+View タイムアウト処理の最終実装（`views/_timeout.py`）に合わせ、タイムアウト時の editor 選択・期限切れ処理の記述を微修正した。**修正後の再ライブ検証は未実施**（記述の整合のみ。実行時テストの完了は主張しない）。
+
+### 反映内容
+
+- **editor の設定と選択**: editor は View の送信・置換時点でのみ設定される（`store_editor` / `store_interaction`）。**汎用の `interaction_check` 等がソース editor を置き換えることはない**。公開ソースは保持した **Message editor**（`Message.edit`）、ephemeral ソースは保持した**元の送信 interaction/token**（`edit_original_response`）を使う。
+- **期限切れの扱い**: `interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op し、ログを出さない**。**想定外の editor 失敗のみ** `logger.exception` で記録される（呼び出し元へは伝播しない）。
+- 反映先: `14-manual-discord-verification.md`（V-03・§1）、`12-testable-acceptance-criteria.md`（ACR-N-23）、`13-open-questions-and-technical-debt.md`（U-04・§6）、`05-discord-interface/interactions-views-and-modals.md`（§2.5・U-04 表）、本ファイル。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
+## 2026-08-10（後続）— Oracle 修正反映と不正確な記述の訂正（docs-only）
+
+### 概要
+
+手動ライブ検証の最終 Oracle 修正（コミット `fb62008` `fix: apply live verification feedback`。**ランタイムコード・テスト・docs を含む**）と、先行 docs 更新（2026-08-10）に含まれた不正確な記述を訂正した。**修正後の再ライブ検証は未実施**（手順・期待表示の更新のみ。実行時テストの完了は主張しない）。
+
+### 反映内容
+
+- **ephemeral View のタイムアウト（V-03 / U-04 / ACR-N-23）を訂正**: 先行更新で「ephemeral メッセージへの編集を試みずメモリ内で無効化・静かに完了」と記したが、最終 Oracle では **ephemeral View のタイムアウトは保持した元の送信 interaction/token の `edit_original_response` で元応答（original response）をベストエフォートで編集**し、無効化されたコントロールを描画する。**公開 View は保持した Message editor（`Message.edit`）** で更新する。editor は View の送信・置換時点でのみ設定され、汎用の `interaction_check` 等がソース editor を置き換えることはない。`interaction.is_expired()` および想定内 HTTP 403/404（トークン期限切れ等）は**静かに no-op しログを出さない**。**想定外の editor 失敗のみ** `logger.exception` で記録され、呼び出し元へ伝播しない（安全に処理）。`views/_timeout.py:disable_on_timeout`。
+- **stale 売却保護（V-04 / U-05 / ACR-N-20）を訂正**: stale 送信は開封時点の **id/meta/count** を照合し、不一致・範囲外・所持数不足は拒否。**新しいモーダル（更新後スタック）は成功**する。同一スタックからの連続売却は、2 回目のモーダルが開封時点の所持数を捕捉するため許可される。制限: 同一 id/meta/count でスタックが完全に入れ替わった場合は区別できない。
+- **count 境界（V-08 / C-16 / C-20 / ACR-K-09, K-13）を訂正**: 「1〜100 の範囲で拒否」を廃止し、**1 以上のみ許可（非正数のみ拒否）**・**100 超は 100 に正規化（キャップ）し通知文を応答に付加**（`normalize_count` / `cap_notice`）。**実際に実行される回数は在庫・スタミナ等により少なくなり得る**。キャップの**ログ記録は存在しない**（通知は応答メッセージのみ）。クールダウンは 3 秒のまま。
+- **対象コミットの記述を訂正**: 検証対象を `fb62008`（`fix: apply live verification feedback`。**ランタイムコード・テスト・docs を含む**）として明記（docs-only ではない）。
+- 反映先: `14-manual-discord-verification.md`（V-03 / V-04 / V-08・§1・§3 表・対象コミット）、`12-testable-acceptance-criteria.md`（ACR-N-20 / N-23 / K-09 / K-13 / C-16・C-20 表 / §2）、`13-open-questions-and-technical-debt.md`（U-04 / U-05 / C-16 / C-20 / §4 / §6）、`05-discord-interface/interactions-views-and-modals.md`（§2.5 / sell UI 遷移 / U-04・C-16・C-20 表）、`05-discord-interface/commands-gameplay.md`（use / gather / fishing の count 注記、売却フロー・受入基準）、`06-features/*`、`09`、`11`、`04`。
+- 本作業は `docs/` 配下のみの変更（コード・設定・データは不変更）。秘密実値・ユーザー ID は記載していない。
+
+---
+
 ## 2026-08-10 — V-03 / V-04 / V-08 実測反映の仕様更新（docs-only）
 
 ### 概要
@@ -16,7 +48,7 @@
 
 ### 反映内容
 
-- **ephemeral View のタイムアウト（V-03 / U-04 / ACR-N-23）**: ephemeral View のタイムアウトは保持メッセージ（ephemeral）への編集を**試みない**。子要素を**メモリ内で無効化**し、タイムアウトは**静かに完了**する（`_disable_on_timeout` は非 ephemeral の保持メッセージのみ編集対象）。
+- **ephemeral View のタイムアウト（V-03 / U-04 / ACR-N-23）**: ※ **2026-08-10（後続）で訂正**。最終 Oracle では ephemeral View のタイムアウトは保持した元の送信 interaction/token で元応答をベストエフォートで編集し無効化表示する（`edit_original_response`）。公開 View は保持した Message editor。トークン期限切れ（`is_expired` / 403/404）は静かに no-op・想定外の失敗のみログ。
 - **所有権チェックの適用範囲（V-03 / ACR-N-26）**: 所有権の**クロスユーザー操作は ephemeral 装備 View には適用されない**（ephemeral は発火者以外に露出しないため）。所有権チェック（`interaction_check`）の検証は**非 ephemeral View**（例: `/status` のページング View）で実施する。
 - **stale 売却保護（V-04 / U-05 / ACR-N-20）**: stale 保護は**安定した同一性**（`index` 範囲内・`id`/`meta` 一致）と**所持数**を検証する。**同一スタックからの連続売却は意図的に許可**される（stale 拒否は index 範囲外・`id`/`meta` 不一致・要求個数が所持数を超える場合に限定）。
 - **count 境界（V-08 / C-16 / C-20 / ACR-K-09, K-13）**: `/use` `/gather` `/fishing` の `count` は**非正数のみ拒否**される。**100 超の値は 100 にキャップ**され、ユーザーへ**明示の通知**が返る（拒否ではない）。クールダウンは**3 秒のまま**（ACR-N-24 / U-15）。

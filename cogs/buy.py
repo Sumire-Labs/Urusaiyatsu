@@ -8,6 +8,7 @@ from discord.ext import commands
 from core.state import USERS, ITEMS
 from core.utils import new_user
 from views.shop_view import shop_choice
+from views._timeout import store_interaction
 
 
 class BuyCog(commands.Cog):
@@ -27,6 +28,8 @@ class BuyCog(commands.Cog):
             return
         
         view = shop_choice(owner_id=user_id)
+        # タイムアウト時に元応答を編集するため、表示生成元の interaction を即時保持
+        store_interaction(view, interaction)
         shop_content = user_data['shop_content']
         shop_choices = []
         for item_id in shop_content:

@@ -72,7 +72,7 @@
 5. **燃料**: `fuel < stats['fuel_uses']` → `ドリルの燃料が足りません。(**{fuel}/{fuel_uses}**{EMOJIS.fuel})`
    - ※既定 `fuel_uses = 0` のため、燃料消費装備が無い限りこのゲートは通る。
 6. **スタミナ**: `stamina_uses = stats['gathering_stamina_uses'] + int(radiation * stats['radiation_effect'])`（既定 10 + 放射線×0.1）に対し `stamina < stamina_uses` → `スタミナが足りません。(**{stamina}/{stamina_uses}**{EMOJIS.stamina})`
-   - ※`count` 引数（`cogs/gather.py:21`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: **非正数のみ拒否**・**100 超は 100 にキャップし明示通知**。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。
+   - ※`count` 引数（`cogs/gather.py:21`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: **1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**・実際の実行回数は在庫・スタミナ等により少なくなり得る。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。
 
 **採集ループ（`process_count < count` の間）**
 7. **放射線（`radioactive: true` の場所のみ）**: `radiation < max_radiation` かつ `radiation_protecting_chance < random.random()` なら `radiation += 1` して `stamina_uses` を再計算。
@@ -105,7 +105,7 @@
 2. **釣り竿装備**: `equipment['fishing_rod'] == {}` → `釣り竿を装備してください。`
 3. **レベル**: `level_fishing < required_level` → `{場所}での釣りには釣りレベルが**{n}**以上必要です。`
 4. **スタミナ**: `stamina < stats['fishing_stamina_uses']`（既定 10）→ `スタミナが足りません。(**{stamina}/{n}**{EMOJIS.stamina})`
-   - ※`count` 引数（`cogs/fishing.py:23`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: **非正数のみ拒否**・**100 超は 100 にキャップし明示通知**。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。
+   - ※`count` 引数（`cogs/fishing.py:23`）は **2026-08-07 修正**: `valid_count`（1〜100）で拒否（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: **1 以上のみ許可**・**100 超は 100 に正規化し通知文を応答に付加**・実際の実行回数は在庫・スタミナ等により少なくなり得る。`@app_commands.checks.cooldown(1, 3.0, key=user_cooldown_key)` でユーザー毎 3 秒クールダウン（**C-19 解決**。3 秒のまま）。
 
 **ルートテーブル構築 `get_fishing_loot_table(place, power, bait=None)`**
 5. `power += int((20 - abs(現在時刻の時 - 6)) / 3)`（**時刻ボーナス**。6 時前後で最大。式の意図は U-11、§13）。
@@ -237,7 +237,7 @@
 - **静的データのミューテーション**: 釣りの `table_addition` は `FISHING_PLACES` の `weight` を直接加算するため、プロセス生存中は累積する（§13 観測事項）。採集の結果マージは `broken_tool` の負値が `result` に入る。
 - 単一プロセス・単一レプリカ前提。`save_users()` は atomic 書込 + `_save_lock`（**C-07 解決**）。`acquire_state_lock` が起動時に多重起動を拒否（**U-09 解決**）。
 - 背景ループの `USERS` 反復（`core/background.py:update_tick`）は **2026-08-07 修正**: `list(USERS.keys())` のスナップショットで反復し、`_users_lock` でトップレベル `USERS` の構造ミューテーションを直列化（**C-17 解決**）。ユーザー単位の例外は捕捉して `logger.exception` で記録しループを継続。頻度は U-13（実機観察は延期）。
-- 高 `count` 指定時はループ数がそのまま処理量になるが、`valid_count`（1〜100）で上限がガードされる（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: 100 超の値は 100 にキャップされ、ユーザーへ明示通知が返る（拒否ではない）。
+- 高 `count` 指定時はループ数がそのまま処理量になるが、`valid_count`（1〜100）で上限がガードされる（**C-20 解決**）。**2026-08-10 実測反映（V-08）**: 100 超の値は 100 に正規化され、ユーザーへ通知文が応答に付加される（拒否ではない）。実際の実行回数は在庫・スタミナ等により少なくなり得る。
 
 ## 11. 関連
 
@@ -281,10 +281,10 @@
 | ID | 内容 | 種別 | 状態 |
 |---|---|---|---|
 | C-03 | `remove_item_from_index` の `list.pop(辞書)` は `TypeError` → クラフトのツール破損経路で interaction failed。`remove_item_stacked(required=True)` は不足時に実インベントリへ部分消費を残す | 現行バグ | **解決済**（`pop(index)` + トランザクション化） |
-| C-16 | `/use` の `count` 負数で在庫増加・効果反転。`con_loot` は `random.choices(..., k=負数)` が空 list のため loot なし（結果 `{}`）で処理継続（詳細は `progression-and-inventory.md` §5.4 参照） | 現行バグ | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-16 | `/use` の `count` 負数で在庫増加・効果反転。`con_loot` は `random.choices(..., k=負数)` が空 list のため loot なし（結果 `{}`）で処理継続（詳細は `progression-and-inventory.md` §5.4 参照） | 現行バグ | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-17 / U-13 | 背景ループの `USERS.items()` 反復と `new_user` / `admin_transit` の top-level mutation race（`RuntimeError` でスレッド終了、頻度は U-13） | 現行バグ（競合依存） | **解決済**（スナップショット反復 + `_users_lock`。実機観察は延期） |
 | C-18 / U-14 | 採集・釣り冒頭の `new_user` 内 `bot.fetch_user` 失敗が未捕捉（例外型・UI は U-14） | 現行バグ（外部依存） | **解決済**（フォールバック名で登録継続。実機確認は延期） |
-| C-20 | gather / fishing / use の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（非正数のみ拒否・100 超は 100 にキャップ。V-08 実測反映） |
+| C-20 | gather / fishing / use の `count` 非正数ガード・上限不在（挙動は推測しない） | 現行バグ（境界未定義） | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-22 | `craft_view` の `set_craft_func` / `_craft_func` デッドコード | 現行バグ | **解決済**（削除） |
 | U-11 | 釣りの時刻ボーナス `int((20 - abs(hour - 6)) / 3)` の数式のバランス意図は文書化されていない | 未確定 | 未解決（数式は不変・契約として維持） |
 | U-10 | `item_data` の釣り確率表示は `power_min`/`power_max` の中間値で近似しており、実ロール（`get_fishing_loot_table`）の条件と完全一致するか未検証 | 未検証 | コード解決済（`_fishing_probability_range` で確率範囲表示）。実機確認は**延期** |
