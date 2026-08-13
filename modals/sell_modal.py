@@ -64,12 +64,10 @@ async def sell_item(interaction: discord.Interaction, index: int, count: int, pa
         if current['count'] != expected_item['count']:
             await respond(interaction, 'アイテム情報が変更されたため、売却をキャンセルしました。')
             return
-        if current['count'] < count:
-            await respond(interaction, '所持数が変更されたため、売却をキャンセルしました。')
-            return
 
     # アイテムを消費
     sell_item = copy(user_data['inventory'][index])
+    # 要求数が現在の所持数を超える場合は、所持している全数を売却する（bounded sell）
     count = min(count, sell_item['count'])
     sell_item['count'] = count
     remove_item_from_dict(user_id, sell_item)

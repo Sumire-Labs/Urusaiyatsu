@@ -134,8 +134,8 @@
 2. `count > 0` なら `custom_id` から `index`/`page` を取り出し `sell_item(interaction, original_interaction, index, count, page)` へ。
 
 **売却実行 `sell_item`**
-1. **2026-08-07・後続（stale 同一性検証）**: `expected_item`（開封時点の `id`/`meta`/`count`）と現在の `inventory[index]` を照合。index 範囲外・`id`/`meta` 不一致・所持数不足は「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**（観測-3 の誤売却対策）。
-2. `sell_item = copy(user_data['inventory'][index])`。`count = min(count, 所持数)`。
+1. **2026-08-07・後続（stale 同一性検証）**: `expected_item`（開封時点の `id`/`meta`/`count`）と現在の `inventory[index]` を照合。**真の stale 拒否**は index 範囲外・`id`/`meta` 不一致・開封後にスタック数が変化（`current['count'] != expected_item['count']`）した場合のみで、「アイテム情報が変更されたため、売却をキャンセルしました。」等で**ミューテーションせず拒否**（観測-3 の誤売却対策）。
+2. `sell_item = copy(user_data['inventory'][index])`。`count = min(count, 所持数)`（**要求個数が所持数を超える場合は所持数へキャップ**し、利用可能なスタック全体を売却する。これは stale 拒否ではなく、状態が不変なら正常に全量売却される）。
 3. `remove_item_from_dict(user_id, sell_item)`（id + meta 一致で所定数を消費）。
 4. `money += ITEMS[id]['value'] * count`。
 5. **永続化先行**: `save_users()` を再描画**前**に実行（再描画失敗でも売却を永続化）。
@@ -145,6 +145,7 @@
 **現行仕様の観測**：
 - 売却は XP・進捗を発生させない。
 - `index` は View 表示時点のインベントリ順番のため、表示後にインベントリが変化すると index ズレし得るが、**stale 同一性検証**（`expected_item` 照合）で誤売却を拒否する（観測-3 対策）。
+- **要求個数が所持数を超える場合**は stale 拒否ではなく**所持数へキャップ**して利用可能なスタック全体を売却する。stale 拒否は状態が実際に変化した場合（index 範囲外・`id`/`meta` 不一致・開封後のスタック数変化）のみ。
 - 応答は **公開**（非 ephemeral）。
 
 ### 5.4 購入・ショップ（CMD-BUY / VIEW-SHOP）— `cogs/buy.py` + `views/shop_view.py`
@@ -258,7 +259,7 @@
 
 **CMD-SELL（売却）**
 - Given `value=5` のアイテムを 3 個 / When 3 個売却 / Then `money += 15` かつインベントリから消える。
-- Given 所持 2 個 / When 5 個指定で売却 / Then 2 個分の金額のみ加算される。
+- Given 所持 2 個 / When 5 個指定で売却 / Then 2 個分の金額のみ加算される（**所持数へキャップ**して全量売却。stale 拒否ではない）。
 - Given 売却後 / When 一覧を再描画 / Then `sell_selecting` が元のページで更新される。
 
 **CMD-BUY（購入）**

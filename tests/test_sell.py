@@ -45,13 +45,14 @@ assert len(ud['inventory']) == 1
 assert interaction.response.sent and 'キャンセル' in interaction.response.sent[0]
 ''')
 
-    def test_stale_count_rejected_without_mutation(self):
+    def test_over_request_sells_full_stack(self):
         run_ok('''
 import asyncio
 from modals.sell_modal import sell_item
 _new_user(1)
 ud = USERS['1']
 u.add_item(1, 'wood', 5)
+ITEMS['wood']['value'] = 5
 
 class FakeResponse:
     def __init__(self):
@@ -70,13 +71,16 @@ class FakeInteraction:
     def __init__(self, uid):
         self.user = FakeUser(uid)
         self.response = FakeResponse()
+        self.message = None
+    async def original_response(self):
+        return None
 
-# same identity but current count (5) < requested (10) -> reject
+# Valid modal (expected == current == 5) but request (10) exceeds the held
+# stack -> bounded sell: sell all 5 held items instead of cancelling.
 interaction = FakeInteraction(1)
 asyncio.run(sell_item(interaction, 0, 10, 1, {'id': 'wood', 'meta': {}, 'count': 5}))
-assert ud['money'] == 0
-assert len(ud['inventory']) == 1
-assert interaction.response.sent and 'キャンセル' in interaction.response.sent[0]
+assert ud['money'] == 25, ud['money']
+assert len(ud['inventory']) == 0, ud['inventory']
 ''')
 
     def test_stale_modal_count_mismatch_rejected(self):
