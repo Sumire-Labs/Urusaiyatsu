@@ -2,6 +2,7 @@
 from copy import deepcopy
 import json
 import logging
+import math
 import os
 from pathlib import Path
 import shutil
@@ -51,9 +52,59 @@ def positive(value):
     return type(value) is int and value > 0
 
 
+def read_json(path):
+    """Reject ambiguous keys and non-finite values before using snapshots."""
+    def object_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('JSONオブジェクトのキーが重複しています')
+            result[key] = value
+        return result
+
+    def reject_constant(value):
+        raise ValueError('JSONに非有限数値が含まれています')
+
+    def finite_float(value):
+        number = float(value)
+        if not math.isfinite(number):
+            reject_constant(value)
+        return number
+
+    with Path(path).open(encoding='utf-8') as f:
+        return json.load(f, object_pairs_hook=object_pairs,
+                         parse_constant=reject_constant, parse_float=finite_float)
+
+
+def validate_item(item, items):
+    if (not isinstance(item, dict) or not isinstance(item.get('id'), str)
+            or item['id'] not in items or not positive(item.get('count'))
+            or not isinstance(item.get('meta'), dict)):
+        raise ValueError('不正な品物参照')
+
+
+def validate_users(users, items):
+    """Validate transaction participants, including users with no listings."""
+    if not isinstance(users, dict):
+        raise ValueError('ユーザーは辞書が必要です')
+    for user_id, user in users.items():
+        if (not isinstance(user_id, str) or not user_id.isascii()
+                or not user_id.isdecimal() or user_id.startswith('0')):
+            raise ValueError('不正なユーザーID')
+        if not isinstance(user, dict) or not isinstance(user.get('inventory'), list):
+            raise ValueError('不正な返却先')
+        if type(user.get('money')) is not int or not isinstance(user.get('name'), str):
+            raise ValueError('不正な代金受取先')
+        if not positive(user.get('level_global')):
+            raise ValueError('不正なユーザーレベル')
+        for item in user['inventory']:
+            validate_item(item, items)
+
+
 def validate(users, auctions, items):
-    if not isinstance(users, dict) or not isinstance(auctions, list):
-        raise ValueError('ユーザーは辞書、出品はリストが必要です')
+    validate_users(users, items)
+    if not isinstance(auctions, list):
+        raise ValueError('出品はリストが必要です')
     seen = set()
     for row in auctions:
         if not isinstance(row, dict) or set(row) != {'id', 'seller_id', 'item', 'price', 'expires_at'}:
@@ -64,15 +115,9 @@ def validate(users, auctions, items):
             raise ValueError('出品ID重複または存在しない出品者')
         seen.add(row['id'])
         item = row['item']
-        if (not isinstance(item, dict) or set(item) != {'id', 'count', 'meta'}
-                or item['id'] not in items or not positive(item['count'])
-                or not isinstance(item['meta'], dict)):
-            raise ValueError('不正な品物参照')
-        seller = users[str(row['seller_id'])]
-        if not isinstance(seller, dict) or not isinstance(seller.get('inventory'), list):
-            raise ValueError('不正な返却先')
-        if type(seller.get('money')) is not int or not isinstance(seller.get('name'), str):
-            raise ValueError('不正な代金受取先')
+        validate_item(item, items)
+        if set(item) != {'id', 'count', 'meta'}:
+            raise ValueError('不正な品物フィールド')
 
 
 def recover(items):
@@ -80,12 +125,11 @@ def recover(items):
     if not JOURNAL_PATH.exists():
         return
     try:
-        with JOURNAL_PATH.open(encoding='utf-8') as f:
-            journal = json.load(f)
+        journal = read_json(JOURNAL_PATH)
         if not isinstance(journal, dict) or set(journal) != {'users', 'auctions'}:
             raise ValueError('不正なジャーナル')
         validate(journal['users'], journal['auctions'], items)
-    except (ValueError, TypeError, KeyError, OSError) as error:
+    except (ValueError, TypeError, KeyError, OSError, RecursionError) as error:
         fail_closed([JOURNAL_PATH, USER_PATH, AUCTION_PATH], error)
     try:
         atomic_write(USER_PATH, journal['users'])
@@ -102,11 +146,10 @@ def load_auctions(users, items):
     try:
         if not AUCTION_PATH.exists():
             atomic_write(AUCTION_PATH, [])
-        with AUCTION_PATH.open(encoding='utf-8') as f:
-            auctions = json.load(f)
+        auctions = read_json(AUCTION_PATH)
         validate(users, auctions, items)
         return auctions
-    except (ValueError, TypeError, KeyError, OSError) as error:
+    except (ValueError, TypeError, KeyError, OSError, RecursionError) as error:
         fail_closed([AUCTION_PATH, USER_PATH], error)
 
 

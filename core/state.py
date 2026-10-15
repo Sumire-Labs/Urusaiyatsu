@@ -11,9 +11,7 @@ import fcntl
 import json
 import logging
 import os
-import shutil
 import sys
-import time
 
 from .config import DATA_DIR
 
@@ -54,45 +52,23 @@ def acquire_state_lock():
     logger.info('状態ロックを取得しました: %s', _STATE_LOCK_PATH)
 
 
-def _write_empty_user_file():
-    with open(_STATE_PATH, 'w', encoding='UTF-8') as f:
-        json.dump({}, f, indent=2, ensure_ascii=False)
-
-
-def _quarantine_user_file() -> str:
-    """既存の状態ファイルをタイムスタンプ付きバックアップとして隔離する。"""
-    ts = time.strftime('%Y%m%d-%H%M%S')
-    backup = os.path.join(_STATE_DIR, f'user.json.bak.{ts}')
-    try:
-        shutil.copy(_STATE_PATH, backup)
-    except OSError:
-        logger.exception('状態ファイルの隔離に失敗しました: %s', backup)
-    return backup
-
-
 def _load_users() -> dict:
     """状態ファイルを読み込む。
 
     - 存在しない場合のみ空の {} を作成する。
-    - 既存状態が破損（JSONDecodeError）または読み取り不能（OSError）の場合は
+    - 既存状態のJSON・取引関連フィールドが不正または読み取り不能の場合は
       隔離/保存した上で起動を非ゼロで失敗させる（fail-closed）。
     """
-    if not os.path.exists(_STATE_PATH):
-        logger.info('状態ファイルが存在しないため空の状態ファイルを作成します: %s', _STATE_PATH)
-        _write_empty_user_file()
-        return {}
     try:
-        with open(_STATE_PATH, 'r', encoding='UTF-8') as f:
-            users = json.load(f)
+        if not USER_PATH.exists():
+            logger.info('状態ファイルが存在しないため空の状態ファイルを作成します: %s', _STATE_PATH)
+            atomic_write(USER_PATH, {})
+        users = read_json(USER_PATH)
+        validate_users(users, ITEMS)
         logger.info('状態ファイルから %d ユーザーを読み込みました', len(users))
         return users
-    except json.JSONDecodeError as e:
-        backup = _quarantine_user_file()
-        logger.error('状態ファイルが破損しています（%s）。%s に隔離しました。起動を中止します', e, backup)
-        sys.exit(1)
-    except OSError as e:
-        logger.error('状態ファイルを読み込めません（%s）。起動を中止します', e)
-        sys.exit(1)
+    except (ValueError, TypeError, KeyError, OSError, RecursionError) as error:
+        fail_closed([USER_PATH], error)
 
 
 # Choice lists（setup_hookで初期化）
@@ -124,7 +100,10 @@ with open('advancement.json', 'r', encoding='UTF-8') as f:
 acquire_state_lock()
 
 # 通常読込より先に、確定済み取引を復旧する。
-from .storage import recover, load_auctions
+from .storage import (
+    recover, load_auctions, read_json, validate_users,
+    atomic_write, fail_closed, USER_PATH,
+)
 recover(ITEMS)
 USERS: dict = _load_users()
 AUCTIONS: list = load_auctions(USERS, ITEMS)

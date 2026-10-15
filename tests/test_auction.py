@@ -165,6 +165,104 @@ rejected(lambda: a.transit_user(3, 3))
 
 
 class TestAuctionPersistence(unittest.TestCase):
+    def test_invalid_journal_users_never_replace_normal_files(self):
+        run_ok(SETUP + '''
+variants = [{'1': None}, {'1': {}}, {'invalid-id': deepcopy(USERS['1'])}]
+for field, value in [('inventory', [None]), ('inventory', [{'id': 'wood', 'count': -1, 'meta': {}}]),
+                     ('inventory', [{'id': 'missing', 'count': 1, 'meta': {}}]),
+                     ('money', True), ('money', 1.5), ('name', None), ('level_global', 0)]:
+    users = deepcopy(USERS)
+    users['2'][field] = value  # No auctions: even non-sellers must be validated.
+    variants.append(users)
+for users in variants:
+    original = [p.read_bytes() for p in (store.USER_PATH, store.AUCTION_PATH)]
+    raw = json.dumps({'users': users, 'auctions': []})
+    store.JOURNAL_PATH.write_text(raw)
+    backups = set(store.JOURNAL_PATH.parent.glob('auction-journal.json.bak.*'))
+    try:
+        store.recover(ITEMS)
+    except SystemExit as error:
+        assert error.code == 1
+    else:
+        raise AssertionError('invalid journal overwrote normal state')
+    assert original == [p.read_bytes() for p in (store.USER_PATH, store.AUCTION_PATH)]
+    assert store.JOURNAL_PATH.read_text() == raw
+    assert set(store.JOURNAL_PATH.parent.glob('auction-journal.json.bak.*')) - backups
+''')
+
+    def test_malformed_user_records_fail_closed_with_backup(self):
+        run_ok(SETUP + '''
+from core.state import _load_users
+variants = ['[]', 'null', '{"1": null}', '{"1": {}}', '{"1": {}, "1": {}}']
+for field, value in [('money', False), ('level_global', True), ('inventory', {}),
+                     ('inventory', [{'id': 'wood', 'count': True, 'meta': {}}]),
+                     ('inventory', [{'id': ['wood'], 'count': 1, 'meta': {}}]),
+                     ('inventory', [{'id': 'wood', 'count': 1, 'meta': None}])]:
+    users = deepcopy(USERS)
+    users['2'][field] = value
+    variants.append(json.dumps(users))
+for raw in variants:
+    store.USER_PATH.write_text(raw)
+    backups = set(store.USER_PATH.parent.glob('user.json.bak.*'))
+    try:
+        _load_users()
+    except SystemExit as error:
+        assert error.code == 1
+    else:
+        raise AssertionError('malformed user state loaded')
+    assert store.USER_PATH.read_text() == raw
+    assert set(store.USER_PATH.parent.glob('user.json.bak.*')) - backups
+''')
+
+    def test_ambiguous_and_nonfinite_json_is_rejected_before_recovery(self):
+        run_ok(SETUP + '''
+from core.state import _load_users
+row = a.create_listing(1, 'wood', {}, 1, 10, 21600)
+users_raw, auctions_raw = json.dumps(USERS), json.dumps(AUCTIONS)
+for value in ('NaN', 'Infinity', '-Infinity', '1e999'):
+    bad_users = users_raw.replace('"meta": {}', '"meta": {"nested": [' + value + ']}', 1)
+    bad_auctions = auctions_raw.replace('"meta": {}', '"meta": {"nested": [' + value + ']}', 1)
+    for path, raw, load in [
+        (store.USER_PATH, bad_users, _load_users),
+        (store.AUCTION_PATH, bad_auctions, lambda: store.load_auctions(USERS, ITEMS)),
+        (store.JOURNAL_PATH, '{"users": ' + bad_users + ', "auctions": []}', lambda: store.recover(ITEMS)),
+    ]:
+        path.write_text(raw)
+        try:
+            load()
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError('nonfinite JSON accepted: ' + value)
+        assert path.read_text() == raw
+        store.USER_PATH.write_text(users_raw)
+        store.AUCTION_PATH.write_text(auctions_raw)
+        if store.JOURNAL_PATH.exists():
+            store.JOURNAL_PATH.unlink()
+
+raw = '{"users": ' + users_raw + ', "users": {}, "auctions": []}'
+store.JOURNAL_PATH.write_text(raw)
+try:
+    store.recover(ITEMS)
+except SystemExit:
+    pass
+else:
+    raise AssertionError('duplicate journal key accepted')
+assert store.USER_PATH.read_text() == users_raw
+assert store.AUCTION_PATH.read_text() == auctions_raw
+assert store.JOURNAL_PATH.read_text() == raw
+
+raw = auctions_raw.replace('"price": 10', '"price": 10, "price": 1')
+store.AUCTION_PATH.write_text(raw)
+try:
+    store.load_auctions(USERS, ITEMS)
+except SystemExit:
+    pass
+else:
+    raise AssertionError('duplicate price accepted')
+assert store.AUCTION_PATH.read_text() == raw
+''')
+
     def test_faults_at_every_commit_step_and_replay(self):
         run_ok(SETUP + '''
 # Faults before marker commit, after marker commit, at each replacement and unlink.

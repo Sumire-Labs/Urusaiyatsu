@@ -52,7 +52,22 @@ def inside(phase):
         assert list(runtime.glob('auction-journal.json.bak.*'))
         assert (runtime / 'user.json').read_text() == (runtime / 'users-before-corruption.json').read_text()
         assert (runtime / 'auction.json').read_text() == '[]'
+        (runtime / 'auction-journal.json').write_text(json.dumps({'users': {'1': None}, 'auctions': []}))
+        return
+    if phase == 'verify-invalid-journal-users':
+        raw = json.dumps({'users': {'1': None}, 'auctions': []})
+        assert (runtime / 'auction-journal.json').read_text() == raw
+        assert any(p.read_text() == raw for p in runtime.glob('auction-journal.json.bak.*'))
+        assert (runtime / 'user.json').read_bytes() == (runtime / 'users-before-corruption.json').read_bytes()
+        assert (runtime / 'auction.json').read_text() == '[]'
         (runtime / 'auction-journal.json').unlink()
+        (runtime / 'user.json').write_text('{"1": null}')
+        return
+    if phase == 'verify-invalid-users':
+        assert (runtime / 'user.json').read_text() == '{"1": null}'
+        assert any(p.read_text() == '{"1": null}' for p in runtime.glob('user.json.bak.*'))
+        assert (runtime / 'auction.json').read_text() == '[]'
+        (runtime / 'user.json').write_bytes((runtime / 'users-before-corruption.json').read_bytes())
         return
 
     sys.path.insert(0, '/app')
@@ -172,6 +187,10 @@ def main():
             phase('verify-corrupt-auction')
             run('python', '-c', 'import core', expected=1)
             phase('verify-corrupt-journal')
+            run('python', '-c', 'import core', expected=1)
+            phase('verify-invalid-journal-users')
+            run('python', '-c', 'import core', expected=1)
+            phase('verify-invalid-users')
             phase('final')
             print('PASS: all isolated Docker checks (including expected corruption exits)', flush=True)
         finally:

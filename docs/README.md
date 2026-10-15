@@ -40,6 +40,7 @@
 | [12-testable-acceptance-criteria.md](12-testable-acceptance-criteria.md) | 受入条件 | 全 59 機能 ID 追跡 + Given-When-Then 受入条件 | 作成済 |
 | [13-open-questions-and-technical-debt.md](13-open-questions-and-technical-debt.md) | 負債台帳 | C-01〜C-08, C-10〜C-14, C-16〜C-22 / U-01〜U-15 の集約（根拠・影響範囲・優先度・確認方法） | 作成済 |
 | [14-manual-discord-verification.md](14-manual-discord-verification.md) | 検証手順 | デプロイ済み Bot に対する手動 Discord ライブ検証ガイド（U-01〜U-15 の実機確認手順） | 作成済 |
+| [15-auction-plan-review.md](15-auction-plan-review.md) | 確認記録 | オークション計画と実装の照合、修正内容、検証済み範囲と残る実機確認 | 作成済 |
 | [CHANGELOG.md](CHANGELOG.md) | 履歴 | 仕様書群の変更履歴 | 作成済 |
 
 > 全文書が作成済み。詳細仕様の機能 ID 割り当ては `00-feature-catalog.md` §6.1「現行ドキュメント構成」どおり。
