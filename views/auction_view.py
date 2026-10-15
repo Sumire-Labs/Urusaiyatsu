@@ -25,7 +25,9 @@ async def error_response(interaction, message):
         await interaction.response.send_message(message, ephemeral=True)
 
 
-async def show(interaction, view, embed):
+async def show(interaction, view, embed, previous_view=None):
+    if previous_view is not None:
+        previous_view.stop()
     if interaction.message is None:
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     else:
@@ -40,6 +42,11 @@ class AuctionView(discord.ui.View):
         super().__init__(timeout=180)
         self.owner_id = owner_id
         self.deadline = time.monotonic() + 180
+        self.retired = False
+
+    def stop(self):
+        self.retired = True
+        super().stop()
 
     async def interaction_check(self, interaction):
         if interaction.user.id != self.owner_id:
@@ -56,7 +63,8 @@ class AuctionView(discord.ui.View):
         return True
 
     async def on_timeout(self):
-        await disable_on_timeout(self)
+        if not self.retired:
+            await disable_on_timeout(self)
 
     async def on_error(self, interaction, error, item):
         from modals._common import safe_on_error
@@ -109,9 +117,9 @@ class AuctionListView(AuctionView):
         self.button('更新', lambda i: self.navigate(i, self.page))
         if mine:
             self.button('出品する', self.inventory, style=discord.ButtonStyle.primary)
-            self.button('一覧へ', lambda i: open_auction(i))
+            self.button('一覧へ', lambda i: open_auction(i, previous_view=self))
         else:
-            self.button('出品', lambda i: open_auction(i, mine=True), style=discord.ButtonStyle.primary)
+            self.button('出品', lambda i: open_auction(i, mine=True, previous_view=self), style=discord.ButtonStyle.primary)
 
     def embed(self):
         embed = discord.Embed(title='自分の出品' if self.mine else 'オークションハウス',
@@ -124,18 +132,15 @@ class AuctionListView(AuctionView):
         return embed
 
     async def navigate(self, interaction, page):
-        await open_auction(interaction, page, self.mine)
-        self.stop()
+        await open_auction(interaction, page, self.mine, previous_view=self)
 
     async def detail(self, interaction, value):
         row = get_listing(int(value))
         view = AuctionDetailView(self.owner_id, row)
-        await show(interaction, view, view.embed())
-        self.stop()
+        await show(interaction, view, view.embed(), previous_view=self)
 
     async def inventory(self, interaction):
-        await open_inventory(interaction)
-        self.stop()
+        await open_inventory(interaction, previous_view=self)
 
 
 class AuctionDetailView(AuctionView):
@@ -144,7 +149,7 @@ class AuctionDetailView(AuctionView):
         self.listing = deepcopy(row)
         self.button('取り消す' if row['seller_id'] == owner_id else '買う', self.trade,
                     style=discord.ButtonStyle.primary)
-        self.button('一覧へ', lambda i: open_auction(i))
+        self.button('一覧へ', lambda i: open_auction(i, previous_view=self))
 
     def embed(self):
         row = self.listing
@@ -180,9 +185,9 @@ class InventoryView(AuctionView):
                                      description=meta_text(s.get('meta', {}), 100), value=str(index))
                 for index, s in enumerate(self.stacks)
             ], self.choose, '出品するスタックを選択')
-        self.button('前へ', lambda i: open_inventory(i, page - 1), disabled=page == 0)
-        self.button('次へ', lambda i: open_inventory(i, page + 1), disabled=page == pages - 1)
-        self.button('自分の出品へ', lambda i: open_auction(i, mine=True))
+        self.button('前へ', lambda i: open_inventory(i, page - 1, previous_view=self), disabled=page == 0)
+        self.button('次へ', lambda i: open_inventory(i, page + 1, previous_view=self), disabled=page == pages - 1)
+        self.button('自分の出品へ', lambda i: open_auction(i, mine=True, previous_view=self))
 
     async def choose(self, interaction, value):
         from modals.auction_modal import AuctionAmountModal
@@ -190,7 +195,7 @@ class InventoryView(AuctionView):
         current = require_access(self.owner_id)['inventory']
         if not any(s['id'] == stack['id'] and s.get('meta', {}) == stack.get('meta', {}) for s in current):
             raise AuctionError('選択したスタックがありません。インベントリを開き直してください。')
-        await interaction.response.send_modal(AuctionAmountModal(self.owner_id, stack))
+        await interaction.response.send_modal(AuctionAmountModal(self.owner_id, stack, source_view=self))
 
     def embed(self):
         return discord.Embed(title='出品する品物を選択',
@@ -205,12 +210,11 @@ class DurationView(AuctionView):
         self.item, self.count, self.price = deepcopy(item), count, price
         self.select([discord.SelectOption(label=f'{name}（手数料 {fee_for(count, duration)}）', value=str(duration))
                      for duration, (name, _) in DURATIONS.items()], self.choose, '出品期間を選択')
-        self.button('中止', lambda i: open_auction(i, mine=True))
+        self.button('中止', lambda i: open_auction(i, mine=True, previous_view=self))
 
     async def choose(self, interaction, value):
         view = ConfirmView(self.owner_id, self.item, self.count, self.price, int(value))
-        await show(interaction, view, view.embed())
-        self.stop()
+        await show(interaction, view, view.embed(), previous_view=self)
 
 
 class ConfirmView(AuctionView):
@@ -218,7 +222,7 @@ class ConfirmView(AuctionView):
         super().__init__(owner_id)
         self.item, self.count, self.price, self.duration = deepcopy(item), count, price, duration
         self.button('確定', self.confirm, style=discord.ButtonStyle.success)
-        self.button('中止', lambda i: open_auction(i, mine=True))
+        self.button('中止', lambda i: open_auction(i, mine=True, previous_view=self))
 
     def embed(self):
         embed = discord.Embed(title='出品内容の確認',
@@ -236,13 +240,13 @@ class ConfirmView(AuctionView):
         await interaction.response.edit_message(embed=discord.Embed(description='出品が完了しました。'), view=None)
 
 
-async def open_auction(interaction, page=0, mine=False):
+async def open_auction(interaction, page=0, mine=False, *, previous_view=None):
     require_access(interaction.user.id)
     expire_auctions()
     view = AuctionListView(interaction.user.id, page, mine)
-    await show(interaction, view, view.embed())
+    await show(interaction, view, view.embed(), previous_view=previous_view)
 
 
-async def open_inventory(interaction, page=0):
+async def open_inventory(interaction, page=0, *, previous_view=None):
     view = InventoryView(interaction.user.id, page)
-    await show(interaction, view, view.embed())
+    await show(interaction, view, view.embed(), previous_view=previous_view)

@@ -9,9 +9,10 @@ from ._common import safe_on_error
 
 
 class AuctionAmountModal(discord.ui.Modal):
-    def __init__(self, owner_id, item):
+    def __init__(self, owner_id, item, *, source_view=None):
         super().__init__(title='出品する個数・総額', timeout=180)
         self.owner_id, self.item = owner_id, deepcopy(item)
+        self.source_view = source_view
         self.deadline = time.monotonic() + 180
         self.add_item(discord.ui.TextInput(label='個数（1以上の整数）', max_length=12))
         self.add_item(discord.ui.TextInput(label='出品全体の総額（1以上の整数）', max_length=12))
@@ -41,7 +42,8 @@ class AuctionAmountModal(discord.ui.Modal):
             return
         count, price = map(int, values)
         view = DurationView(self.owner_id, self.item, count, price)
-        await show(interaction, view, discord.Embed(title='出品期間を選択', description='期間によって手数料が変わります。'))
+        await show(interaction, view, discord.Embed(title='出品期間を選択', description='期間によって手数料が変わります。'),
+                   previous_view=self.source_view)
         self.stop()
 
     async def on_timeout(self):

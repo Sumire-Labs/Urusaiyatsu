@@ -450,6 +450,7 @@ ACR-XXX — <タイトル>
 | ACR-AUC-10 | 空一覧・26件一覧・meta違い・古い画面 / 選択・ページ・タイムアウト / 25件ごとの新着順、本人専用、180秒失効、確認前は未消費 | UIフェイクで隔離テスト済 |
 | ACR-AUC-11 | テストBotとサーバー / 実際の一連の画面遷移 / ephemeral・選択・Modal・購入・取消・期限切れ・無効化を確認 | 未実施 |
 | ACR-AUC-12 | Docker Desktop稼働 / ビルド・コンパイル・既存ボリュームで起動 / 永続化・権限・symlinkが機能 | 2026-10-16 隔離Dockerで成功 |
+| ACR-AUC-13 | 画面の戻る・中止・ページ送り・Modal入力送信 / 旧Viewがタイムアウト / 新画面を旧Viewで上書きせず、旧操作も失効する | 2026-10-16 UI隔離テスト済 |
 
 2026-10-15 最終実行: Python 3.14、`requirements.lock` の固定依存関係（discord.py 2.6.4）で `python -m unittest discover -s tests -v` を実行し、**74件すべて成功**（既存58件 + 追加16件）。アプリ全ソースのcompileall（テストに含む）、`pip check`、`sh -n docker-entrypoint.sh`、`git diff --check` も成功。Dockerコンパイルコマンドは実行を試みたがデーモン接続不可で失敗し、Docker内の実行成功は主張しない。シンボリックリンク実体への保存・リンク保持・ファイル0600・ジャーナル配置は隔離サブプロセスで確認した。
 

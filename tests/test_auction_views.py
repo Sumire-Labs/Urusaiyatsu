@@ -63,6 +63,62 @@ async def click(view, label, uid=1):
 
 
 class TestAuctionViews(unittest.TestCase):
+    def test_replaced_views_cannot_overwrite_new_screens_on_timeout(self):
+        run_ok(SETUP + UI + '''
+async def scenario():
+    from discord.ui.view import ViewStore
+    row = a.create_listing(1, 'wood', {}, 1, 10, 21600)
+    u.add_item(1, 'wood', 1, meta={'version': 1})
+    for view, label in [
+        (AuctionListView(1), '出品'),
+        (AuctionListView(1, mine=True), '一覧へ'),
+        (AuctionListView(1, mine=True), '出品する'),
+        (AuctionDetailView(1, row), '一覧へ'),
+        (InventoryView(1), '自分の出品へ'),
+        (DurationView(1, row['item'], 1, 10), '中止'),
+        (ConfirmView(1, row['item'], 1, 10, 21600), '中止'),
+    ]:
+        origin = Interaction(initial=True)
+        await show(origin, view, discord.Embed(title='old screen'))
+        ViewStore(bot._connection).add_view(view, message_id=1)
+        i = await click(view, label)
+        replacement = i.response.sent[0][1]['view']
+        assert view.is_finished(), (type(view), label)
+        # Even an already queued timeout must not edit the replacement screen.
+        await view.on_timeout()
+        assert not origin.edits
+        assert not replacement.is_finished()
+        replacement.stop()
+
+    # Inventory pagination uses the same replacement path.
+    for index in range(26):
+        u.add_item(1, 'wood', 1, meta={'page': index})
+    inventory = InventoryView(1)
+    i = await click(inventory, '次へ')
+    assert inventory.is_finished()
+    page = i.response.sent[0][1]['view']
+    assert page.page == 1
+    i = await click(page, '前へ')
+    assert page.is_finished()
+    i.response.sent[0][1]['view'].stop()
+
+    # Opening a modal retains the inventory until submit (cancel remains usable).
+    inventory = InventoryView(1)
+    origin = Interaction(initial=True)
+    await show(origin, inventory, inventory.embed())
+    i = await choose(inventory, 0)
+    modal = i.response.modal
+    assert not inventory.is_finished()
+    modal.children[0]._value, modal.children[1]._value = '1', '10'
+    i = Interaction()
+    await modal.on_submit(i)
+    assert inventory.is_finished()
+    await inventory.on_timeout()
+    assert not origin.edits
+    i.response.sent[0][1]['view'].stop()
+asyncio.run(scenario())
+''')
+
     def test_full_listing_buy_and_cancel_flow(self):
         run_ok(SETUP + UI + '''
 async def scenario():
