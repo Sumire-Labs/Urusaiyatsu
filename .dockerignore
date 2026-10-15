@@ -62,3 +62,10 @@ logs/
 .spyderproject
 .spyproject
 .ropeproject
+
+# Auction runtime state, recovery snapshots, and backups
+auction.json
+auction-journal.json
+*.json.tmp
+*.json.bak.*
+.state.lock

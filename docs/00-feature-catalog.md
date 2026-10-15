@@ -482,3 +482,18 @@ Modal は **timeout を明示宣言していない**（`__init__` に `timeout=`
 - 読み取り対象: 全 Python ソース（`main.py`, `core/*`, `cogs/*`, `views/*`, `modals/*`）、データ JSON 7 種 + 設定テンプレート、`requirements.txt` / `requirements.lock`, `Dockerfile`, `docker-entrypoint.sh`, `compose.yaml`, `AGENTS.md`, `.gitignore`, git ログ（直近 10 件）。
 - 検証手段: ファイル一覧・行数確認、データ JSON の構造解析（件数・タグ・stats・参照整合性スクリプト）、パターン grep（`new_user` 未使用、エラーハンドラ、Prefix/Group/Hybrid/Context、テスト/CI、pop 使用箇所）。
 - 非対象: 実稼働・実通信での動作確認（Discord 認証必要）、`data/config.json` の実値（秘密情報のため不記載・不参照）。
+
+
+## 2026-10-15 追加機能台帳（既存59 + 追加7 = 66）
+
+| 機能ID | 一次根拠 | 調査 | 仕様化 | 静的照合 | 隔離自動テスト | Discord実機 |
+|---|---|---|---|---|---|---|
+| CMD-AUCTION | `cogs/auction.py:AuctionCog` | 済 | 済 | 済 | 済 | 未 |
+| CTX-AUCTION | `core/auction.py` | 済 | 済 | 済 | 済 | 未 |
+| VIEW-AUCTION | `views/auction_view.py` | 済 | 済 | 済 | 済 | 未 |
+| MODAL-AUCTION | `modals/auction_modal.py` | 済 | 済 | 済 | 済 | 未 |
+| DATA-AUCTION | `core/storage.py:validate` | 済 | 済 | 済 | 済 | 未 |
+| OPS-AUCTION-JOURNAL | `core/storage.py:commit / recover` | 済 | 済 | 済 | 済 | 未 |
+| JOB-AUCTION-EXPIRY | `core/auction.py:expire_auctions` | 済 | 済 | 済 | 済 | 未 |
+
+詳細仕様: [オークションハウス](06-features/auction-house.md)。Docker内検証は管理者認証待ちで未実施。

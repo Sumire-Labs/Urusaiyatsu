@@ -97,7 +97,8 @@ def run(code: str, user_json=None, timeout: int = 60) -> subprocess.CompletedPro
     if user_json is None:
         user_json = {}
     (data / 'user.json').write_text(json.dumps(user_json), encoding='utf-8')
-    for leftover in ('user.json.tmp', '.state.lock'):
+    for leftover in ('user.json.tmp', '.state.lock', 'auction.json', 'auction.json.tmp',
+                     'auction-journal.json', 'auction-journal.json.tmp'):
         p = data / leftover
         if p.exists():
             p.unlink()

@@ -13,6 +13,7 @@ EXTENSIONS = [
     "cogs.craft",
     "cogs.sell",
     "cogs.buy",
+    "cogs.auction",
     "cogs.refuel",
     "cogs.item_data",
     "cogs.leaderboard",

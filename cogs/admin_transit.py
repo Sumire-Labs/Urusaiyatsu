@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.state import USERS
-from core.utils import save_users
+from core.auction import transit_user, AuctionError
 from core.config import ADMIN
 from cogs._helpers import admin_check
 
@@ -29,19 +29,13 @@ class AdminTransitCog(commands.Cog):
             await interaction.response.send_message('存在しないユーザーです。',ephemeral=True)
             return
         
-        user_name = USERS[user_id_from]["name"]
+        try:
+            user_name = transit_user(int(user_id_from), int(user_id_to))
+        except AuctionError as error:
+            await interaction.response.send_message(str(error), ephemeral=True)
+            return
+        await interaction.response.send_message(f'{user_name}のデータを移行しました。', ephemeral=True)
 
-        # 移行
-        if user_id_to in USERS:
-            USERS[user_id_to] = USERS.pop(user_id_from)
-        else:
-            USERS.setdefault(user_id_to,USERS.pop(user_id_from))
-
-        # 送信
-        await interaction.response.send_message(f'{user_name}のデータを移行しました。',ephemeral=True)
-
-        # ファイル更新
-        save_users()
 
 
 async def setup(bot: commands.Bot):

@@ -422,3 +422,35 @@ ACR-XXX — <タイトル>
 - 既知の欠陥は `13-open-questions-and-technical-debt.md` の C-01〜C-08, C-10〜C-14, C-16〜C-22 と対応し、未検証事項は U-01〜U-15 と対応する。
 - 詳細仕様書群（01〜11）は既存であり、各機能 ID の「詳細仕様リンク」から仕様と受入条件の突合が可能である。
 - 受入条件の実行結果は §4 追跡表の「検証済み」に反映し、[00-feature-catalog.md](00-feature-catalog.md) §6.2 の追跡表と同期する。
+
+
+## 2026-10-15 オークション受入条件
+
+| 機能ID | 一次根拠 | 調査 | 仕様化 | 静的照合 | 隔離自動テスト | Discord実機 |
+|---|---|---|---|---|---|---|
+| CMD-AUCTION | `cogs/auction.py:AuctionCog` | 済 | 済 | 済 | 済 | 未 |
+| CTX-AUCTION | `core/auction.py` | 済 | 済 | 済 | 済 | 未 |
+| VIEW-AUCTION | `views/auction_view.py` | 済 | 済 | 済 | 済 | 未 |
+| MODAL-AUCTION | `modals/auction_modal.py` | 済 | 済 | 済 | 済 | 未 |
+| DATA-AUCTION | `core/storage.py:validate` | 済 | 済 | 済 | 済 | 未 |
+| OPS-AUCTION-JOURNAL | `core/storage.py:commit / recover` | 済 | 済 | 済 | 済 | 未 |
+| JOB-AUCTION-EXPIRY | `core/auction.py:expire_auctions` | 済 | 済 | 済 | 済 | 未 |
+
+| 条件ID | Given / When / Then | 検証 |
+|---|---|---|
+| ACR-AUC-01 | Lv7以上・在庫と手数料あり / 出品を確定 / 同じid・metaだけ消費し、期間別手数料を徴収、5項目の出品を永続化 | 隔離テスト済 |
+| ACR-AUC-02 | 有効な他人の出品 / 残高ちょうどで購入 / 一括移転し売主に代金全額を支払い、出品を削除 | 隔離テスト済 |
+| ACR-AUC-03 | 出品済 / 本人取消または期限境界到達 / 品物だけ返却、手数料は戻さず、繰り返しても重複なし | 隔離テスト済 |
+| ACR-AUC-04 | 不正入力・在庫/残高不足・低レベル・他人取消・自己購入・売却済・期限切れ / 操作 / 具体的エラーで変更なし | 隔離テスト済 |
+| ACR-AUC-05 | 同じ出品 / 購入・取消・期限切れを競合 / 一度だけ処理し品物・通貨を保存 | 隔離テスト済 |
+| ACR-AUC-06 | 各保存段階に障害 / 保存・再起動 / 確定前は未反映、確定後は停止しスナップショットで復旧、再適用で重複なし | 隔離テスト済 |
+| ACR-AUC-07 | 出品またはジャーナルの破損・不正参照 / 読込 / バックアップ・ログを残して起動中止し、空状態で上書きしない | 隔離テスト済 |
+| ACR-AUC-08 | 有効出品・停止中に期限切れの出品 / 再起動 / 有効出品は保持、期限切れは一度返却 | 隔離テスト済 |
+| ACR-AUC-09 | 出品中のユーザー / 管理者移行 / 出品者IDとプロフィールを同時保存し、代金・返却を移行先へ送る | コア隔離テスト済、実機権限確認は未 |
+| ACR-AUC-10 | 空一覧・26件一覧・meta違い・古い画面 / 選択・ページ・タイムアウト / 25件ごとの新着順、本人専用、180秒失効、確認前は未消費 | UIフェイクで隔離テスト済 |
+| ACR-AUC-11 | テストBotとサーバー / 実際の一連の画面遷移 / ephemeral・選択・Modal・購入・取消・期限切れ・無効化を確認 | 未実施 |
+| ACR-AUC-12 | Docker Desktop稼働 / ビルド・コンパイル・既存ボリュームで起動 / 永続化・権限・symlinkが機能 | 管理者認証待ちで未実施 |
+
+2026-10-15 最終実行: Python 3.14、`requirements.lock` の固定依存関係（discord.py 2.6.4）で `python -m unittest discover -s tests -v` を実行し、**74件すべて成功**（既存58件 + 追加16件）。アプリ全ソースのcompileall（テストに含む）、`pip check`、`sh -n docker-entrypoint.sh`、`git diff --check` も成功。Dockerコンパイルコマンドは実行を試みたがデーモン接続不可で失敗し、Docker内の実行成功は主張しない。シンボリックリンク実体への保存・リンク保持・ファイル0600・ジャーナル配置は隔離サブプロセスで確認した。
+
+一次根拠: `tests/test_auction.py` / `tests/test_auction_views.py`。Discord認証と実データを使わず、コピーしたアプリケーション・一時JSON・生成設定で検証する。

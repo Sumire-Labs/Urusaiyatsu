@@ -25,15 +25,17 @@ COPY . .
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod 0555 /usr/local/bin/docker-entrypoint.sh
 
-# 可変・永続化対象は /app/runtime/user.json のみ。
+# 可変データと復旧ジャーナルは /app/runtime に保存する。
 # appユーザーだけが読み書きできる状態にし、data/user.json をそこへの相対シンボリックリンクにする。
 # 設定 data/config.json は起動時にエントリポイントが生成する /run/urusaiyatsu/config.json への絶対シンボリックリンクにする。
 RUN mkdir -p /app/runtime \
     && printf '{}' > /app/runtime/user.json \
+    && printf '[]' > /app/runtime/auction.json \
     && chown -R 10001:10001 /app/runtime \
     && chmod 700 /app/runtime \
-    && chmod 600 /app/runtime/user.json \
+    && chmod 600 /app/runtime/user.json /app/runtime/auction.json \
     && ln -s ../runtime/user.json /app/data/user.json \
+    && ln -s ../runtime/auction.json /app/data/auction.json \
     && ln -s /run/urusaiyatsu/config.json /app/data/config.json
 
 # エントリポイントは短時間 root で実行し、シークレット複製後に UID/GID 10001 へ降格する

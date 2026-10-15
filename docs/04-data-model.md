@@ -467,3 +467,17 @@ flowchart LR
 | [`06-features/world-activities.md`](06-features/world-activities.md) | CTX-LOOT・採集・釣り・クラフトの詳細 |
 | [`07-event-processing/scheduled-and-background-jobs.md`](07-event-processing/scheduled-and-background-jobs.md) | 時間状態更新・保存ジョブの詳細 |
 | [`13-open-questions-and-technical-debt.md`](13-open-questions-and-technical-debt.md) | C-02〜C-08・C-10〜C-14・C-16〜C-22・C-D01・U-13〜U-15 等の引き継ぎ |
+
+
+---
+
+## 2026-10-15 追加: 出品・復旧データ
+
+この節は、本文の「可変状態はuser.jsonのみ」「バリデータなし」という記述を更新する。
+
+- `auction.json`: リスト。各要素は `id: int`、`seller_id: int`、`item: {id: str, count: int, meta: dict}`、`price: int`、`expires_at: int` の5項目。数値は正整数（boolを許可しない）。出品IDはUUID由来で重複不可。参照先のユーザーとアイテムの存在を起動時に検査する。
+- `auction-journal.json`: `{users: 更新後USERS全量, auctions: 更新後AUCTIONS全量}`。通常読込前に再適用して削除する。配列への追加や通貨加算を復旧時に実行しないため、再適用しても重複しない。
+- `USERS` と `AUCTIONS` はメモリ状態。通常ユーザー保存と二ファイル取引保存は同じ保存ロックを使う。各保存はファイルとディレクトリをfsyncする。
+- ジャーナル・出品の破損、不正参照はログと時刻付きバックアップを残して起動を中止する。欠損時だけ空リストを初期作成する。
+
+一次根拠: `core/storage.py:validate` / `recover` / `commit`、`core/state.py`。詳細: [オークション仕様](06-features/auction-house.md)。

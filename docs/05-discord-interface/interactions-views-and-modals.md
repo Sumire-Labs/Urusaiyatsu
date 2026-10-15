@@ -295,3 +295,12 @@
 | C-20 | use / gather / fishing の `count` 非正数ガード・上限不在 | `commands-gameplay.md` §3.2-3.4 | **解決済**（1 以上のみ許可・100 超は 100 に正規化。V-08 実測反映） |
 | C-21 | stale shop choice の `shop_content.index` `ValueError` | §3.7 参照 |
 | C-22 | `craft_view` の未使用 `set_craft_func` / `_craft_func` デッドコード | §3.5 参照 |
+
+
+---
+
+## 2026-10-15 追加: VIEW-AUCTION / MODAL-AUCTION
+
+一覧 → 詳細（購入または自分の出品取消）、一覧 → 自分の出品 → 出品する → インベントリ選択 → 個数・総額Modal → 期間Select → 手数料込み確認 → 確定。metaごとのスタックは別選択肢。View/Modalは180秒、所有者とレベルを検査し、共通タイムアウト処理で無効化する。取引前に在庫・所持金・期限・所有者を再確認する。保存が完了してから成功を通知する。
+
+一次根拠: `views/auction_view.py`、`modals/auction_modal.py`。詳細: [オークション仕様](../06-features/auction-house.md)。

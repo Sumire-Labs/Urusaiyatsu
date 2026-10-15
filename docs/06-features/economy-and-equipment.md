@@ -292,3 +292,12 @@
 | 観測-3 | 売却 View 表示後にインベントリが変化すると、Modal 送信時の `inventory[index]` がずれ、誤売却または `IndexError`（interaction failed）になり得る。再検証が無い | 現行バグ（要検証） | **解決済**（stale 同一性検証: `expected_item` 照合で誤売却を拒否。`tests/test_sell.py` が非ライブでカバー） |
 | 観測-4 | `get_item` は meta 不問のため、`fishing_bait` 装備時に別 meta スタックが混在していると誤ったスタックを装備し得る | 現行バグ（要検証） | 未解決（変更なし） |
 | 未確定 | `weapon` / `armor` / `armor_secondary` スロットは定義のみで現行データに該当アイテムが無い（`equip_slot` 5 種のみ）。将来仕様の扱い未確定 | 未確定 | 未解決（変更なし） |
+
+
+---
+
+## 2026-10-15 追加: オークション経済
+
+`/auction` を総合レベル7から利用可能にする。全サーバー共通・一括購入・自己購入禁止。手数料は6時間=個数×1、1日=個数×2、3日=個数×4を確定時に徴収する。総額は出品全体の価格で、売却代金は全額出品者へ支払う。取消・期限切れでは品物を返却し、手数料は返金しない。装備品はインベントリへ戻してから出品する。
+
+詳細: [オークション仕様](auction-house.md)。一次根拠: `core/auction.py:create_listing` / `buy_listing` / `cancel_listing` / `expire_auctions`。

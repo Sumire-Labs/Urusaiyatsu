@@ -123,8 +123,11 @@ with open('advancement.json', 'r', encoding='UTF-8') as f:
 # 状態ストアのロックを取得（複数インスタンス起動の防止）
 acquire_state_lock()
 
-# ユーザーデータ読み込み（破損時はバックアップして復旧）
+# 通常読込より先に、確定済み取引を復旧する。
+from .storage import recover, load_auctions
+recover(ITEMS)
 USERS: dict = _load_users()
+AUCTIONS: list = load_auctions(USERS, ITEMS)
 
 # 絵文字マッピング（setup_hookで更新）
 EMOJIS: dict[str, str] = {

@@ -21,12 +21,21 @@ if [ ! -f /app/runtime/user.json ]; then
     printf '{}' > /app/runtime/user.json
 fi
 
-# 権限保証: cap_drop ALL のため CAP_FOWNER がなく、他人所有ファイルの chmod は失敗する。
-# そこで一時的に root 所有へ変更 → chmod → app 所有へ戻す順で 0700/0600 を保証する。
-chown 0:0 /app/runtime /app/runtime/user.json
+# 既存ボリュームにも出品ファイルを初期化。破損データやジャーナルは保持する。
+if [ ! -e /app/runtime/auction.json ]; then
+    printf '[]' > /app/runtime/auction.json
+fi
+
+# ジャーナル・一時ファイル・バックアップもアプリから復旧可能にする。
+chown 0:0 /app/runtime
 chmod 700 /app/runtime
-chmod 600 /app/runtime/user.json
-chown 10001:10001 /app/runtime /app/runtime/user.json
+for file in /app/runtime/* /app/runtime/.state.lock; do
+    [ -f "$file" ] || continue
+    chown 0:0 "$file"
+    chmod 600 "$file"
+    chown 10001:10001 "$file"
+done
+chown 10001:10001 /app/runtime
 
 # アプリユーザー（UID/GID 10001）へ降格して CMD を起動
 exec setpriv --reuid=10001 --regid=10001 --init-groups --no-new-privs "$@"

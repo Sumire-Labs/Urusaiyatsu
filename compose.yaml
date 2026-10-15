@@ -1,5 +1,5 @@
 # Urusaiyatsu Discord Bot - Docker Compose 定義
-# 外部サービス・ポートはなし。永続化は bot_runtime ボリュームの user.json のみ。
+# 外部サービス・ポートはなし。永続化は bot_runtime ボリュームのユーザー・出品・復旧ジャーナル。
 # 設定は data/config.json を read-only file secret として /run/secrets/bot_config にマウントし、
 # エントリポイントが /run/urusaiyatsu（tmpfs）へ複製した後にアプリユーザーへ降格して起動する。
 

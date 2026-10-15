@@ -235,3 +235,10 @@ config.json
 
 # Local deepwork progress
 .slim/deepwork/
+
+# Auction runtime state, recovery snapshots, and backups
+auction.json
+auction-journal.json
+*.json.tmp
+*.json.bak.*
+.state.lock

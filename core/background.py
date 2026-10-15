@@ -89,6 +89,9 @@ def update_tick(now: float | None = None) -> None:
     if now is None:
         now = time.time()
 
+    from .auction import expire_auctions
+    expire_auctions(now)
+
     for user_id_str in list(USERS.keys()):
         user_data = USERS.get(user_id_str)
         if user_data is None:

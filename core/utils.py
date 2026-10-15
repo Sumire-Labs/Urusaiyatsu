@@ -2,25 +2,23 @@
 ユーティリティ関数モジュール
 """
 from copy import copy, deepcopy
-import json
 import logging
 import math
-import os
 import random
 import threading
 import time
 
 from .state import (
     USERS, ITEMS, ADVANCEMENTS,
-    shop_list, bot, _STATE_PATH, _STATE_TMP_PATH
+    shop_list, bot
 )
+
+from .storage import save_lock as _save_lock, atomic_write, USER_PATH
 
 logger = logging.getLogger(__name__)
 
 # トップレベル USERS の構造ミューテーション（追加/削除）を直列化するロック
 _users_lock = threading.Lock()
-# 永続化（save_users）をプロセス内で直列化するロック
-_save_lock = threading.Lock()
 
 
 async def new_user(user_id: int):
@@ -532,9 +530,4 @@ def save_users():
     実体ディレクトリ（Docker では書き込み可能なランタイムボリューム）に解決される。
     """
     with _save_lock:
-        snapshot = deepcopy(USERS)
-        with open(_STATE_TMP_PATH, 'w', encoding='UTF-8') as f:
-            json.dump(snapshot, f, indent=2, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(_STATE_TMP_PATH, _STATE_PATH)
+        atomic_write(USER_PATH, deepcopy(USERS))
