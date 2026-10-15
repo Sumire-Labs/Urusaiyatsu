@@ -496,4 +496,4 @@ Modal は **timeout を明示宣言していない**（`__init__` に `timeout=`
 | OPS-AUCTION-JOURNAL | `core/storage.py:commit / recover` | 済 | 済 | 済 | 済 | 未 |
 | JOB-AUCTION-EXPIRY | `core/auction.py:expire_auctions` | 済 | 済 | 済 | 済 | 未 |
 
-詳細仕様: [オークションハウス](06-features/auction-house.md)。Docker内検証は管理者認証待ちで未実施。
+詳細仕様: [オークションハウス](06-features/auction-house.md)。2026-10-16にDocker内の全74テストと永続化・復旧検証が成功。Discord実機欄は未のままとし、Docker内のUI検証はフェイクInteractionによる自動テストとして区別する。

@@ -18,12 +18,14 @@
 
 - Run locally with `python -m pip install -r requirements.txt && python main.py`. Starting a live bot requires valid Discord credentials.
 - Run Docker with `docker compose build && docker compose up -d`. Docker uses the pinned `requirements.lock`, whereas the local `requirements.txt` is not fully pinned.
-- Keep runtime imports and `requirements.lock` synchronized. Currently, `requirements.lock` omits `deepmerge`, so Docker cannot load `cogs.admin_manage`. Extension-load errors are only logged; the bot continues to run without the affected Cog.
+- Keep runtime imports and `requirements.lock` synchronized. The lock includes `deepmerge` and `discord.py`. Extension-load errors are only logged; the bot continues to run without the affected Cog.
 - Rebuild the image after changing code; hot reload is unavailable. After changing configuration, run `docker compose up -d --force-recreate`.
 
 ### Verification
 
-- The project has no automated tests, linters, type checks, formatters, CI, or task runner. The available non-live verification is the following compilation check.
+- Run isolated automated tests with `python -m unittest discover -s tests -v` after installing dependencies. The harness copies the application into temporary directories and generates dummy configuration, so the real data and Discord credentials are not required.
+- Run the complete Docker verification with `python3 tests/docker_auction_check.py`. It builds with the pinned dependencies and uses a uniquely named Compose project, dummy secret, disposable volume, read-only root filesystem, non-root application user, and no container network access. It checks compilation, dependencies, all automated tests, existing-volume initialization, restart persistence, offline expiry, journal recovery/replay, and fail-closed corruption handling, then removes only its own test resources.
+- The direct compilation check below uses the normal Compose configuration (and therefore requires the configured secret). Prefer the isolated runner for verification without real configuration.
 
   ```sh
   docker compose run --rm --no-deps bot sh -c 'PYTHONPYCACHEPREFIX=/tmp/pycache python -m compileall -q /app'
@@ -46,8 +48,8 @@
 ### Data and State
 
 - Importing `core` or `core.state` changes the process working directory to `data/`, eagerly loads static JSON, and creates `user.json` if it is missing. Subsequent relative paths resolve from `data/`.
-- `data/user.json` is ignored mutable state and is saved every five seconds. A malformed `user.json` is silently replaced with `{}`; back up mutable state before diagnosing or editing it.
-- In Docker, `data/user.json` persists in `bot_runtime` and is linked into `data/` with a symbolic link. Run only one bot replica to prevent corruption from concurrent writes. `docker compose down -v` destroys this state.
+- `data/user.json` and `data/auction.json` are ignored mutable state. Users are saved every five seconds; auction transactions synchronously save both files through a recovery journal. Malformed user/auction/journal data fails closed with logs and backups. Never overwrite corrupt data with an empty state; back up the runtime volume before diagnosis.
+- In Docker, user/auction data and `auction-journal.json` persist in `bot_runtime`; user/auction files are linked into `data/`. Journal recovery runs before normal loading, and expired auctions are returned before Discord connection and every second thereafter. Run only one bot replica; the state lock rejects concurrent instances. `docker compose down -v` destroys this state.
 
 ### UI Interactions
 

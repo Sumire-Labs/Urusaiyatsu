@@ -161,3 +161,6 @@
 ## 2026-10-15 追加仕様
 
 [オークションハウス](06-features/auction-house.md) を追加。既存の59機能の台帳に7機能IDを追加する（現行合計66）。追加ID・検証状況は [機能カタログ](00-feature-catalog.md) と [受入条件](12-testable-acceptance-criteria.md) の2026-10-15追記を参照。本文の59機能という件数は2026-08-06時点の基準値。
+
+
+2026-10-16追記: `python3 tests/docker_auction_check.py` でDockerビルド・全74テスト・コンパイル・既存ボリューム初期化・再起動・復旧・破損時停止が成功。テストBotなしで再実行可能な手順は [運用仕様](10-deployment-and-operations.md) を参照。Discord実機確認とは区別する。

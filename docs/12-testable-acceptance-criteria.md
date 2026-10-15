@@ -449,8 +449,21 @@ ACR-XXX — <タイトル>
 | ACR-AUC-09 | 出品中のユーザー / 管理者移行 / 出品者IDとプロフィールを同時保存し、代金・返却を移行先へ送る | コア隔離テスト済、実機権限確認は未 |
 | ACR-AUC-10 | 空一覧・26件一覧・meta違い・古い画面 / 選択・ページ・タイムアウト / 25件ごとの新着順、本人専用、180秒失効、確認前は未消費 | UIフェイクで隔離テスト済 |
 | ACR-AUC-11 | テストBotとサーバー / 実際の一連の画面遷移 / ephemeral・選択・Modal・購入・取消・期限切れ・無効化を確認 | 未実施 |
-| ACR-AUC-12 | Docker Desktop稼働 / ビルド・コンパイル・既存ボリュームで起動 / 永続化・権限・symlinkが機能 | 管理者認証待ちで未実施 |
+| ACR-AUC-12 | Docker Desktop稼働 / ビルド・コンパイル・既存ボリュームで起動 / 永続化・権限・symlinkが機能 | 2026-10-16 隔離Dockerで成功 |
 
 2026-10-15 最終実行: Python 3.14、`requirements.lock` の固定依存関係（discord.py 2.6.4）で `python -m unittest discover -s tests -v` を実行し、**74件すべて成功**（既存58件 + 追加16件）。アプリ全ソースのcompileall（テストに含む）、`pip check`、`sh -n docker-entrypoint.sh`、`git diff --check` も成功。Dockerコンパイルコマンドは実行を試みたがデーモン接続不可で失敗し、Docker内の実行成功は主張しない。シンボリックリンク実体への保存・リンク保持・ファイル0600・ジャーナル配置は隔離サブプロセスで確認した。
 
 一次根拠: `tests/test_auction.py` / `tests/test_auction_views.py`。Discord認証と実データを使わず、コピーしたアプリケーション・一時JSON・生成設定で検証する。
+
+
+### Docker検証の追記（2026-10-16）
+
+ユーザー指定により、テストBotを用意せずDockerで追加検証した。Docker Engine 29.8.0 / Linux aarch64 / Python 3.12.13 / discord.py 2.6.4で `python3 tests/docker_auction_check.py` を実行し、**全工程成功（終了コード0）**。
+
+- Dockerfileの固定ダイジェストと `requirements.lock` でビルド成功。`pip check` と `/app` 全体のcompileall成功。
+- Docker内の全74テスト成功（28.914秒）。取引・UIフェイク・権限・レベル・期限境界・競合・保存段階の障害注入・ユーザー移行を含む。
+- 通常エントリポイントを通す別コンテナを順に起動し、既存ユーザーデータだけのボリュームへの初期化、出品保持、停止中の期限切れ返却、売買・取消、破損した通常ファイルのジャーナル復旧、同一ジャーナル再適用での非重複を確認。
+- 出品とジャーナルの破損それぞれで、起動が期待どおり終了コード1となり、バックアップと元データ保持を確認。修復後の再起動も成功。
+- read-onlyルート、UID/GID10001、ディレクトリ0700・状態ファイル0600・設定0400、symlink、外部通信のないネットワーク、専用リソースの後片付けを確認。
+
+ACR-AUC-12は実行検証済みに更新する。ACR-AUC-11のDiscord実機確認は未実施のまま。UIはDocker内のフェイクInteractionで確認しており、認証通信・コマンド同期・Discordクライアントの描画は未検証。一次根拠: `tests/docker_auction_check.py`。

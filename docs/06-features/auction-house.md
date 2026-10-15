@@ -72,4 +72,6 @@
 - `tests/test_auction_views.py`: 画面遷移、所有者制限、期限切れ、空一覧、25件のページ境界、新しい順、古い選択、確認後の在庫・残高・レベル再検証、確認前の不変性、保存後の成功通知。
 - 固定依存関係のPython 3.14環境で既存分を含む74件すべて成功。シンボリックリンク経由の保存・権限も隔離環境で確認。最終件数・実行環境は [受入条件](../12-testable-acceptance-criteria.md) に記録する。
 - Discord実機確認: **未実施**。隔離テストBot・サーバーの接続先が未指定のため。手順は [実機確認ガイド](../14-manual-discord-verification.md)。
-- Dockerコンパイルチェック: **実行不可**。Docker DesktopはmacOS管理者認証待ちで、デーモンに接続できない。ローカルの固定依存環境でコンパイルを確認する。
+- Docker検証: **2026-10-16 実施・成功**。Docker Engine 29.8.0 / Linux aarch64 / Python 3.12.13 / discord.py 2.6.4。`python3 tests/docker_auction_check.py` でビルド・pip check・全ソースcompileall・全74テスト・既存ボリューム初期化・再起動・停止中期限切れ返却・ジャーナル復旧と再適用・破損時の起動拒否/バックアップを確認した。前日のDocker認証待ちは解消済み。
+- テスト専用Composeプロジェクト・生成したダミー設定・使い捨てボリュームを使用。通常のエントリポイント、read-onlyルート、UID/GID10001、0700/0600/0400権限、symlink、外部通信のないネットワーク構成を検証した。終了後は専用コンテナ・ボリューム・イメージタグを削除する。
+- ユーザー指定により、テストBotがないためDockerでの隔離検証を実施した。UIはDocker内で実際のdiscord.pyコンポーネントとフェイクInteractionを使って検証しており、Discord認証・クライアント実画面の確認は未実施。
