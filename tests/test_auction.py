@@ -33,7 +33,7 @@ def rejected(fn, contains=None):
 class TestAuctionEconomy(unittest.TestCase):
     def test_list_buy_cancel_and_exact_balance(self):
         run_ok(SETUP + '''
-USERS['1']['money'] = 3
+USERS['1']['money'] = 15
 row = a.create_listing(1, 'wood', {}, 3, 1000, 21600)
 assert USERS['1']['money'] == 0
 assert USERS['1']['inventory'][0]['count'] == 17
@@ -50,7 +50,7 @@ rejected(lambda: a.cancel_listing(1, row['id']))
 row = a.create_listing(1, 'wood', {}, 2, 1, 86400)
 a.cancel_listing(1, row['id'])
 assert USERS['1']['inventory'][0]['count'] == 17
-assert USERS['1']['money'] == 996
+assert USERS['1']['money'] == 940
 assert AUCTIONS == []
 assert json.loads(store.AUCTION_PATH.read_text()) == []
 assert json.loads(store.USER_PATH.read_text()) == USERS
@@ -58,12 +58,23 @@ assert json.loads(store.USER_PATH.read_text()) == USERS
 
     def test_fee_schedule_and_invalid_input(self):
         run_ok(SETUP + '''
-for duration, rate in [(21600, 1), (86400, 2), (259200, 4)]:
-    before = USERS['1']['money']
-    row = a.create_listing(1, 'wood', {}, 2, 1, duration, now=100)
-    assert row['expires_at'] == 100 + duration
-    assert USERS['1']['money'] == before - 2 * rate
-    a.cancel_listing(1, row['id'], now=100)
+for duration, fee in [(21600, 10), (86400, 60), (259200, 210)]:
+    assert a.fee_for(2, duration) == fee
+    assert a.fee_for(3, duration) == fee + 5
+    for expire in (False, True):
+        USERS['1']['money'] = fee - 1
+        rejected(lambda: a.create_listing(1, 'wood', {}, 2, 1, duration, now=100), '手数料')
+        USERS['1']['money'] = fee
+        row = a.create_listing(1, 'wood', {}, 2, 1, duration, now=100)
+        assert row['expires_at'] == 100 + duration
+        assert USERS['1']['money'] == 0
+        if expire:
+            assert a.expire_auctions(row['expires_at']) == 1
+            assert a.expire_auctions(row['expires_at']) == 0
+        else:
+            a.cancel_listing(1, row['id'], now=100)
+        assert USERS['1']['money'] == 0
+        assert USERS['1']['inventory'][0]['count'] == 20
 for count, price, duration in [(0, 1, 21600), (-1, 1, 21600), (True, 1, 21600),
                                (1.5, 1, 21600), (1, 0, 21600), (1, -1, 21600),
                                (1, True, 21600), (1, 1, 7), (1, 1.5, 21600)]:
@@ -116,7 +127,7 @@ from core.background import update_tick
 update_tick(now=row['expires_at'])
 assert not AUCTIONS
 assert USERS['1']['inventory'][0]['count'] == 20
-assert USERS['1']['money'] == 998
+assert USERS['1']['money'] == 990
 assert a.expire_auctions(row['expires_at'] + 1) == 0
 ''')
 
@@ -132,7 +143,7 @@ def purchase(uid):
         return False
 with ThreadPoolExecutor(2) as pool:
     assert sum(pool.map(purchase, [2, 3])) == 1
-assert USERS['1']['money'] == 1028
+assert USERS['1']['money'] == 1020
 assert sum(sum(s['count'] for s in x['inventory']) for x in USERS.values()) == 20
 row = a.create_listing(1, 'wood', {}, 2, 30, 21600)
 def compete(action):
@@ -154,7 +165,7 @@ row = a.create_listing(1, 'wood', {}, 2, 30, 21600)
 a.transit_user(1, 4)
 assert '1' not in USERS and AUCTIONS[0]['seller_id'] == 4
 a.buy_listing(2, row['id'])
-assert USERS['4']['money'] == 1028
+assert USERS['4']['money'] == 1020
 row = a.create_listing(4, 'wood', {}, 2, 30, 21600)
 a.transit_user(4, 3)
 a.expire_auctions(row['expires_at'])
@@ -165,6 +176,34 @@ rejected(lambda: a.transit_user(3, 3))
 
 
 class TestAuctionPersistence(unittest.TestCase):
+    def test_legacy_listing_is_loaded_without_another_fee(self):
+        run_ok(SETUP + '''
+import subprocess, sys
+from pathlib import Path
+from core import state
+# A two-item, one-day listing already paid the former fee of 4.
+USERS['1']['money'] = 996
+USERS['1']['inventory'][0]['count'] = 18
+legacy = {'id': 99, 'seller_id': 1, 'item': {'id': 'wood', 'count': 2, 'meta': {}},
+          'price': 100, 'expires_at': int(time.time()) + 86400}
+store.commit(USERS, [legacy])
+state._state_lock_fd.close()
+script = """
+from core.state import USERS, AUCTIONS
+from core import auction as a
+assert len(AUCTIONS) == 1 and AUCTIONS[0]['id'] == 99
+assert USERS['1']['money'] == 996
+a.buy_listing(2, 99)
+assert USERS['1']['money'] == 1096
+assert USERS['2']['money'] == 900
+assert USERS['2']['inventory'] == [{'id': 'wood', 'count': 2, 'meta': {}}]
+assert not AUCTIONS
+"""
+result = subprocess.run([sys.executable, '-c', script], cwd=str(Path.cwd().parent),
+                        capture_output=True, text=True)
+assert result.returncode == 0, result.stderr
+''')
+
     def test_invalid_journal_users_never_replace_normal_files(self):
         run_ok(SETUP + '''
 variants = [{'1': None}, {'1': {}}, {'invalid-id': deepcopy(USERS['1'])}]
@@ -370,7 +409,7 @@ from core import storage
 assert len(AUCTIONS) == 1
 assert AUCTIONS[0]['item']['count'] == 3
 assert USERS['1']['inventory'][0]['count'] == 17
-assert USERS['1']['money'] == 995
+assert USERS['1']['money'] == 975
 assert not storage.JOURNAL_PATH.exists()
 """
 root = str(Path.cwd().parent)

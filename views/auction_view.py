@@ -6,7 +6,7 @@ import time
 
 import discord
 
-from core.state import AUCTIONS, USERS, ITEMS
+from core.state import AUCTIONS, USERS, ITEMS, EMOJIS
 from core.auction import (
     AuctionError, DURATIONS, require_access, get_listing, create_listing,
     buy_listing, cancel_listing, expire_auctions, fee_for,
@@ -123,10 +123,10 @@ class AuctionListView(AuctionView):
 
     def embed(self):
         embed = discord.Embed(title='自分の出品' if self.mine else 'オークションハウス',
-                              description='出品を選択してください。' if self.rows else '現在、出品はありません。')
+                              description='購入する商品を選択' if self.rows else '現在、出品はありません。')
         for row in self.rows:
-            embed.add_field(name=f'{ITEMS[row["item"]["id"]]["name"]} ×{row["item"]["count"]}'[:80],
-                            value=f'総額: {row["price"]}\n出品者: {USERS[str(row["seller_id"])]["name"][:40]}\n終了: <t:{row["expires_at"]}:R>'[:140],
+            embed.add_field(name=f'{ITEMS[row["item"]["id"]]["name_e"]} ×{row["item"]["count"]}'[:80],
+                            value=f'総額: {row["price"]}{EMOJIS["money"]}\n出品者: {USERS[str(row["seller_id"])]["name"][:40]}\n終了: <t:{row["expires_at"]}:R>'[:140],
                             inline=False)
         embed.set_footer(text=f'{self.page + 1}/{self.pages} ページ • 価格は出品全体の総額です')
         return embed
@@ -153,10 +153,11 @@ class AuctionDetailView(AuctionView):
 
     def embed(self):
         row = self.listing
-        embed = discord.Embed(title=ITEMS[row['item']['id']]['name'],
-                              description=f'数量: {row["item"]["count"]}\n総額: {row["price"]}\n'
+        embed = discord.Embed(title=ITEMS[row['item']['id']]['name_e'],
+                              description=f'数量: {row["item"]["count"]}\n総額: {row["price"]}{EMOJIS["money"]}\n'
                                           f'出品者: {USERS[str(row["seller_id"])]["name"]}\n終了まで: <t:{row["expires_at"]}:R>')
-        embed.add_field(name='meta', value=meta_text(row['item']['meta']), inline=False)
+        if row['item']['meta']:
+            embed.add_field(name='meta', value=meta_text(row['item']['meta']), inline=False)
         return embed
 
     async def trade(self, interaction):
@@ -182,7 +183,8 @@ class InventoryView(AuctionView):
         if self.stacks:
             self.select([
                 discord.SelectOption(label=f'{ITEMS[s["id"]]["name"]} ×{s["count"]}'[:100],
-                                     description=meta_text(s.get('meta', {}), 100), value=str(index))
+                                     description=meta_text(s['meta'], 100) if s.get('meta') else None,
+                                     value=str(index))
                 for index, s in enumerate(self.stacks)
             ], self.choose, '出品するスタックを選択')
         self.button('前へ', lambda i: open_inventory(i, page - 1, previous_view=self), disabled=page == 0)
@@ -226,11 +228,12 @@ class ConfirmView(AuctionView):
 
     def embed(self):
         embed = discord.Embed(title='出品内容の確認',
-                              description=f'{ITEMS[self.item["id"]]["name"]} ×{self.count}\n'
-                                          f'期間: {DURATIONS[self.duration][0]}\n総額: {self.price}\n'
+                              description=f'{ITEMS[self.item["id"]]["name_e"]} ×{self.count}\n'
+                                          f'期間: {DURATIONS[self.duration][0]}\n総額: {self.price}{EMOJIS["money"]}\n'
                                           f'手数料: {fee_for(self.count, self.duration)}\n'
                                           '手数料は確定時に支払い、取り消し・期限切れでも返金されません。')
-        embed.add_field(name='meta', value=meta_text(self.item.get('meta', {})), inline=False)
+        if self.item.get('meta'):
+            embed.add_field(name='meta', value=meta_text(self.item['meta']), inline=False)
         return embed
 
     async def confirm(self, interaction):

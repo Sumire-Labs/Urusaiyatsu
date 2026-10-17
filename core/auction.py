@@ -6,7 +6,8 @@ import uuid
 from .state import USERS, AUCTIONS, ITEMS
 from .storage import save_lock, commit, positive
 
-DURATIONS = {21600: ('6時間', 1), 86400: ('1日', 2), 259200: ('3日', 4)}
+# Each duration stores its label and fixed surcharge.
+DURATIONS = {21600: ('6時間', 0), 86400: ('1日', 50), 259200: ('3日', 200)}
 
 
 class AuctionError(ValueError):
@@ -23,7 +24,7 @@ def require_access(user_id):
 def fee_for(count, duration):
     if not positive(count) or type(duration) is not int or duration not in DURATIONS:
         raise AuctionError('個数は1以上、期間は6時間・1日・3日から選んでください。')
-    return count * DURATIONS[duration][1]
+    return count * 5 + DURATIONS[duration][1]
 
 
 def _publish(users, auctions):

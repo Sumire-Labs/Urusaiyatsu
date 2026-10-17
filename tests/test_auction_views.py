@@ -63,6 +63,69 @@ async def click(view, label, uid=1):
 
 
 class TestAuctionViews(unittest.TestCase):
+    def test_embed_item_currency_and_optional_meta(self):
+        run_ok(SETUP + UI + '''
+async def scenario():
+    ITEMS['wood']['name_e'] = '<:wood:123456789012345678>木材'
+    EMOJIS['money'] = '<:money:987654321098765432>'
+    for meta in ({}, {'durability': 0, 'nested': {'品質': 2}}):
+        if meta:
+            u.add_item(1, 'wood', 2, meta=meta)
+        row = a.create_listing(1, 'wood', meta, 2, 100, 21600)
+        for mine in (False, True):
+            view = AuctionListView(1, mine=mine)
+            embed = view.embed()
+            assert embed.description == '購入する商品を選択'
+            assert embed.fields[0].name == ITEMS['wood']['name_e'] + ' ×2'
+            assert embed.fields[0].value.startswith('総額: 100' + EMOJIS['money'] + '\\n')
+            # Select text keeps the existing plain item name and price.
+            option = select(view).options[0]
+            assert option.label == ITEMS['wood']['name'] + ' ×2'
+            assert option.description.startswith('総額 100 / ')
+        detail = AuctionDetailView(2, row).embed()
+        confirm = ConfirmView(1, row['item'], 2, 100, 21600).embed()
+        assert detail.title == ITEMS['wood']['name_e']
+        assert confirm.description.startswith(ITEMS['wood']['name_e'] + ' ×2\\n')
+        for embed in (detail, confirm):
+            assert '総額: 100' + EMOJIS['money'] + '\\n' in embed.description
+            if meta:
+                assert len(embed.fields) == 1 and embed.fields[0].name == 'meta'
+                assert json.loads(embed.fields[0].value) == meta
+            else:
+                assert not embed.fields
+        a.cancel_listing(1, row['id'])
+    inventory = InventoryView(1)
+    options = select(inventory).options
+    assert options[0].description is None
+    assert 'description' not in options[0].to_dict()
+    assert json.loads(options[1].description) == {'durability': 0, 'nested': {'品質': 2}}
+    USERS['1']['inventory'][0].pop('meta')
+    assert select(InventoryView(1)).options[0].description is None
+    assert not ConfirmView(1, {'id': 'wood'}, 1, 100, 21600).embed().fields
+    assert AuctionListView(1).embed().description == '現在、出品はありません。'
+asyncio.run(scenario())
+''')
+
+    def test_duration_fees_match_confirmation_and_charge(self):
+        run_ok(SETUP + UI + '''
+async def scenario():
+    for seconds, label, fee in [(21600, '6時間', 10), (86400, '1日', 60), (259200, '3日', 210)]:
+        before = deepcopy((USERS, AUCTIONS))
+        duration = DurationView(1, {'id': 'wood', 'meta': {}}, 2, 100)
+        option = next(o for o in select(duration).options if o.value == str(seconds))
+        assert option.label == f'{label}（手数料 {fee}）'
+        i = await choose(duration, seconds)
+        confirm = i.response.sent[0][1]['view']
+        assert f'手数料: {fee}\\n' in confirm.embed().description
+        assert before == (USERS, AUCTIONS)
+        await click(confirm, '確定')
+        assert USERS['1']['money'] == before[0]['1']['money'] - fee
+        assert json.loads(store.USER_PATH.read_text())['1']['money'] == USERS['1']['money']
+        a.cancel_listing(1, AUCTIONS[0]['id'])
+        assert USERS['1']['money'] == before[0]['1']['money'] - fee
+asyncio.run(scenario())
+''')
+
     def test_replaced_views_cannot_overwrite_new_screens_on_timeout(self):
         run_ok(SETUP + UI + '''
 async def scenario():
@@ -143,11 +206,11 @@ async def scenario():
     i = await choose(duration, 86400)
     confirm = i.response.sent[0][1]['view']
     text = confirm.embed().description
-    assert '1日' in text and '総額: 100' in text and '手数料: 4' in text
+    assert '1日' in text and '総額: 100' in text and '手数料: 60' in text
     assert before == (USERS, AUCTIONS)
     i = await click(confirm, '確定')
     assert '完了' in i.response.sent[0][1]['embed'].description
-    assert len(AUCTIONS) == 1 and USERS['1']['money'] == 996
+    assert len(AUCTIONS) == 1 and USERS['1']['money'] == 940
     assert json.loads(store.AUCTION_PATH.read_text()) == AUCTIONS
     duplicate = await click(confirm, '確定')
     assert '失効' in duplicate.response.sent[0][0]
@@ -156,7 +219,7 @@ async def scenario():
     buyer = AuctionDetailView(2, row)
     assert find_button(buyer, '買う')
     await click(buyer, '買う', 2)
-    assert not AUCTIONS and USERS['1']['money'] == 1096
+    assert not AUCTIONS and USERS['1']['money'] == 1040
     row = a.create_listing(1, 'wood', {}, 1, 10, 21600)
     own = AuctionDetailView(1, row)
     await click(own, '取り消す')
@@ -242,7 +305,7 @@ async def scenario():
     i = await click(confirm, '確定')
     assert '在庫' in i.response.sent[0][0]
     USERS['1']['inventory'][0]['count'] = 20
-    USERS['1']['money'] = 19
+    USERS['1']['money'] = 99
     i = await click(confirm, '確定')
     assert '手数料' in i.response.sent[0][0]
     USERS['1']['money'] = 100

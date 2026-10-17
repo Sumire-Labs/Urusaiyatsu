@@ -105,19 +105,19 @@ def inside(phase):
         USERS['2']['money'] = 100
         active = auction.create_listing(1, 'wood', {}, 3, 100, 21600)
         auction.create_listing(1, 'wood', {}, 2, 30, 21600, now=1)
-        assert len(AUCTIONS) == 2 and USERS['1']['money'] == 995
+        assert len(AUCTIONS) == 2 and USERS['1']['money'] == 975
         write_manifest({'active_id': active['id']})
     elif phase == 'restart':
         manifest = read_manifest()
         assert len(AUCTIONS) == 1 and AUCTIONS[0]['id'] == manifest['active_id']
         assert USERS['1']['inventory'][0]['count'] == 17
-        assert USERS['1']['money'] == 995
+        assert USERS['1']['money'] == 975
         auction.buy_listing(2, manifest['active_id'])
-        assert USERS['2']['money'] == 0 and USERS['1']['money'] == 1095
+        assert USERS['2']['money'] == 0 and USERS['1']['money'] == 1075
         assert USERS['2']['inventory'][0]['count'] == 3
         row = auction.create_listing(1, 'wood', {}, 1, 5, 86400)
         auction.cancel_listing(1, row['id'])
-        assert USERS['1']['money'] == 1093
+        assert USERS['1']['money'] == 1020
         auction.create_listing(1, 'wood', {}, 1, 5, 21600)
         snapshot = {'users': USERS, 'auctions': AUCTIONS}
         write_manifest(snapshot)
@@ -134,13 +134,13 @@ def inside(phase):
         else:
             auction.cancel_listing(1, AUCTIONS[0]['id'])
             assert AUCTIONS == []
-            assert sum(u['money'] for u in USERS.values()) == 1092
+            assert sum(u['money'] for u in USERS.values()) == 1015
             assert sum(s['count'] for u in USERS.values() for s in u['inventory']) == 20
             storage.atomic_write(runtime / 'users-before-corruption.json', USERS)
             storage.AUCTION_PATH.write_text('{broken auction')
     elif phase == 'final':
         assert AUCTIONS == []
-        assert sum(u['money'] for u in USERS.values()) == 1092
+        assert sum(u['money'] for u in USERS.values()) == 1015
         assert sum(s['count'] for u in USERS.values() for s in u['inventory']) == 20
     else:
         raise ValueError(f'Unknown test phase: {phase}')
