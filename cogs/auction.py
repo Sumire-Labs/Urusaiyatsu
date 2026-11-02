@@ -12,7 +12,7 @@ class AuctionCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name='auction', description='総合レベル7から利用できるオークションハウスです。')
+    @app_commands.command(name='auction', description='プレイヤー同士でアイテムの取引ができます。')
     async def auction_command(self, interaction: discord.Interaction):
         await new_user(interaction.user.id)
         try:

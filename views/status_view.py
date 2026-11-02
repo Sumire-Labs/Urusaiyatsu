@@ -146,7 +146,8 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
             elif equipment_key == 'fishing_bait':
                 if equipment_value:
                     item_id = equipment_value['id']
-                    embed.description += f'{ITEMS[item_id]["emoji"]}'
+                    item_count = equipment_value['count']
+                    embed.description += f'{ITEMS[item_id]["emoji"]}{item_count}'
                 else:
                     embed.description += f'{EMOJIS["empty"]} ｜ '
         embed.description = embed.description[:-2]
@@ -187,8 +188,8 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
             embed.description += '\n'
 
         embed.description += f'レベル{EMOJIS["level"]}__**{user_data["level_global"]}**__ ｜ '
-        embed.description += f'採集{EMOJIS["level_gathering"]} **__{level_gathering}__ ( {user_data["xp_gathering"]}/{level_next_gathering} )** ｜ '
-        embed.description += f'釣り{EMOJIS["level_fishing"]} **__{level_fishing}__ ( {user_data["xp_fishing"]}/{level_next_fishing} )**'
+        embed.description += f'採集{EMOJIS["level_gathering"]}**__{level_gathering}__ ( {user_data["xp_gathering"]}/{level_next_gathering} )** ｜ '
+        embed.description += f'釣り{EMOJIS["level_fishing"]}**__{level_fishing}__ ( {user_data["xp_fishing"]}/{level_next_fishing} )**'
 
         # 装備品
         embed.description += '\n\n'
@@ -198,37 +199,37 @@ async def view_status(interaction: discord.Interaction, page: int, short: bool):
                 for accessory in equipment_value:
                     if accessory:
                         item_id = accessory['id']
-                        embed.description += f'{ITEMS[item_id]["name_e"]}\n'
+                        embed.description += f'-# {ITEMS[item_id]["name_e"]}\n'
                     else:
-                        embed.description += f'{EMOJIS["empty"]}空スロット\n'
+                        embed.description += f'-# {EMOJIS["empty"]}空スロット\n'
             elif equipment_key == 'gathering_tool':
                 embed.description += '[採集ツール]\n'
                 if equipment_value:
                     item_id = equipment_value['id']
-                    embed.description += f'{ITEMS[item_id]["name_e"]}\n'
+                    embed.description += f'-# {ITEMS[item_id]["name_e"]}\n'
                 else:
-                    embed.description += f'{EMOJIS["empty"]}空スロット\n'
+                    embed.description += f'-# {EMOJIS["empty"]}空スロット\n'
             elif equipment_key == 'gathering_equipment':
                 embed.description += '[採集装備]\n'
                 if equipment_value:
                     item_id = equipment_value['id']
-                    embed.description += f'{ITEMS[item_id]["name_e"]}\n'
+                    embed.description += f'-# {ITEMS[item_id]["name_e"]}\n'
                 else:
-                    embed.description += f'{EMOJIS["empty"]}空スロット\n'
+                    embed.description += f'-# {EMOJIS["empty"]}空スロット\n'
             elif equipment_key == 'fishing_rod':
                 embed.description += '[釣り竿]\n'
                 if equipment_value:
                     item_id = equipment_value['id']
-                    embed.description += f'{ITEMS[item_id]["name_e"]}\n'
+                    embed.description += f'-# {ITEMS[item_id]["name_e"]}\n'
                 else:
-                    embed.description += f'{EMOJIS["empty"]}空スロット\n'
+                    embed.description += f'-# {EMOJIS["empty"]}空スロット\n'
             elif equipment_key == 'fishing_bait':
                 embed.description += '[釣り餌]\n'
                 if equipment_value:
                     item_id = equipment_value['id']
-                    embed.description += f'{ITEMS[item_id]["name_e"]}\n'
+                    embed.description += f'-# {ITEMS[item_id]["name_e"]}\n'
                 else:
-                    embed.description += f'{EMOJIS["empty"]}空スロット\n'
+                    embed.description += f'-# {EMOJIS["empty"]}空スロット\n'
 
         page_end = page * STATUS_ITEMS_PER_PAGE
         embed.description += '\n'

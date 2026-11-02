@@ -13,7 +13,7 @@ from core.config import ADMIN
 from cogs._helpers import admin_check
 
 class AdminManageCog(commands.Cog):
-    """管理者用アイテム付与コマンド"""
+    """管理者用ユーザーデータ管理コマンド"""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
